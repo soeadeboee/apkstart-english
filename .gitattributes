@@ -1,0 +1,14 @@
+* text=auto
+
+*.js   text eol=lf
+*.tsv  text eol=lf
+*.json text eol=lf
+*.md   text eol=lf
+*.ps1  text eol=crlf
+
+*.png  binary
+*.jpg  binary
+*.ico  binary
+
+# translated program files are hash-checked by install-en.ps1: keep their bytes as-is
+patch/app/** -text

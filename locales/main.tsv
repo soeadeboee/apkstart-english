@@ -1,0 +1,93 @@
+，桌面快捷方式已创建	, desktop shortcut created
+（运行时已重启）	(runtime restarted)
+[smoke] 截图失败	[smoke] screenshot failed
+「${runtime.provisioner.paths().root}」所在盘仅剩 ${free} MB，运行时与镜像可能撑爆硬盘。	The drive holding "${runtime.provisioner.paths().root}" has only ${free} MB left; the runtime and images may fill it up.
+「虚拟机平台」已开启，硬件加速即时生效	"Windows Hypervisor Platform" is enabled, hardware acceleration works immediately
+${result.app.label} 已安装${result.app.shortcutPath ? '，桌面快捷方式已创建' : ''}	${result.app.label} installed${result.app.shortcutPath ? ', desktop shortcut created' : ''}
+adb 工具链缺失	adb toolchain missing
+AEHD 驱动包准备失败	Failed to prepare the AEHD driver package
+AEHD 驱动包未就绪	AEHD driver package not ready
+agent scope 为空：不压制任何窗口（避免误伤其他软件）	agent scope is empty: no windows suppressed (avoids affecting other software)
+Android 应用	Android apps
+ApkStart — 安卓应用运行器	ApkStart — Android app runner
+ApkStart ${info.tag} 已发布，当前版本 v${app.getVersion()}。现在更新吗？	ApkStart ${info.tag} has been released, you are on v${app.getVersion()}. Update now?
+ApkStart 仍在后台运行	ApkStart is still running in the background
+GitHub 运行时不可用（${e.message}），改用官方源…	GitHub runtime unavailable (${e.message}), switching to the official source…
+会先停止运行时，再删除旧镜像、当前 AVD 的快速启动快照、锁文件和非活动 AVD 的缓存。已安装的应用本身保留（只清快照），	The runtime is stopped first, then old images, the current AVD's quick-boot snapshot, lock files and inactive AVD caches are deleted. Installed apps are kept (only snapshots are cleared),
+全屏（自适应屏幕）	Fullscreen (adapts to the screen)
+准备下载…	Preparing download…
+切回竖屏窗口	Switch back to portrait window
+切换到横屏：正在重启安卓运行时…	Switching to landscape: restarting the Android runtime…
+切换回竖屏：正在重启安卓运行时…	Switching back to portrait: restarting the Android runtime…
+发现新版本	New version available
+发现新版本 ${updateInfo.tag}	New version ${updateInfo.tag}
+取消	Cancel
+只删除旧镜像、旧快照、锁文件和非活动 AVD 的缓存，已安装的应用会保留。	Only old images, old snapshots, lock files and inactive AVD caches are deleted; installed apps are kept.
+只剩 ${(freeMB / 1024).toFixed(1)} GB。请到「设置 → 系统集成」把安卓数据目录/运行时目录改到其他盘，或先清理磁盘。	Only ${(freeMB / 1024).toFixed(1)} GB left. Move the Android data folder / runtime folder to another drive in Settings → System integration, or free up disk space.
+可能导致下一次启动被判定为「AVD 已被占用」。	It may make the next start fail with "AVD already in use".
+同步共享目录	Sync shared folder
+安卓可用空间约 ${want} GB${stopped ? '（运行时已重启）' : ''}	About ${want} GB free in Android${stopped ? ' (runtime restarted)' : ''}
+安卓运行时依赖微软 VC++ 2015-2022，缺失会导致模拟器无法启动（0xc0000135）。	The Android runtime needs Microsoft VC++ 2015-2022; without it the emulator fails to start (0xc0000135).
+安装失败	Installation failed
+安装完成	Installed
+将回退软件模拟（能跑但很慢）。开启虚拟化后可获得最佳性能。	Falling back to software emulation (works but slow). Enable virtualization for best performance.
+已取消管理员授权（需要点「是」才能安装驱动）	Administrator approval was cancelled (you must click "Yes" to install the driver)
+已开启「虚拟机平台」，请重启电脑后获得最佳性能	"Windows Hypervisor Platform" was enabled, restart your PC for best performance
+已是最新版本	You are on the latest version
+已有安装任务在进行	An installation is already running
+已有安装任务在进行，请等它装完。	Another installation is running, wait for it to finish.
+已经是最新版本	Already up to date
+应用不存在	App not found
+快捷方式已补齐	Shortcuts restored
+打开 ApkStart	Open ApkStart
+数据分区已调整	Data partition resized
+无法启动 PowerShell	Could not start PowerShell
+无法开启系统虚拟化功能	Could not enable system virtualization
+无法连接安卓运行时。	Cannot connect to the Android runtime.
+未启用硬件加速	Hardware acceleration not enabled
+未知设置项 ${key}	Unknown setting ${key}
+检查更新	Check for updates
+检测到上次残留的锁文件	Leftover lock file from a previous run detected
+正在从 GitHub 下载运行时…	Downloading the runtime from GitHub…
+正在准备 adb…	Preparing adb…
+正在准备 Android 系统镜像…	Preparing the Android system image…
+正在准备 Android 运行时…	Preparing the Android runtime…
+正在安装中	Installing
+正在打开应用…	Opening the app…
+正在更新中	Updating
+正在替换程序并重启…	Replacing the program and restarting…
+此操作不可撤销，建议先导出诊断报告。	This cannot be undone; exporting a diagnostic report first is recommended.
+清理 ${preview.candidates.length} 项	Clean ${preview.candidates.length} items
+点击托盘图标可重新打开；右键托盘可退出。	Click the tray icon to reopen it; right-click the tray icon to quit.
+目录不能为空	Folder cannot be empty
+硬件加速已可用，无需额外操作	Hardware acceleration is already available, nothing to do
+确定	OK
+确认	OK
+确认清理运行时缓存	Confirm runtime cache cleanup
+磁盘只剩 ${(freeMB / 1024).toFixed(1)} GB，安卓可能无法启动（设置 → 系统集成 可换盘）	Only ${(freeMB / 1024).toFixed(1)} GB left on disk, Android may fail to start (change the drive in Settings → System integration)
+磁盘空间不足	Not enough disk space
+稍后	Later
+立即更新	Update now
+系统镜像	System images
+系统镜像未就绪	System image not ready
+缺少 VC++ 运行库（x64）	VC++ runtime (x64) is missing
+虚拟磁盘	Virtual disks
+设置	Settings
+该版本没有可直接安装的包，已打开 GitHub 发布页	This release has no installable package, the GitHub release page was opened
+运行时已自动准备完成	The runtime was prepared automatically
+运行时引擎未安装	Runtime engine not installed
+运行时整包不完整，改用官方源补齐…	The runtime package is incomplete, filling it in from the official source…
+运行时目录含中文/特殊字符	Runtime folder contains non-ASCII characters
+运行时磁盘空间紧张	Runtime disk space is low
+还没有安装应用	No apps installed yet
+这个 APK 正在安装中，请稍等…	This APK is already installing, please wait…
+退出	Quit
+选择 Android-x86 / Bliss OS 系统镜像	Choose an Android-x86 / Bliss OS system image
+选择已安装 Android 的虚拟磁盘	Choose the virtual disk with Android installed
+选择数据存放目录	Choose a data folder
+选择要安装的 APK	Choose the APK to install
+部分运行时组件对中文路径敏感，可能引发启动失败。建议改到纯英文目录。	Some runtime components are sensitive to non-ASCII paths and may fail to start. Consider a plain ASCII folder.
+重建桌面/开始菜单快捷方式	Rebuild desktop/Start Menu shortcuts
+需要先下载 Android 系统镜像（约 1.5GB）。	The Android system image must be downloaded first (~1.5 GB).
+需要先部署运行时引擎（约 440MB）。	The runtime engine must be deployed first (~440 MB).
+驱动安装失败（退出码 ${code}）	Driver installation failed (exit code ${code})

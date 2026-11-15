@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' file: data:; style-src 'self' 'unsafe-inline'; script-src 'self'" />
+<title>ApkStart</title>
+<link rel="stylesheet" href="style.css" />
+<link rel="stylesheet" href="theme.css" />
+</head>
+<body>
+
+<!-- 品牌标记：Small尺寸下也要认得出来，所以用矢量而不是 1024 的位图缩到 22px -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <linearGradient id="brandGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#2ee6a6"/>
+      <stop offset="55%" stop-color="#12b886"/>
+      <stop offset="100%" stop-color="#0a6f47"/>
+    </linearGradient>
+  </defs>
+  <symbol id="brandMark" viewBox="0 0 48 48">
+    <rect x="1.5" y="1.5" width="45" height="45" rx="13.5" fill="url(#brandGrad)"/>
+    <rect x="1.5" y="1.5" width="45" height="45" rx="13.5" fill="none" stroke="rgba(255,255,255,.34)" stroke-width="1.4"/>
+    <path d="M18.5 14.5 35 24 18.5 33.5z" fill="#fff"/>
+  </symbol>
+</svg>
+
+<header class="titlebar">
+  <div class="brand">
+    <div class="logo" aria-hidden="true">
+      <svg viewBox="0 0 48 48" width="22" height="22"><use href="#brandMark"/></svg>
+    </div>
+    <span class="brand-name">ApkStart</span>
+    <span class="brand-tag" id="engineTag">Runtime not connected</span>
+  </div>
+  <div class="titlebar-spacer"></div>
+  <div class="titlebar-actions">
+    <button class="icon-btn" id="btnSettings" title="Settings">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06A1.7 1.7 0 0 0 15 19.4a1.7 1.7 0 0 0-1 1.55V21a2 2 0 1 1-4 0v-.09A1.7 1.7 0 0 0 9 19.4a1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-1.55-1H3a2 2 0 1 1 0-4h.09A1.7 1.7 0 0 0 4.6 9a1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.7 1.7 0 0 0 9 4.6h.09A1.7 1.7 0 0 0 10 3.05V3a2 2 0 1 1 4 0v.09A1.7 1.7 0 0 0 15 4.6a1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.7 1.7 0 0 0 19.4 9v.09a1.7 1.7 0 0 0 1.55 1H21a2 2 0 1 1 0 4h-.09a1.7 1.7 0 0 0-1.51 1z"/></svg>
+    </button>
+  </div>
+</header>
+
+<main class="shell">
+  <section class="toolbar">
+    <div class="search">
+      <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.9"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      <input id="search" type="text" placeholder="Search installed apps" autocomplete="off" />
+    </div>
+    <div class="toolbar-right">
+      <button class="btn primary" id="btnInstall">
+        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v10"/><path d="m7 12 5 5 5-5"/><path d="M5 20h14"/></svg>
+        Install APK
+      </button>
+    </div>
+  </section>
+
+  <section class="content" id="content">
+    <div class="grid" id="grid"></div>
+    <div class="empty" id="empty">
+      <div class="empty-art">
+        <svg viewBox="0 0 160 120" width="220">
+          <rect x="18" y="16" width="124" height="50" rx="10" fill="#eef1f4" stroke="#dde2e8"/>
+          <rect x="34" y="34" width="30" height="14" rx="4" fill="#cfd8e3"/>
+          <rect x="72" y="34" width="52" height="6" rx="3" fill="#dde5ee"/>
+          <rect x="72" y="44" width="36" height="6" rx="3" fill="#e6ecf3"/>
+          <path d="M80 76v22m0 0-9-9m9 9 9-9" stroke="#9fb0c2" stroke-width="3" fill="none" stroke-linecap="round"/>
+          <rect x="40" y="100" width="80" height="8" rx="4" fill="#eef1f4"/>
+        </svg>
+      </div>
+      <h2>Drop an APK here to install</h2>
+      <p>Installs finish with a desktop icon; double-click it to run the app in its own window, just like a Windows program.<br/>With the .apk association enabled, double-clicking an APK in Explorer also installs it in ApkStart.</p>
+      <button class="btn primary lg" id="btnInstall2">Choose APK file</button>
+      <p class="hint" id="emptyHint"></p>
+    </div>
+  </section>
+
+  <footer class="statusbar">
+    <div class="status-left">
+      <span class="dot" id="statusDot"></span>
+      <span id="statusText">Checking the runtime…</span>
+      <button class="status-chip" id="envChip" hidden></button>
+    </div>
+    <div class="status-right">
+      <span class="status-item" id="statusDevice"></span>
+      <span class="sep"></span>
+      <span class="status-item" id="statusStats"></span>
+      <span class="sep"></span>
+      <a class="status-item powered-link" href="https://github.com/RoutineMiku/apkstart" target="_blank" rel="noopener">Powered by RoutineMiku</a>
+    </div>
+  </footer>
+</main>
+
+<!-- 启动欢迎卡：替代原来散落的各种启动Small提示 -->
+<div class="modal-mask welcome-mask" id="welcomeMask" hidden>
+  <div class="welcome" role="dialog" aria-modal="true" aria-labelledby="welcomeHi">
+    <div class="welcome-hero">
+      <div class="welcome-halo"></div>
+      <div class="welcome-badge"><svg viewBox="0 0 48 48" width="44" height="44" aria-hidden="true"><use href="#brandMark"/></svg></div>
+      <div class="welcome-hi" id="welcomeHi">Hello</div>
+      <div class="welcome-sub" id="welcomeSub">ApkStart is ready</div>
+    </div>
+    <div class="welcome-body">
+      <div class="welcome-stats" id="welcomeStats"></div>
+      <div class="welcome-tips" id="welcomeTips"></div>
+      <label class="welcome-opt">
+        <input type="checkbox" id="welcomeNever" />
+        <span>Don’t show this again</span>
+      </label>
+    </div>
+    <div class="welcome-actions">
+      <button class="btn ghost" id="welcomeSettings">Open settings</button>
+      <button class="btn primary" id="welcomeOk">Get started</button>
+    </div>
+  </div>
+</div>
+
+<!-- 安装进度 -->
+<div class="toast-wrap" id="toastWrap"></div>
+
+<!-- 拖放遮罩 -->
+<div class="dropzone" id="dropzone">
+  <div class="dropzone-inner">
+    <svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 16V4"/><path d="m7 9 5-5 5 5"/><path d="M5 20h14"/></svg>
+    <strong>Release to start installing</strong>
+    <span>One or more .apk files supported</span>
+  </div>
+</div>
+
+<!-- 右键菜单 -->
+<div class="ctxmenu" id="ctxmenu"></div>
+
+<!-- Settings -->
+<div class="modal-mask" id="settingsMask">
+  <div class="modal">
+    <header class="modal-head">
+      <h2>Settings</h2>
+      <button class="icon-btn" id="btnCloseSettings">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6 6 18"/></svg>
+      </button>
+    </header>
+    <div class="modal-body">
+      <div class="group" id="runtimeGroup">
+        <div class="group-title">Runtime & environment</div>
+        <div class="field">
+          <label>Status</label>
+          <div class="row" style="align-items:center;">
+            <span class="inline-note" id="setupStateText">Checking…</span>
+            <span style="flex:1"></span>
+            <button class="btn primary sm" id="btnDeployAll">One-click setup</button>
+            <button class="btn ghost sm" id="btnSetupAdvanced">Advanced: connect to an existing runtime</button>
+          </div>
+          <span class="sub" id="setupNote">Fully automatic: no image to pick, no acceleration to enable, no memory to tune</span>
+        </div>
+        <div class="field">
+          <div class="steps" id="setupSteps"></div>
+        </div>
+        <div id="envCheck" class="env-check" hidden></div>
+
+        <div class="setup-guide" id="setupGuide" hidden>
+          <h2>Install Android to a virtual disk</h2>
+          <p class="guide-sub">The VM window is open. Do these 6 steps once; after that ApkStart boots straight from the disk and needs no image.</p>
+          <ol class="guide-list">
+            <li><b>Boot menu</b>: use <kbd>↓</kbd> to select <code>Installation - Install Android-x86 to harddisk</code>, then Enter</li>
+            <li><b>Choose Partition</b>: choose <code>Create/Modify partitions</code>; when asked about GPT, choose <code>No</code></li>
+            <li><b>cfdisk partitioning</b>：<code>New</code> → <code>Primary</code> → press Enter for the size <code>Bootable</code> → <code>Write</code> → type <code>yes</code> → <code>Quit</code></li>
+            <li><b>Format</b>: choose <code>vda1</code> → when asked to format, choose <code>ext4</code> → <code>Yes</code></li>
+            <li><b>Bootloader & system</b>：<code>Install GRUB</code> choose <code>Yes</code>；<code>Install /system as read-write</code> choose <code>Yes</code></li>
+            <li><b>Finish</b>: when it reaches 100% click “I’ve finished installing” below (ApkStart restarts and takes over)</li>
+          </ol>
+          <p class="guide-tip">If adb later reports as disconnected: in the VM window press <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>F1</kbd> to open a terminal, run
+            <code>setprop service.adb.tcp.port 5555</code>、<code>stop adbd</code>、<code>start adbd</code>,
+            then press <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>F7</kbd> to return to the graphical UI.</p>
+          <div class="guide-foot">
+            <button class="btn primary" id="btnMarkInstalled">I’ve finished installing</button>
+            <button class="btn ghost" id="btnGuideClose">Later</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="group">
+        <div class="group-title">Automatic (default, nothing to configure)</div>
+        <div class="field">
+          <label>Auto-tuned for this PC</label>
+          <div class="inline-note" id="autoProfileText">Detecting…</div>
+          <span class="sub">Memory, cores, render backend, port and acceleration are all chosen automatically; failed starts fall back and retry, no manual tweaks needed.</span>
+        </div>
+        <div class="field">
+          <label>Total disk usage (runtime + Android data + cache)</label>
+          <div class="row">
+            <span class="inline-note" id="usageText">Calculating…</span>
+            <button class="btn ghost sm" id="btnCleanup">Clean reclaimable files</button>
+            <button class="btn ghost sm" id="btnLeftovers" title="Scan and remove program folders, stale uninstall entries and update temp files left by older versions">Clean old version leftovers</button>
+            <button class="btn ghost sm" id="btnRepairNetwork" title="When the Android VM has no network (online pages stay black or spinning), this resets the Android data to fix networking. The app list is kept and apps reinstall when opened">Repair network</button>
+            <button class="btn ghost sm danger" id="btnResetData" title="Wipes Android /data, installed apps and the quick-boot snapshot, restoring a freshly installed state">Reset Android data</button>
+          </div>
+          <label class="checkbox-inline">
+            <input type="checkbox" id="chkCleanSnapshots" />
+            <span>Also clear the current AVD’s quick-boot snapshot (stops the runtime first; really reclaims the multi-GB snapshot)</span>
+          </label>
+          <span class="sub">One system image is shared machine-wide; app data lives in a differential layer. Old images, snapshots, logs and lock files can all be reclaimed. Logs roll over at the size limit and never grow without bound. “Reset Android data” really deletes gigabytes of user data and keeps only the system itself.</span>
+        </div>
+        <div class="runtime-actions">
+          <button class="btn ghost sm" id="btnDiagnostics">Export diagnostic report</button>
+          <button class="btn ghost sm" id="btnRebuildShortcuts">Rebuild shortcuts</button>
+          <span class="inline-note">Reports help with troubleshooting; rebuilding restores desktop + Start Menu entries</span>
+        </div>
+        <div class="field switch-field">
+          <div>
+            <label>Start with Windows (on by default)</label>
+            <span class="sub">Lives in the tray after Windows sign-in; desktop icons open apps instantly, no manual start needed.</span>
+          </div>
+          <input type="checkbox" id="setAutoStart" class="switch" />
+        </div>
+      </div>
+
+      <div class="group">
+        <div class="group-title">App windows</div>
+        <div class="field">
+          <label>Display mode</label>
+          <select id="setDisplayMode">
+            <option value="window">Portrait window (freely resizable, size remembered per app)</option>
+            <option value="fullscreen">Fullscreen (fills the screen, keeps the phone aspect ratio with black bars)</option>
+          </select>
+          <span class="sub">Press <b>F11</b> at any time, or right-click the tray icon to switch; fullscreen only enlarges the window, keeps the aspect ratio and does not restart the app.</span>
+        </div>
+        <div class="field" id="portraitField">
+          <label>Portrait screen size</label>
+          <select id="setPortrait">
+            <option value="720x1280">Small · 720 × 1280</option>
+            <option value="900x1600">Medium · 900 × 1600</option>
+            <option value="1080x1920">Large · 1080 × 1920</option>
+            <option value="1440x2560">Extra large · 1440 × 2560</option>
+          </select>
+          <span class="sub">In window mode drag the border to resize freely; this sets Android’s internal render size, smaller is cheaper.</span>
+        </div>
+      </div>
+
+      <div class="group">
+        <div class="group-title">Mouse buttons</div>
+        <div class="field">
+          <label>Left · confirm / tap</label>
+          <span class="sub">The emulator treats the left button as a finger tap natively; press and drag to swipe, nothing to configure.</span>
+        </div>
+        <div class="field switch-field">
+          <div>
+            <label>Right · Android back</label>
+            <span class="sub">By default the right button also counts as a tap (easy to trigger by accident). When enabled, the right button only goes back and never taps.</span>
+          </div>
+          <input type="checkbox" id="setMouseRightBack" class="switch" />
+        </div>
+        <div class="field">
+          <label>Wheel · scroll</label>
+          <select id="setMouseWheelMode">
+            <option value="smooth">Smooth (recommended) · merges several wheel ticks into one smooth swipe</option>
+            <option value="native">Native · let the emulator handle each tick</option>
+            <option value="off">Off · don’t intercept the wheel</option>
+          </select>
+          <span class="sub">Smooth mode merges wheel ticks within a short window into one swipe gesture, so it doesn’t stutter and doesn’t spawn an adb process per tick.</span>
+        </div>
+        <div class="field switch-field">
+          <div>
+            <label>Side buttons · back / forward (off by default)</label>
+            <span class="sub">Side-button mapping needs a global mouse hook. The hook is installed only while an ApkStart app window is focused and removed on blur or close, so it never slows the desktop.</span>
+          </div>
+          <input type="checkbox" id="setMouseSideButtons" class="switch" />
+        </div>
+        <div class="field">
+          <span class="sub">These mappings only apply while an app window is focused; back on the desktop or after closing the window, mouse behaviour is fully native Windows.</span>
+        </div>
+      </div>
+
+      <div class="group" id="perfGroup">
+        <div class="group-title">Performance & resources</div>
+        <div class="field">
+          <label>Resource profile</label>
+          <select id="setResourceMode">
+            <option value="save">Eco · 2 cores / yields to foreground / 540p (old PCs, idle running)</option>
+            <option value="balanced">Balanced · half the physical cores / yields to foreground / 720p (recommended)</option>
+            <option value="smooth">Smooth · all cores / same priority as foreground (video, games)</option>
+          </select>
+          <span class="sub">Decides how much CPU and detail the Android VM gets. Switch to “Smooth” when video apps stutter, use “Eco” for small apps left running. Applies the next time you open an app.</span>
+        </div>
+        <div class="field two">
+          <div>
+            <label>Quality (Android internal render resolution)</label>
+            <select id="setRenderSize">
+              <option value="auto">Auto (based on acceleration)</option>
+              <option value="540x960">Smooth · 540 × 960</option>
+              <option value="720x1280">Balanced · 720 × 1280</option>
+              <option value="1080x1920">HD · 1080 × 1920</option>
+            </select>
+          </div>
+          <div>
+            <label>Android data partition (apps and games live here)</label>
+            <select id="setDataGB">
+              <option value="0">Automatic</option>
+              <option value="4">4 GB</option>
+              <option value="6">6 GB</option>
+              <option value="8">8 GB</option>
+              <option value="12">12 GB</option>
+              <option value="16">16 GB</option>
+              <option value="24">24 GB</option>
+            </select>
+          </div>
+        </div>
+        <div class="field">
+          <div class="row">
+            <button class="btn ghost sm" id="btnGrowData">Expand now</button>
+            <span class="sub" style="flex:1;margin:0">Expansion is done in place: installed apps and saves are kept, the next app launch just takes ~10s longer.</span>
+          </div>
+        </div>
+        <div class="field">
+          <span class="sub" id="dataNote">Reading the data partition…</span>
+        </div>
+        <div class="field switch-field">
+          <div>
+            <label>Network boost (recommended)</label>
+            <span class="sub">Points Android at public CN DNS servers (Alibaba / Tencent). By default Android uses the host’s DNS; with a VPN or corporate network, lookups can take hundreds of ms and video apps start slowly. Turn off if internal domains misbehave.</span>
+          </div>
+          <input type="checkbox" id="setFastDns" class="switch" />
+        </div>
+        <div class="field switch-field">
+          <div>
+            <label>Android audio</label>
+            <span class="sub">Plays notification and video sound. Turn off only if you never need audio and want to save a little CPU.</span>
+          </div>
+          <input type="checkbox" id="setAudio" class="switch" />
+        </div>
+        <div class="field switch-field">
+          <div>
+            <label>Keep quick-boot snapshot (recommended)</label>
+            <span class="sub">The second launch takes seconds, at the cost of an extra 2-3 GB on disk <code>ram.bin</code>. Turn it off when disk is tight: it only affects launch speed, not apps or saves.</span>
+          </div>
+          <input type="checkbox" id="setKeepSnapshot" class="switch" />
+        </div>
+        <details class="mini-details">
+          <summary>Container details (advanced)</summary>
+          <div class="field switch-field">
+            <div>
+              <label>Lightweight container</label>
+              <span class="sub">Caps the vCPU quota and lowers process priority so the Windows desktop gets CPU first. The “Resource profile” above already sets this.</span>
+            </div>
+            <input type="checkbox" id="setLiteMode" class="switch" />
+          </div>
+          <div class="field">
+            <label>VM priority</label>
+            <select id="setPriorityMode">
+              <option value="balanced">Balanced (recommended) · the runtime yields to foreground windows</option>
+              <option value="performance">Performance · same priority as foreground</option>
+              <option value="game">Game / low latency · high runtime priority, for FPS and rhythm games</option>
+            </select>
+            <span class="sub">Game mode keeps the Android VM at a higher CPU priority and reduces host-side polling, minimising input and frame latency; other programs on the machine get slower. The container still drops priority when no app window is open.</span>
+          </div>
+        </details>
+        <div class="field switch-field">
+          <div>
+            <label>Deep-trim system background</label>
+            <span class="sub">Also disables Play Store, setup wizard, print service and other background packages, keeping only what apps need. Turn it off and they are restored automatically if an app complains about missing Google Play services.</span>
+          </div>
+          <input type="checkbox" id="setDeepTrim" class="switch" />
+        </div>
+        <div class="field switch-field">
+          <div>
+            <label>Prewarm on startup (recommended)</label>
+            <span class="sub">ApkStart boots the Android environment in the background right after launch (the window stays hidden, you never see the emulator). Opening any app then costs one “open” — measured from 20+ seconds down to almost nothing. Costs ~1 GB of RAM while idle; with it off, the first app launch is a cold boot.</span>
+          </div>
+          <input type="checkbox" id="setPrewarm" class="switch" />
+        </div>
+        <div class="field">
+          <span class="sub">Android boots once and stays resident; opening an app no longer re-runs the system, it just starts that app and stops the others. Closing the last window frees background processes and parks the container, and the next launch is still instant.</span>
+        </div>
+      </div>
+
+      <div class="group" id="downloadGroup">
+        <div class="group-title">Download & update sources</div>
+        <div class="field">
+          <label>Update & download sources</label>
+          <select id="setSourcePref">
+            <option value="auto">Pick the faster source automatically (recommended)</option>
+            <option value="gitee">Gitee only (usually fastest in China)</option>
+            <option value="github">GitHub only</option>
+          </select>
+          <span class="sub">“Auto” asks both GitHub and Gitee for the latest version, benchmarks every download URL with a real 256 KB probe, then downloads from the fastest one; one source being unreachable doesn’t break updates.</span>
+        </div>
+        <div class="field switch-field">
+          <div>
+            <label>Try public acceleration mirrors automatically</label>
+            <span class="sub">When direct GitHub is too slow, also benchmark the public ghfast.top / gh-proxy.com proxies (they only forward public release files, no accounts). Off means direct connections plus your own prefix only.</span>
+          </div>
+          <input type="checkbox" id="setAutoMirror" class="switch" />
+        </div>
+        <div class="field">
+          <label>Download mirror prefix (optional, speeds up GitHub)</label>
+          <input id="setMirrorPrefix" type="text" placeholder="e.g. https://ghfast.top/" />
+          <span class="sub">When set, only your prefix is used and the two public mirrors above are skipped; leave empty to let “Auto” decide. The downloader prepends it to the real URL.</span>
+        </div>
+        <div class="field">
+          <label>Download threads (1-16, default 8)</label>
+          <input id="setConnections" type="number" min="1" max="16" step="1" />
+          <span class="sub">Large files download in parallel chunks. 8 threads already saturate most home connections; try 16 on a stable line.</span>
+        </div>
+        <details class="mini-details">
+          <summary>Gitee update source (optional)</summary>
+          <div class="field">
+            <label>Gitee read-only token (usually not needed)</label>
+            <input id="setGiteeToken" type="password" placeholder="Leave empty: public repos can be read anonymously" />
+            <span class="sub">This repo is public and Gitee’s release list can be read anonymously, so leaving it empty still uses the Gitee source. Fill it only if Gitee rate-limits you (403/429) or you want a private fork: gitee.com → Settings → Private token, tick only “projects” — it is used to read the release list and never uploads anything.</span>
+          </div>
+        </details>
+      </div>
+
+      <details class="advanced-group">
+        <summary>Advanced settings (usually no changes needed)</summary>
+      <div class="group">
+        <div class="group-title">Runtime</div>
+        <div class="field">
+          <label>Engine mode</label>
+          <select id="setEngineMode">
+            <option value="builtin">Built-in runtime (recommended, QEMU + Android-x86, no third-party dependencies)</option>
+            <option value="attach">Connect to an existing runtime (advanced: reuse WSA / another emulator’s adb port)</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>adb path</label>
+          <input id="setAdbPath" type="text" placeholder="Leave empty to look in PATH / Android SDK" />
+        </div>
+        <div class="field">
+          <label>Device address</label>
+          <div class="row">
+            <input id="setDevice" type="text" placeholder="127.0.0.1:58526" />
+            <button class="btn ghost sm" id="btnProbe">Probe</button>
+          </div>
+        </div>
+        <div class="field">
+          <label>System image (ISO)</label>
+          <input id="setSystemImage" type="text" placeholder="Path to the Android-x86 / Bliss OS ISO or IMG; empty uses the default location" />
+        </div>
+        <div class="field two">
+          <div>
+            <label>Memory (MB, 0 = auto)</label>
+            <input id="setMemory" type="number" min="0" step="512" />
+          </div>
+          <div>
+            <label>CPU cores (0 = auto)</label>
+            <input id="setCores" type="number" min="0" max="16" />
+          </div>
+        </div>
+        <div class="field">
+          <label>Idle reclaim (minutes, 0 = never)</label>
+          <input id="setIdle" type="number" min="0" step="1" />
+        </div>
+        <div class="field switch-field">
+          <div>
+            <label>Universal compatible image (managed automatically)</label>
+            <span class="sub">There is now a single universal Android 14 image that runs both x86 and ARM apps; it downloads automatically the first time an ARM app shows up, no manual switching. This switch only exists for old configurations.</span>
+          </div>
+          <input type="checkbox" id="setCompat" class="switch" />
+        </div>
+        <div class="field" id="compatInstallField" hidden>
+          <label>Compatible image</label>
+          <div class="row">
+            <span class="inline-note" id="compatImgStatus">not downloaded</span>
+            <button class="btn ghost sm" id="btnInstallPlay">Download compatible image</button>
+          </div>
+        </div>
+        <div class="runtime-actions">
+          <button class="btn ghost sm" id="btnRuntimeStart">Start runtime</button>
+          <button class="btn ghost sm" id="btnRuntimeStop">Stop built-in VM</button>
+          <span class="inline-note" id="probeResult"></span>
+        </div>
+      </div>
+      </details>
+
+      <div class="group">
+        <div class="group-title">Android system settings (without entering the Android desktop)</div>
+        <div class="field">
+          <label>Status</label>
+          <div class="row">
+            <span class="inline-note" id="androidStatus">Runtime not started</span>
+            <button class="btn ghost sm" id="btnAndroidRefresh">Refresh</button>
+            <button class="btn ghost sm" id="btnAndroidTune">One-click smoothness tune</button>
+          </div>
+          <span class="sub">Turns off system animations, raises the background process limit and whitelists the app for battery — the biggest win on low-end PCs.</span>
+        </div>
+        <div class="field switch-field">
+          <div>
+            <label>Wi-Fi</label>
+            <span class="sub">The Android VM’s wireless network; turning it off saves a little CPU.</span>
+          </div>
+          <input type="checkbox" id="setAndroidWifi" class="switch" />
+        </div>
+        <div class="field switch-field">
+          <div>
+            <label>Airplane mode</label>
+            <span class="sub">Cuts all networking (mobile data included); turn it on when you want quiet.</span>
+          </div>
+          <input type="checkbox" id="setAndroidAirplane" class="switch" />
+        </div>
+        <div class="field switch-field">
+          <div>
+            <label>System animations</label>
+            <span class="sub">Off makes UI transitions noticeably faster with no functional loss.</span>
+          </div>
+          <input type="checkbox" id="setAndroidAnim" class="switch" />
+        </div>
+        <div class="field">
+          <label>Media volume</label>
+          <div class="row">
+            <input type="range" id="setAndroidVolume" min="0" max="100" step="1" style="flex:1" />
+            <span class="inline-note" id="androidVolumeText">—</span>
+          </div>
+        </div>
+        <div class="field two">
+          <div>
+            <label>Font size</label>
+            <select id="setAndroidFont">
+              <option value="0.85">Small</option>
+              <option value="1.00">Standard</option>
+              <option value="1.15">Large</option>
+              <option value="1.30">Extra large</option>
+            </select>
+          </div>
+          <div>
+            <label>Display size</label>
+            <select id="setAndroidDensity">
+              <option value="240">Compact (cheaper)</option>
+              <option value="320">Standard</option>
+              <option value="420">Roomy</option>
+              <option value="480">Extra large</option>
+            </select>
+          </div>
+        </div>
+        <div class="runtime-actions">
+          <button class="btn ghost sm" id="btnAndroidSettings">Native Android settings</button>
+          <button class="btn ghost sm" id="btnAndroidDisplay">Display settings</button>
+          <button class="btn ghost sm" id="btnAndroidSound">Sound settings</button>
+          <button class="btn ghost sm" id="btnAndroidLocale">Language settings</button>
+          <button class="btn ghost sm" id="btnAndroidApps">App management</button>
+        </div>
+      </div>
+
+      <div class="group">
+        <div class="group-title">Desktop & apps</div>
+        <div class="field switch-field">
+          <div>
+            <label>Create a desktop shortcut after install</label>
+            <span class="sub">Shortcuts carry the real app icon; double-click to open the app</span>
+          </div>
+          <input type="checkbox" id="setAutoShortcut" class="switch" />
+        </div>
+        <div class="field switch-field">
+          <div>
+            <label>Also add to the Start Menu</label>
+            <span class="sub">Windows Search finds the app name and the taskbar groups by app</span>
+          </div>
+          <input type="checkbox" id="setStartMenuShortcut" class="switch" />
+        </div>
+        <div class="field">
+          <label>Shortcut folder</label>
+          <input id="setShortcutDir" type="text" placeholder="Empty = desktop" />
+        </div>
+        <div class="runtime-actions">
+          <button class="btn ghost sm" id="btnRebuildShortcuts">Rebuild shortcuts</button>
+          <span class="inline-note">If desktop icons were deleted or blocked by security software, click here to restore them all from the current settings.</span>
+        </div>
+      </div>
+
+      <div class="group">
+        <div class="group-title">File sharing</div>
+        <div class="field">
+          <label>Host shared folder</label>
+          <div class="row">
+            <input id="setSharedDir" type="text" />
+            <button class="btn ghost sm" id="btnBrowseShared">Browse</button>
+            <button class="btn ghost sm" id="btnOpenShared">Open</button>
+            <button class="btn ghost sm" id="btnSyncShared">Sync now</button>
+            <button class="btn primary sm" id="btnSaveShared">Save & migrate</button>
+          </div>
+          <span class="sub">Existing files in the old folder are moved to the new one; running file sharing is unaffected.</span>
+        </div>
+        <div class="field">
+          <label>Matching folder in Android</label>
+          <input id="setDeviceSharedDir" type="text" placeholder="/sdcard/ApkStartShared" />
+        </div>
+        <p class="note">The two folders sync both ways continuously; files an Android app saves there appear in the host shared folder.</p>
+      </div>
+
+      <div class="group">
+        <div class="group-title">System integration</div>
+        <div class="field switch-field">
+          <div>
+            <label>Associate .apk files</label>
+            <span class="sub">Double-clicking an APK installs it in ApkStart (current user only, no admin needed)</span>
+          </div>
+          <button class="btn ghost sm" id="btnAssoc">Checking…</button>
+        </div>
+        <div class="field">
+          <label>Runtime data folder (system image · installed apps · snapshots)</label>
+          <div class="row">
+            <input id="setRuntimeDir" type="text" readonly placeholder="Default: user data folder on C:" />
+            <button class="btn ghost sm" id="btnBrowseRuntimeDir">Browse</button>
+            <button class="btn ghost sm" id="btnOpenData">Open</button>
+          </div>
+          <span class="sub">This takes the most space (several GB). Moving it off the system drive relieves C:; restart the app after changing it — existing data is not moved automatically (copy it manually, then delete the old folder).</span>
+        </div>
+        <div class="field">
+          <label>Android data folder (apps, games and quick-boot snapshots)</label>
+          <div class="row">
+            <input id="setAvdDir" type="text" readonly placeholder="Default: the avd folder inside the runtime folder" />
+            <button class="btn ghost sm" id="btnBrowseAvdDir">Browse</button>
+            <button class="btn ghost sm" id="btnOpenAvdDir">Open</button>
+          </div>
+          <span class="sub">This is what really uses disk: the data partition (6 GB by default, enlarge it above) + the quick-boot snapshot (~2-3 GB). Point it at another drive (e.g. D:) when disk is tight; it applies after a restart. The old folder’s <code>apkstart.avd</code> can be moved over as a whole and then deleted.</span>
+        </div>
+        <div class="field">
+          <label>Uninstall ApkStart</label>
+          <div class="row">
+            <button class="btn ghost sm" id="btnUninstall">One-click uninstall</button>
+            <span class="inline-note">Uninstalling removes the .apk association and the program; the portable build asks you to delete the folder manually.</span>
+          </div>
+        </div>
+      </div>
+      <div class="group" id="updateGroup">
+        <div class="group-title">Software update</div>
+        <div class="field">
+          <label>Current version <span class="inline-note" id="updateCurrent">—</span></label>
+          <div class="row">
+            <span class="inline-note" id="updateState">Not checked yet</span>
+            <span style="flex:1"></span>
+            <button class="btn ghost sm" id="btnCheckUpdate">Check for updates</button>
+            <button class="btn primary sm" id="btnDoUpdate" style="display:none" hidden>Update now</button>
+          </div>
+          <div class="update-bar" id="updateBar" hidden><i id="updateBarFill"></i></div>
+          <span class="sub" id="updateNote">
+            Fetches the latest version from GitHub (RoutineMiku/apkstart); the lightweight build downloads the portable package and replaces program files automatically, leaving the runtime, installed apps and snapshots untouched.
+          </span>
+        </div>
+      </div>
+
+      <div class="group" id="aboutGroup">
+        <div class="group-title">About</div>
+        <div class="about-box">
+          <div class="about-brand">
+            <img class="about-logo" src="assets/logo.png" alt="ApkStart Logo" draggable="false" />
+          </div>
+          <div class="about-qrs">
+            <div class="about-qr">
+              <img src="assets/wechat-qr.jpg" alt="WeChat account QR code" width="112" height="112" />
+              <span class="about-qr-tip">Scan to follow the WeChat account</span>
+            </div>
+            <div class="about-qr">
+              <img src="assets/douyin-qr.jpg" alt="Douyin QR code" width="112" height="112" />
+              <span class="about-qr-tip">Douyin · Daily MIKU</span>
+            </div>
+          </div>
+          <div class="about-info">
+            <div class="about-name">ApkStart <span class="about-ver" id="aboutVer"></span></div>
+            <p class="note">A double-click Android app launcher for Windows: APK install, desktop shortcuts, separate windows, two-way file sharing.</p>
+            <div class="about-links">
+              <a href="https://github.com/RoutineMiku/apkstart" target="_blank" rel="noopener">GitHub · RoutineMiku/apkstart</a>
+              <a href="https://v.douyin.com/9TIIxVCANig/" target="_blank" rel="noopener">Douyin · @DailyMIKU (contact the author)</a>
+              <span class="powered">Powered by <b>RoutineMiku</b></span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <footer class="modal-foot">
+      <span class="inline-note">Settings apply immediately</span>
+      <button class="btn primary" id="btnDoneSettings">Finish</button>
+    </footer>
+  </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>

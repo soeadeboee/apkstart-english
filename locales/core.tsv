@@ -1,0 +1,382 @@
+ · 剩余约 ${Math.ceil(pr.eta / 60)} 分钟	 · about ${Math.ceil(pr.eta / 60)} min left
+ · 轻量容器	 · lightweight container
+，可再次点击继续断点续传	, click again to resume
+，已停掉 ${plan.stopped.length} 个后台应用	, stopped ${plan.stopped.length} background apps
+（可稍后重试，或在设置里填只读 token 提高额度）	(retry later, or fill in a read-only token in Settings for a higher quota)
+（第 ${part.index}/${asset.parts.length} 片）${sp}	(part ${part.index}/${asset.parts.length})${sp}
+（被限流，已暂停使用该源一段时间）	(rate limited, this source is paused for a while)
+（进程未存活）	(process is not alive)
+== 本机 ==	== Host ==
+== 自动配置 ==	== Auto configuration ==
+== 诊断 ==	== Diagnosis ==
+== 运行时日志（末尾 300 行）==	== Runtime log (last 300 lines) ==
+== 附加信息 ==	== Additional info ==
+⚠ 安卓虚拟机当前没有网络：需要联网的应用（如红果、短剧类）打开后会一直黑屏。	Warning: the Android VM has no network right now, so apps that need the internet (video and short-drama apps) will stay on a black screen.
+${app.label} — 由 ApkStart 运行	${app.label} — run by ApkStart
+${app.label} 安装完成	${app.label} installed
+${d.title}，自动换一组参数重试…	${d.title}, retrying with another parameter set…
+${gpu} / ${profile.accel === 'auto' ? '硬件加速' : '软件模拟'}	${gpu} / ${profile.accel === 'auto' ? 'hardware acceleration' : 'software emulation'}
+${lastError}，自动换一组参数重试…	${lastError}, retrying with another parameter set…
+${out}\n（应用仍在加载中）	${out}\n(the app is still loading)
+${p.accelOk ? '硬件加速' : '软件模拟'} · ${p.snapshot ? '按需快照' : '冷启动'}	${p.accelOk ? 'hardware acceleration' : 'software emulation'} · ${p.snapshot ? 'snapshot on demand' : 'cold boot'}
+${p.lite ? ' · 轻量容器' : ''} · 端口 ${p.port}	${p.lite ? ' · lightweight container' : ''} · port ${p.port}
+${pkg || '应用'} 启动即崩溃（应用内部异常，可能与模拟器环境或缺少 Google 服务有关）。	${pkg || 'App'} crashes on launch (an internal app error, possibly the emulator environment or missing Google services).
+${pkg || '应用'} 启动后崩溃：ARM 翻译层与该应用的信号处理不兼容。	${pkg || 'App'} crashed after launch: the ARM translator is incompatible with the app's signal handling.
+${pkg || '应用'} 启动后崩溃：缺少设备原生库（应用可能只提供 ARM 版本）。	${pkg || 'App'} crashed after launch: missing native device libraries (the app may only ship ARM builds).
+${pkg || '应用'} 启动失败：系统拒绝了启动请求（权限或签名问题）。	${pkg || 'App'} failed to start: the system rejected the request (permissions or signature).
+${pkg || '应用'} 未能启动${t ? `：${t.slice(0, 240)}` : '（进程未存活）'}	${pkg || 'App'} did not start${t ? `: ${t.slice(0, 240)}` : ' (process is not alive)'}
+${x.name || x.source}: ${x.error || '无数据'}	${x.name || x.source}: ${x.error || 'no data'}
+${x.name} 不可达	${x.name} unreachable
+0xC0000005 访问冲突，渲染后端崩溃	0xC0000005 access violation, render backend crashed
+0xC0000022 拒绝访问（驱动或权限问题）	0xC0000022 access denied (driver or permission issue)
+0xC000007B 镜像位数不匹配或 DLL 损坏	0xC000007B architecture mismatch or corrupt DLL
+0xC00000FD 栈溢出	0xC00000FD stack overflow
+0xC0000135 缺少 DLL（VC++ 运行库 / 运行时组件被杀毒删除）	0xC0000135 missing DLL (VC++ runtime / runtime components removed by antivirus)
+adb ${finalArgs.join(' ')} 失败: ${text}	adb ${finalArgs.join(' ')} failed: ${text}
+adb ${v.version} 就绪	adb ${v.version} ready
+adb shell 启动失败	failed to start adb shell
+adb shell 已退出	adb shell exited
+adb 安装包下载不完整	the adb package download is incomplete
+adb 解压后无法运行，请检查是否被杀毒软件拦截	adb does not run after extraction; check whether antivirus blocked it
+adb 连接异常，重启 adb server 后继续等待…	adb connection broke; restarted the adb server and still waiting…
+AEHD 硬件加速已启用	AEHD hardware acceleration enabled
+AEHD 硬件加速已启用（emulator-check 缺失，按驱动判定）	AEHD hardware acceleration enabled (emulator-check missing, inferred from the driver)
+AEHD 驱动包解压异常	error extracting the AEHD driver package
+AEHD 驱动已就绪，需管理员权限安装	AEHD driver ready; installing it needs administrator rights
+Android ${PLAY_SYSIMG.api}（ARM 兼容镜像）	Android ${PLAY_SYSIMG.api} (ARM compatible image)
+Android 内核已启动，等待系统服务就绪…（${Math.round((Date.now() - start) / 1000)}s）	Android kernel started, waiting for system services… (${Math.round((Date.now() - start) / 1000)}s)
+Android 内核未完成引导，请查看运行时日志（可能镜像损坏或加速未生效）	the Android kernel did not finish booting; check the runtime log (corrupt image or inactive acceleration)
+Android 已就绪（${Math.round((Date.now() - start) / 1000)}s）	Android ready (${Math.round((Date.now() - start) / 1000)}s)
+Android 已引导但系统服务未就绪（可能停在首次开机设置界面，请在虚拟机窗口里完成向导）	Android booted but system services are not ready (it may be sitting on the first-boot wizard; finish it in the VM window)
+Android 应用包	Android app package
+APK 不存在: ${apkPath}	APK not found: ${apkPath}
+APK 安装包缓存	APK cache
+APK 清单为空	empty APK manifest
+ApkStart 会自动切换到 Android 14 兼容镜像后重试。	ApkStart switches to the Android 14 compatible image and retries.
+ApkStart 会自动清掉残留锁并重试；若反复出现，请检查是否有别的模拟器正在用同一套运行时。	ApkStart clears the stale locks and retries; if this keeps happening, check whether another emulator uses the same runtime.
+ApkStart 会自动用官方绕过参数重试。	ApkStart retries automatically with the official override flag.
+ApkStart 诊断报告	ApkStart diagnostic report
+ARM 兼容镜像就绪，重新启动运行时即可生效	ARM compatible image ready; restart the runtime to apply
+AVD 可写层 / 快照	AVD writable layer / snapshot
+CPU 缺少运行时要求的指令集	the CPU lacks an instruction set the runtime requires
+emulator 引擎	emulator engine
+emulator 解压后无法运行，请检查是否被杀毒软件拦截	the emulator does not run after extraction; check whether antivirus blocked it
+Google Play (ARM 兼容)	Google Play (ARM compatible)
+input 命令超时	input command timed out
+MEmu 逍遥	MEmu
+monitor 超时	monitor timed out
+MuMu 模拟器	MuMu emulator
+Nox 夜神	Nox
+QEMU ${v.version} 就绪	QEMU ${v.version} ready
+QEMU 启动失败，详见日志：${logFile}	QEMU failed to start, see the log: ${logFile}
+QEMU 安装包下载不完整	the QEMU package download is incomplete
+QEMU 安装后未找到 qemu-system-x86_64.exe：可手动下载 QEMU 并解压到 engine/qemu/	qemu-system-x86_64.exe not found after installing QEMU: download QEMU manually and unpack it to engine/qemu/
+qemu-img ${op} 失败: ${(r.stderr || '').trim() || r.status}	qemu-img ${op} failed: ${(r.stderr || '').trim() || r.status}
+qemu-img 创建虚拟磁盘失败：${r.stderr || r.stdout}	qemu-img failed to create the virtual disk: ${r.stderr || r.stdout}
+resize2fs 失败: ${(r.stderr || '').trim() || r.status}	resize2fs failed: ${(r.stderr || '').trim() || r.status}
+resources.arsc 格式错误	invalid resources.arsc format
+userdata 扩容：文件 ${size} → ${wantBytes}，文件系统 ${fsBytes} → ${grown}	userdata resize: file ${size} → ${wantBytes}, filesystem ${fsBytes} → ${grown}
+WHPX 硬件加速	WHPX hardware acceleration
+WHPX 硬件加速已启用	WHPX hardware acceleration enabled
+ZIP 中央目录偏移异常	bad ZIP central directory offset
+上一次运行没有正常退出，残留了锁文件	the previous run did not exit cleanly and left lock files
+上次 ${badGpu} 渲染后端启动即崩溃，本次改用 ${variants[1].gpu} 先试	the ${badGpu} render backend crashed on start last time; trying ${variants[1].gpu} first this time
+上次异常退出残留的锁文件	lock files left by an unclean exit
+上次运行残留了锁文件	lock file left by the previous run
+下载 adb… ${(pr.got / 1048576).toFixed(1)}MB / ${(pr.total / 1048576).toFixed(1)}MB	downloading adb… ${(pr.got / 1048576).toFixed(1)}MB / ${(pr.total / 1048576).toFixed(1)}MB
+下载 AEHD 驱动…	downloading the AEHD driver…
+下载 Android platform-tools（约 8MB）…	downloading Android platform-tools (~8 MB)…
+下载 Android-x86 9.0-r2（约 900MB，8 线程分块）…	downloading Android-x86 9.0-r2 (~900 MB, 8 chunked threads)…
+下载 ARM 兼容镜像（Android 14，约 1.5GB）…	downloading the ARM compatible image (Android 14, ~1.5 GB)…
+下载 QEMU… ${(pr.got / 1048576).toFixed(0)}MB / ${(pr.total / 1048576).toFixed(0)}MB	downloading QEMU… ${(pr.got / 1048576).toFixed(0)}MB / ${(pr.total / 1048576).toFixed(0)}MB
+下载 QEMU（约 200MB）…	downloading QEMU (~200 MB)…
+下载不完整：${size}/${total} 字节	incomplete download: ${size}/${total} bytes
+下载中 ${(got / 1048576).toFixed(1)} MB${total ? ` / ${(total / 1048576).toFixed(1)} MB` : ''}	downloading ${(got / 1048576).toFixed(1)} MB${total ? ` / ${(total / 1048576).toFixed(1)} MB` : ''}
+下载中 ${mb}${sp}	downloading ${mb}${sp}
+下载临时文件	download temp files
+下载兼容镜像 ${(pr.got / 1048576).toFixed(0)}MB / ${(pr.total / 1048576).toFixed(0)}MB	downloading compatible image ${(pr.got / 1048576).toFixed(0)}MB / ${(pr.total / 1048576).toFixed(0)}MB
+下载失败 HTTP ${res.statusCode}: ${url}	download failed HTTP ${res.statusCode}: ${url}
+下载系统镜像… ${(pr.got / 1048576).toFixed(0)}MB / ${(pr.total / 1048576).toFixed(0)}MB	downloading system image… ${(pr.got / 1048576).toFixed(0)}MB / ${(pr.total / 1048576).toFixed(0)}MB
+下载运行时 ${mb}${sp}${eta}	downloading runtime ${mb}${sp}${eta}
+下载运行时（约 1.5 GB，只需一次，${conn} 线程）…	downloading the runtime (~1.5 GB, one time only, ${conn} threads)…
+下载运行时引擎 ${(pr.got / 1048576).toFixed(0)}MB / ${(pr.total / 1048576).toFixed(0)}MB	downloading the runtime engine ${(pr.got / 1048576).toFixed(0)}MB / ${(pr.total / 1048576).toFixed(0)}MB
+下载运行时引擎（约 440MB，走 Google 官方源）…	downloading the runtime engine (~440 MB, from Google's official source)…
+不支持的压缩方式 ${e.method}: ${name}	unsupported compression method ${e.method}: ${name}
+不是 Android 二进制 XML（可能被混淆或非法 APK）	not Android binary XML (obfuscated or invalid APK)
+不是有效的 ZIP/APK 文件（文件过小）	not a valid ZIP/APK file (file too small)
+不是有效的 ZIP/APK 文件（未找到 EOCD）	not a valid ZIP/APK file (no EOCD found)
+两个源上都没有运行时整包${errs ? `（${errs}）` : ''}	the runtime package is missing on both sources${errs ? ` (${errs})` : ''}
+会自动切换到带 ARM 翻译层的兼容镜像后重试。	it switches to a compatible image with the ARM translator and retries.
+保守冷启动（最小内存 + 清快照）	conservative cold boot (minimum RAM + snapshot cleared)
+关闭加速的软件模拟（慢，但兼容性最好）	software emulation without acceleration (slow, but the most compatible)
+兼容镜像下载不完整，可重试续传	the compatible image download is incomplete; retry to resume
+兼容镜像下载失败，请检查网络后重试	compatible image download failed; check your network and retry
+兼容镜像解压后校验失败	verification failed after extracting the compatible image
+内存分配失败	memory allocation failed
+冷启动	cold boot
+分块下载失败（${c.start}-${c.end}）：${e.message}	chunk download failed (${c.start}-${c.end}): ${e.message}
+分块失败（${c.start}-${c.end}）：${e.message}	chunk failed (${c.start}-${c.end}): ${e.message}
+分块未完整返回	chunk returned incompletely
+分块被拒绝 HTTP ${res.statusCode}	chunk rejected HTTP ${res.statusCode}
+分块请求被拒绝 HTTP ${res.statusCode}	chunk request rejected HTTP ${res.statusCode}
+分片 ${part.index} 大小不对（${buf.length} ≠ ${part.size}），已中止，可重试	part ${part.index} has the wrong size (${buf.length} ≠ ${part.size}); aborted, you can retry
+切换兼容镜像后运行时不可用	the runtime is unavailable after switching to the compatible image
+创建 ${sizeGB}GB 虚拟磁盘…	creating a ${sizeGB}GB virtual disk…
+创建快捷方式失败	failed to create the shortcut
+创建快捷方式失败（writeShortcutLink 返回 false）	failed to create the shortcut (writeShortcutLink returned false)
+删除失败	delete failed
+发现 ${alive.length} 台残留运行时（端口 ${alive.join(', ')}），尝试接管	found ${alive.length} leftover runtimes (ports ${alive.join(', ')}), trying to take over
+发现上一台运行时（${serial}）但没就绪，先关掉它再重新开机	found the previous runtime (${serial}) but it is not ready; closing it and booting again
+可在「设置 → 修复网络」重置安卓数据来修（应用清单会保留，点开时会自动重装）。	Fix it with "Settings → Repair network", which resets the Android data (the app list is kept and apps reinstall when opened).
+可达	reachable
+启动参数或环境错误	bad launch parameters or environment
+启动失败：${e.message}	start failed: ${e.message}
+启动运行时（${env.hypervisor.whpx ? 'WHPX 硬件加速' : '纯软件模拟'}）…	Starting the runtime (${env.hypervisor.whpx ? 'WHPX hardware acceleration' : 'pure software emulation'})…
+启动运行时（第 ${i + 1}/${variants.length} 次：${plan.label}）…	Starting the runtime (attempt ${i + 1}/${variants.length}: ${plan.label})…
+地址无效	invalid URL
+复制镜像组件失败：${e.message}	failed to copy image components: ${e.message}
+失效的卸载项${disp ? `：${String(disp).trim()}` : ''}	stale uninstall entry${disp ? `: ${String(disp).trim()}` : ''}
+字符串池类型错误	wrong string pool type
+安卓应用	Android app
+安卓数据（应用 + 快照）	Android data (apps + snapshots)
+安卓运行时未能启动	the Android runtime did not start
+安装到 ApkStart	Install with ApkStart
+安装包已下载完成	package downloaded
+安装失败，未获得明确原因	Installation failed without a clear reason
+安装失败：${raw}	Installation failed: ${raw}
+安装失败：APK 文件损坏或不完整（可能下载未完成），请重新获取。	Installation failed: the APK is corrupt or incomplete (the download may not have finished); get it again.
+安装失败：APK 没有有效签名，无法安装。	Installation failed: the APK has no valid signature, so it cannot be installed.
+安装失败：APK 路径含特殊字符，请把文件移到纯英文路径后重试。	Installation failed: the APK path contains special characters; move the file to a plain ASCII path and retry.
+安装失败：与已安装版本签名不一致，请先卸载旧版。	Installation failed: signature differs from the installed version; uninstall the old one first.
+安装失败：与已安装版本签名不一致，请先卸载旧版再装。	Installation failed: signature differs from the installed version; uninstall the old one first.
+安装失败：与已有应用的 ContentProvider 冲突，请卸载冲突应用。	Installation failed: ContentProvider conflict with an existing app; uninstall the conflicting app.
+安装失败：已存在同名应用且签名不同，请先卸载。	Installation failed: an app with the same name exists with a different signature; uninstall it first.
+安装失败：应用依赖的设备特性（如特定厂商库）在当前运行时不存在。	Installation failed: the app depends on device features (e.g. vendor libraries) that this runtime lacks.
+安装失败：应用要求的 Android 版本高于当前运行时（需更高系统镜像）。	Installation failed: the app requires a newer Android version than this runtime provides (a newer system image is needed).
+安装失败：系统内部错误（常见于存储空间不足或开机未完成），请重启运行时后重试。	Installation failed: internal system error (often low storage or an unfinished boot); restart the runtime and retry.
+安装失败：系统限制了安装，请重启运行时后重试。	Installation failed: the system blocked the install; restart the runtime and retry.
+安装失败：设备上已安装更高版本，不能降级覆盖。	Installation failed: a newer version is already installed; downgrades are not allowed.
+安装失败：运行时磁盘空间不足，请清理后重试。	Installation failed: not enough disk space in the runtime; free some space and retry.
+安装失败：这个应用只提供 ARM 原生库（多数国产应用如此），	Installation failed: this app only ships ARM native libraries (common for Chinese apps),
+安装失败：这是仅供测试的应用包，已自动加上测试包参数重试。	Installation failed: this is a test-only package; retrying automatically with the test-package flag.
+安装失败：这是面向很老 Android 版本的应用（targetSdk 过低），Android 14 默认禁止安装。	Installation failed: this app targets a very old Android version (targetSdk too low) and Android 14 blocks it by default.
+安装环境启动失败	failed to start the installation environment
+安装程序已启动，请在虚拟机窗口里按引导完成安装	the installer started; follow the guide in the VM window
+安装路径含中文或特殊字符	the install path contains non-ASCII or special characters
+容器已停放（Android 常驻，0 个应用进程，qemu 最低优先级）	container parked (Android resident, 0 app processes, qemu at lowest priority)
+容器活跃：${n} 个应用窗口${plan && plan.stopped && plan.stopped.length<NL>    ? `，已停掉 ${plan.stopped.length} 个后台应用` : ''}	Container active: ${n} app windows${plan && plan.stopped && plan.stopped.length\n    ? `, stopped ${plan.stopped.length} background apps` : ''}
+容器空闲（Android 常驻但已降优先级，0 个应用进程）	container idle (Android resident at low priority, 0 app processes)
+尚未创建	not created yet
+尚未安装 Android 系统到虚拟磁盘	Android has not been installed to the virtual disk yet
+展开系统镜像（约 1 分钟，只需一次）…	expanding the system image (~1 minute, one time only)…
+展开镜像失败：${e.message}	failed to expand the image: ${e.message}
+崩溃上报工具（无头运行不需要）	crash reporter (not needed for headless runs)
+已切换兼容镜像，正在重新安装…	switched to the compatible image, reinstalling…
+已取消	cancelled
+已接管正在运行的运行时（${serial}）	took over the running runtime (${serial})
+已自动下调分配给 Android 的内存与核心数。请关闭占内存的程序后重试。	RAM and core count for Android were lowered automatically. Close memory-hungry programs and retry.
+已自动丢弃旧快照走冷启动；下一次正常退出会重新生成快照。	Discarded the old snapshot and cold-booted; a new snapshot is written on the next clean exit.
+已自动切换软件渲染重试。若仍失败，请更新显卡驱动，或关闭远程桌面/虚拟机显卡直通后再试。	Switched to software rendering and retried. If it still fails, update your GPU driver or turn off Remote Desktop / GPU passthrough.
+已自动回退软件模拟（首次启动会明显变慢）。想要流畅可用，请在「Windows 功能」勾选「虚拟机平台」，或安装 AEHD 驱动后重启。	Fell back to software emulation (the first start is much slower). For smooth performance, tick "Windows Hypervisor Platform" in Windows features, or install the AEHD driver and reboot.
+已自动按多种参数组合重试。可点「导出诊断报告」把日志发给作者定位。	Retried automatically with several parameter combinations. Use "Export diagnostic report" to send the logs to the author.
+已自动按运行时版本挑选可用的 GPU 模式重试（老版本用 swiftshader_indirect，新版本用 software）。	Picked a GPU mode that matches the runtime version and retried (swiftshader_indirect on older builds, software on newer ones).
+已自动换用空闲端口。若反复出现，请退出夜神/MuMu/蓝叠等模拟器，或重启电脑。	Switched to a free port automatically. If this keeps happening, close other emulators (Nox/MuMu/BlueStacks) or reboot.
+已自动改用 Windows 短路径。若仍失败，请把 ApkStart 移到纯英文目录（如 C:\\ApkStart）。	Switched to a Windows short path automatically. If it still fails, move ApkStart to a plain ASCII folder (e.g. C:\\ApkStart).
+已自动改用更保守的渲染后端重试，并记住这个后端下次不再先试。	retried automatically with a more conservative render backend; that backend is remembered and tried last next time.
+已自动清理 AVD 锁文件并重新拉起。	AVD lock files were cleared and the VM was restarted.
+已自动用干净的用户数据重新开机。若仍失败，请在「运行时」里删除镜像后重新下载。	Rebooted with clean user data automatically. If it still fails, delete the image in "Runtime" and download it again.
+已识别 ${meta.label}（${meta.package}）	detected ${meta.label} (${meta.package})
+已选最快的源：${new URL(best).host}（约 ${(s / 1048576).toFixed(2)} MB/s）	fastest source chosen: ${new URL(best).host} (~${(s / 1048576).toFixed(2)} MB/s)
+已重建 userdata：${(wantBytes / 1024 / 1024 / 1024).toFixed(1)}GB ext4（4K block，支持 FBE）	userdata rebuilt: ${(wantBytes / 1024 / 1024 / 1024).toFixed(1)}GB ext4 (4K blocks, FBE supported)
+应用	App
+应用启动后立即退出，已自动重试并重置应用数据仍未成功	the app exits immediately after launch; retries and a data reset did not help
+应用启动后退出（第 ${attempt} 次），正在自动重试…	the app exited after launch (attempt ${attempt}), retrying automatically…
+应用图标（WebP）解码失败，快捷方式暂时使用占位图标。	failed to decode the app icon (WebP); the shortcut uses a placeholder for now.
+应用图标无法解析（可能是特殊格式的自适应图标），快捷方式暂时使用占位图标。	could not parse the app icon (possibly an unusual adaptive icon); the shortcut uses a placeholder for now.
+应用尚未安装，正在自动安装…	the app is not installed yet, installing automatically…
+应用连续退出，正在重置应用数据后重试…	the app keeps exiting; resetting its data and retrying…
+废弃的快照残留	abandoned snapshot leftovers
+建议：把「运行时数据目录」改到空间更大的盘（设置 → 系统集成 → 运行时数据目录 → 浏览），	Suggestion: move "Runtime data folder" to a larger drive (Settings → System integration → Runtime data folder → Browse),
+开机超时（可能是首次引导较慢或硬件加速未生效）	boot timed out (first boot may be slow, or hardware acceleration is not active)
+当前系统镜像没有 ARM 转译层。ApkStart 会自动切换到内置新版翻译层的兼容镜像并重试。	the current system image has no ARM translation layer. ApkStart switches to the compatible image with a newer built-in translator and retries.
+当前运行时不接受该 GPU 模式	the runtime rejects this GPU mode
+快捷方式创建失败：${e.message}	shortcut creation failed: ${e.message}
+快捷方式未落盘：${opt.shortcutPath}	the shortcut was not written: ${opt.shortcutPath}
+快捷方式目录不可写：${dir}（${e.message}）	shortcut folder is not writable: ${dir} (${e.message})
+快速启动快照损坏	quick-boot snapshot is corrupt
+或先清理磁盘 / 卸载不用的应用后再试。	or free up disk space / uninstall unused apps and retry.
+或在设置里关掉「保留快速启动快照」/ 调小数据分区。安卓数据不会被自动清除。	or turn off "Keep quick-boot snapshot" / shrink the data partition in Settings. Android data is never deleted automatically.
+所有下载源均失败：\n${errors.join('\n')}	all download sources failed:\n${errors.join('\n')}
+扩容 userdata 失败（继续用现有分区）：${e.message}	failed to resize userdata (keeping the current partition): ${e.message}
+把它改到空间充足的盘（例如 D:），或先清理磁盘。你的应用与存档不会被自动删除。	point it at a drive with more space (e.g. D:) or free up disk space first. Your apps and saves are never deleted automatically.
+拆分 APK 安装失败	split APK installation failed
+拆分包的 base APK 解析失败	failed to parse the bundle's base APK
+按需快照	snapshot on demand
+文件不存在或为空	file missing or empty
+文件不是有效的 ISO9660 镜像（可能是下载到错误页或文件已损坏）	the file is not a valid ISO9660 image (an error page may have been downloaded, or the file is corrupt)
+文件只有 ${(size / 1048576).toFixed(1)}MB，下载未完成	the file is only ${(size / 1048576).toFixed(1)}MB, the download is incomplete
+文件被占用	file in use
+文件被占用（可能有窗口还开着）	file in use (a window may still be open)
+文件过小，不是有效的 APK	file is too small to be a valid APK
+新通知	New notification
+无数据	no data
+日志	logs
+旧 quickboot 快照（配置变更后会自动重建）	old quickboot snapshots (rebuilt automatically after config changes)
+旧版 API 30 镜像（含过时的 ARM 翻译层）	old API 30 image (with an outdated ARM translator)
+旧版本程序目录（含 	old program folder (contains 
+旧版遗留的快速启动快照	quick-boot snapshots left by an older version
+旧的 QEMU/ISO 遗留文件	old QEMU/ISO leftovers
+显卡渲染后端初始化失败	failed to initialize the GPU render backend
+显示适配跳过：${e.message}	display adaptation skipped: ${e.message}
+暂时跳过（${Math.ceil((until - Date.now()) / 60000)} 分钟内不再尝试）	skipping for now (no retry within ${Math.ceil((until - Date.now()) / 60000)} min)
+更新下载的临时文件	temporary update download files
+更新包已解压完成	update package extracted
+更新包拼装后大小不对（${doneBytes} ≠ ${total}），已中止，可重试	the assembled update package has the wrong size (${doneBytes} ≠ ${total}); aborted, you can retry
+未下载	not downloaded
+未发现可用的已有运行时	no usable existing runtime found
+未启用硬件加速：将回退软件模拟（能跑但很慢）。建议安装 AEHD 驱动或开启「虚拟机平台」	hardware acceleration not enabled: falling back to software emulation (works but slow). Installing the AEHD driver or enabling "Windows Hypervisor Platform" is recommended.
+未安装	not installed
+未安装 emulator	emulator not installed
+未安装 QEMU，请先完成运行时部署	QEMU not installed; finish the runtime deployment first
+未安装运行时引擎，请先在「运行时」页完成部署	runtime engine not installed; finish the deployment on the "Runtime" page first
+未找到 qemu-img.exe，请先安装 QEMU	qemu-img.exe not found; install QEMU first
+未检测到 Windows Hypervisor Platform 组件：可在「启用或关闭 Windows 功能」中勾选「虚拟机平台」后重启	Windows Hypervisor Platform not detected: tick "Windows Hypervisor Platform" in "Turn Windows features on or off" and reboot
+未检测到硬件加速：将自动回退软件模拟（首次开机会明显变慢，无需手动设置）	no hardware acceleration detected: falling back to software emulation (the first boot is much slower, nothing to configure)
+本地文件头损坏: ${name}	local file header corrupt: ${name}
+本地文件头越界: ${name}	local file header out of bounds: ${name}
+条目不存在: ${name}	entry not found: ${name}
+条目数据被截断: ${name}	entry data truncated: ${name}
+条目数据越界: ${name}	entry data out of bounds: ${name}
+条目过大（${(e.compSize / 1048576).toFixed(0)}MB），请改用 pipeTo: ${name}	entry too large (${(e.compSize / 1048576).toFixed(0)}MB), use pipeTo instead: ${name}
+查找最新 QEMU 版本…	finding the latest QEMU version…
+校验失败：期望 ${expectSha256.slice(0, 12)}… 实际 ${actual.slice(0, 12)}…	checksum mismatch: expected ${expectSha256.slice(0, 12)}… got ${actual.slice(0, 12)}…
+桌面图标缓存	desktop icon cache
+检测到 ARM 翻译层崩溃，正在自动切换兼容镜像…	ARM translator crash detected, switching to the compatible image…
+检测到卡住的运行时，正在重启…	a stuck runtime was detected, restarting…
+模拟器端口被占用	emulator port is in use
+正在下载 ${it.asset.name}…	downloading ${it.asset.name}…
+正在修复虚拟机网络：重置安卓数据并重新开机（应用清单会保留，点开时自动重装）…	Repairing VM networking: resetting the Android data and rebooting (the app list is kept and apps reinstall when opened)…
+正在准备安卓运行时…	preparing the Android runtime…
+正在切回竖屏（重启安卓运行时，约 30-60 秒）…	Switching back to portrait (restarting the Android runtime, ~30-60s)…
+正在切换到兼容镜像并重启运行时…	switching to the compatible image and restarting the runtime…
+正在切换到横屏（重启安卓运行时，约 30-60 秒）…	Switching to landscape (restarting the Android runtime, ~30-60s)…
+正在创建桌面快捷方式…	creating the desktop shortcut…
+正在启动安卓运行时…	Starting the Android runtime…
+正在安装 QEMU（静默）…	installing QEMU (silent)…
+正在安装应用…	installing the app…
+正在开机… ${Math.round((Date.now() - started) / 1000)}s	Booting… ${Math.round((Date.now() - started) / 1000)}s
+正在引导 Android… ${Math.round((Date.now() - start) / 1000)}s	booting Android… ${Math.round((Date.now() - start) / 1000)}s
+正在恢复已装应用 ${app.label}…	restoring installed app ${app.label}…
+正在挑选最快的下载源（${pack.from || 'GitHub'} · ${pack.tag}）…	picking the fastest source (${pack.from || 'GitHub'} · ${pack.tag})…
+正在探测已有运行时…	probing for an existing runtime…
+正在更新应用…	updating the app…
+正在测速 ${need.length} 个下载源…	benchmarking ${need.length} download sources…
+正在测速第 ${i}/${need.length} 个源：${host}…	benchmarking source ${i}/${need.length}: ${host}…
+正在等待安卓虚拟机联网… ${Math.round((Date.now() - t0) / 1000)}s	waiting for the Android VM to get online… ${Math.round((Date.now() - t0) / 1000)}s
+正在等待系统服务… ${Math.round((Date.now() - start) / 1000)}s	waiting for system services… ${Math.round((Date.now() - start) / 1000)}s
+正在获取运行时版本信息…	fetching runtime version info…
+正在解压 ${i}/${names.length}	extracting ${i}/${names.length}
+正在解析 APK…	parsing APK…
+正常退出	exited normally
+此应用要求 Android ${meta.minSdk}+，高于当前运行时，可能无法正常运行。	this app requires Android ${meta.minSdk}+, newer than this runtime; it may not run properly.
+没有发现上一台运行时，准备冷启动	no previous runtime found, preparing a cold boot
+没有可安装的分片 APK	no split APKs to install
+没有可用的下载地址	no usable download URL
+清单中未找到 package 名	no package name in the manifest
+清理 ${pids.size} 个残留模拟器进程	cleaning up ${pids.size} leftover emulator processes
+渲染后端崩溃（0xC0000005 访问冲突）	render backend crashed (0xC0000005 access violation)
+生成时间：${new Date().toLocaleString()}	Generated: ${new Date().toLocaleString()}
+目录里没有 	the folder has no 
+目标磁盘空间不足：该组件约需 ${need + buf} MB，但「${dir}」所在盘仅剩 ${free} MB。\n	Not enough space on the target drive: this component needs about ${need + buf} MB but the drive holding "${dir}" has only ${free} MB left.\n
+硬件加速	Hardware acceleration
+硬件加速不可用	hardware acceleration unavailable
+磁盘空间不足，已停止重试（不会动你的应用与存档）。	Not enough disk space, retries stopped (your apps and saves are untouched).
+磁盘空间不足，无法启动安卓	not enough disk space to start Android
+磁盘空间不足：安卓数据目录（${avdHome}）所在磁盘只剩 ${(avdFreeMB / 1024).toFixed(1)} GB，	not enough disk space: the drive holding the Android data folder (${avdHome}) has only ${(avdFreeMB / 1024).toFixed(1)} GB left,
+窗口代理不可用	window agent unavailable
+窗口代理启动失败	failed to start the window agent
+窗口代理启动超时	window agent start timed out
+窗口代理已退出	window agent exited
+窗口代理未连接	window agent not connected
+窗口代理超时: ${obj.cmd}	window agent timed out: ${obj.cmd}
+窗口代理连接断开	window agent disconnected
+等待 Android 启动… ${Math.round((Date.now() - start) / 1000)}s	waiting for Android to start… ${Math.round((Date.now() - start) / 1000)}s
+系统镜像（ISO）未就绪	system image (ISO) not ready
+系统镜像（只读基础层）	system image (read-only base layer)
+系统镜像就绪（${(info.size / 1073741824).toFixed(2)} GB）	system image ready (${(info.size / 1073741824).toFixed(2)} GB)
+系统镜像展开失败：${e.message}	failed to expand the system image: ${e.message}
+系统镜像展开失败（${failures.join('；')}）	failed to expand the system image (${failures.join('; ')})
+系统镜像未就绪，请先在「运行时」页下载 Android 系统镜像	system image not ready; download the Android system image on the "Runtime" page first
+系统镜像缺失或损坏 / 与旧用户数据不兼容	system image missing or corrupt, or incompatible with the old user data
+纯软件模拟	pure software emulation
+缺少 adb：点击「一键部署」自动下载	adb missing: click "One-click setup" to download it
+缺少 AndroidManifest.xml：这不是单个 APK（可能是 .apks/.xapk 拆分包）	AndroidManifest.xml missing: this is not a single APK (possibly an .apks/.xapk split bundle)
+缺少 resize2fs.exe	resize2fs.exe is missing
+缺少 system.img	system.img is missing
+网络仍未就绪，正在冷启动一次虚拟机（不加载快照）后重试…	still no network; cold-booting the VM once (without snapshot) and retrying…
+网络已恢复（${network.ip || ''} 网关 ${network.gateway || '可达'}），已存好可用快照。	Network restored (${network.ip || ''} gateway ${network.gateway || 'reachable'}), a working snapshot was saved.
+自动：${(p.memoryMB / 1024).toFixed(1)}GB 内存 · ${p.cores} 核 · ${p.gpu} 渲染 · 	Auto: ${(p.memoryMB / 1024).toFixed(1)}GB RAM · ${p.cores} cores · ${p.gpu} render · 
+自动安装失败：${e.message}	automatic installation failed: ${e.message}
+若反复出现，请更新显卡驱动；或在设置 → 性能与资源里把画质调低、关闭远程桌面/虚拟机显卡直通后再试。	If this keeps happening, update your GPU driver; or lower the quality in Settings → Performance & resources and turn off Remote Desktop / GPU passthrough, then retry.
+虚拟机已启动，但 adb 未能连接：请在虚拟机里开启「开发者选项 → ADB over network」后重试	the VM started but adb cannot connect: enable "Developer options → ADB over network" in the VM and retry
+虚拟机平台组件存在（可用性由运行时引擎检测）	Windows Hypervisor Platform component present (availability is detected by the runtime engine)
+虚拟机没能启动	the VM did not start
+虚拟机网络就绪（${net.ip || ''}）	VM network ready (${net.ip || ''})
+虚拟机网络还没就绪，先启动应用（联网页面可能稍后才加载出来）	VM network is not ready yet; launching the app anyway (online pages may load a little later)
+虚拟磁盘已创建	virtual disk created
+解压 ${done}/${all}	extracting ${done}/${all}
+解压 adb…	extracting adb…
+解压兼容镜像 ${i}/${total}	extracting compatible image ${i}/${total}
+解压兼容镜像（3GB，需十余秒）…	extracting the compatible image (3 GB, about 10s)…
+解压运行时（约 1 分钟）…	extracting the runtime (~1 minute)…
+解压运行时引擎…	extracting the runtime engine…
+解压错位产生的重复镜像目录	duplicate image folders left by a misplaced extraction
+诊断报告：${report.file}	diagnostic report: ${report.file}
+该源速度过低（${(bps / 1024).toFixed(0)} KB/s），换源重试	source is too slow (${(bps / 1024).toFixed(0)} KB/s), trying another one
+请先下载/导入 Android 系统镜像（ISO）	download/import the Android system image (ISO) first
+请把 ApkStart 目录加入杀毒软件白名单后重新解压安装包，并安装微软 VC++ 2015-2022 运行库。	Whitelist the ApkStart folder in your antivirus, re-extract the package, and install Microsoft VC++ 2015-2022.
+请把运行时目录（设置 → 系统集成 → 运行时数据目录）改到空间充足的盘，	Move the runtime folder (Settings → System integration → Runtime data folder) to a drive with more space,
+软件模拟	Software emulation
+输入通道已关闭	input channel closed
+运行时（引擎 + 系统镜像）	runtime (engine + system image)
+运行时不可用	runtime unavailable
+运行时多次尝试仍未能启动（${d.title}）。\n${d.hint}\n\n	the runtime failed to start after several attempts (${d.title}).\n${d.hint}\n\n
+运行时就绪（${Math.round(bootMs / 1000)}s，${plan.label}）	Runtime ready (${Math.round(bootMs / 1000)}s, ${plan.label})
+运行时已就绪	runtime ready
+运行时已退出（code=${code}）	runtime exited (code=${code})
+运行时已退出（code=${code}${meaning ? `，${meaning}` : ''}）	runtime exited (code=${code}${meaning ? `, ${meaning}` : ''})
+运行时引擎 ${v.version} 就绪	runtime engine ${v.version} ready
+运行时引擎下载不完整，可重试续传	the runtime engine download is incomplete; retry to resume
+运行时整包下载不完整，可重试续传	the runtime package download is incomplete; retry to resume
+运行时未就绪	runtime not ready
+运行时未能完成开机	the runtime did not finish booting
+运行时未连接	runtime not connected
+运行时目录（${loc.root}）所在磁盘只剩 ${(diskMB / 1024).toFixed(1)} GB，	the drive holding the runtime folder (${loc.root}) has only ${(diskMB / 1024).toFixed(1)} GB left,
+运行时组件尚未部署完成	runtime components are not fully deployed yet
+运行时组件被杀毒软件删除或缺少 VC++ 运行库	runtime components removed by antivirus, or the VC++ runtime is missing
+运行时至少要 ${(needMB / 1024).toFixed(1)} GB 可用。请在「设置 → 系统集成 → 安卓数据目录」	the runtime needs at least ${(needMB / 1024).toFixed(1)} GB free. In "Settings → System integration → Android data folder"
+还差系统镜像：点「下载系统镜像」即可	only the system image is missing: click "Download system image"
+这个安装包里没有找到 APK 分片（可能不是 .apks/.xapk）	no APK splits found in this package (maybe it is not an .apks/.xapk)
+这个版本没有可自动安装的安装包，请到 GitHub 发布页手动下载	this release has no auto-installable package; download it manually from the GitHub releases page
+这是当前正在运行的版本	this is the running version
+这类提示在部分老 CPU 上只是警告、仍能开机；若确实起不来，请把「运行时」里的引擎更新到较旧兼容版本，或换一台支持 VT-x/AVX 的电脑。	On some older CPUs this is only a warning and the VM still boots; if it really will not start, update the engine in "Runtime" to an older compatible build or use a PC with VT-x/AVX.
+连不上更新服务器（${why}）	cannot reach the update server (${why})
+连接停滞（无数据超时）	connection stalled (no-data timeout)
+连接停滞（长时间无数据）	connection stalled (no data for too long)
+连接被中断	connection interrupted
+连接超时	connection timed out
+连日志和临时文件都写不下。请清理磁盘，或把「运行时数据目录」也换到别的盘。	not enough even for logs and temp files. Free up disk space, or move the "Runtime data folder" to another drive too.
+重定向次数过多	too many redirects
+重建 userdata 失败：${e.message}	failed to rebuild userdata: ${e.message}
+重置后仍未联网。请检查本机网络/防火墙是否拦截了模拟器（netsimd 走本机回环端口）。	Still offline after the reset. Check whether your network/firewall blocks the emulator (netsimd uses a local loopback port).
+镜像不完整	image incomplete
+镜像包内的大体积说明文件	large documentation files inside the image package
+镜像文件不可用	image file unavailable
+非 Windows 平台	not a Windows platform
+非 x86_64 的 QEMU 目标，运行时用不到	non-x86_64 QEMU targets, unused by the runtime
+非法的输入命令	invalid input command
+非活动 AVD（含 8-16GB 的旧用户数据镜像）	inactive AVDs (with 8-16 GB old userdata images)
+预热：${m}	prewarm: ${m}
+预热完成（${Math.round(ms / 1000)}s）	prewarm done (${Math.round(ms / 1000)}s)
+首次启动：正在展开系统镜像 ${path.basename(j.dest)}（约 1 分钟，只需一次）	First start: expanding the system image ${path.basename(j.dest)} (~1 minute, one time only)
+首次安装 ARM 应用：正在下载兼容镜像（约 1.5GB，只需一次）…	First ARM app: downloading the compatible image (~1.5 GB, one time only)…

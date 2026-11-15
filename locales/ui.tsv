@@ -1,0 +1,549 @@
+   但应用内的登录态、追剧记录等会丢失\n\n	   but in-app logins and watch history are lost\n\n
+ · 可回收 ${u.reclaimableText}（${u.count} 项）	 · ${u.reclaimableText} reclaimable (${u.count} items)
+ · 已是精简状态	 · already slim
+ · 独立窗口已启用	 · separate windows
+ · 经由 ${src}	 · via ${src}
+ · 飞行模式	 · airplane mode
+，<NL>            再按	,\n            then press
+，${c.failed.length} 项被占用未删	, ${c.failed.length} items were in use and skipped
+，回车	, then Enter
+；${bad} 不可达	; ${bad} unreachable
+；询问是否使用 GPT 时选	; when asked about GPT, choose
+：用	: use
+：进度到 100% 后点下面的「我已安装完成」（ApkStart 会自动重启并接管）	: when it reaches 100% click "I've finished installing" below (ApkStart restarts and takes over)
+：选	: choose
+…另有 ${items.length - 8} 项	…and ${items.length - 8} more
+.apk 关联已取消	.apk association removed
+.apk 关联已开启	.apk association enabled
+。磁盘紧张可以关掉：只影响启动速度，不影响应用与存档。	. Turn it off when disk is tight: it only affects launch speed, not apps or saves.
+（为修复网络重置过安卓数据，点开应用会自动重装）	(Android data was reset to fix networking; apps reinstall when opened)
+（无硬件加速，将回退软件模拟）	(no hardware acceleration, falling back to software emulation)
+（未动你的数据）	(your data was not touched)
+（离线缓存，可能不是最新）	(offline cache, may be outdated)
+（离线缓存）	(offline cache)
+（自动）	(auto)
+「自动」会同时问 GitHub 与 Gitee 的最新版本，把每个下载地址都真下 256KB 测一次速度，再从最快的那个地址下载；其中一个源不通不影响更新。	"Auto" asks both GitHub and Gitee for the latest version, benchmarks every download URL with a real 256 KB probe, then downloads from the fastest one; one source being unreachable doesn't break updates.
+「自动」表示由软件按磁盘余量决定，不需要扩容	"Auto" means the app decides from free disk space; no expansion needed
+• 删除全部已安装的第三方 app（含红果、游戏等）及其数据、登录态\n	• Deletes all installed third-party apps (games included) with their data and logins\n
+• 删除当前 AVD 的快速启动快照\n	• Deletes the current AVD's quick-boot snapshot\n
+• 系统镜像本身不受影响，重新打开应用会再次冷启动建数据\n\n	• The system image itself is untouched; opening an app again cold-boots and recreates the data\n\n
+→ 容量直接回车 →	→ press Enter for the size
+→ 提示格式化时选	→ when asked to format, choose
+→ 输入	→ type
+${(r.network && r.network.ip) || '已联网'}${r.wiped ? '（为修复网络重置过安卓数据，点开应用会自动重装）' : '（未动你的数据）'}	${(r.network && r.network.ip) || 'Online'}${r.wiped ? ' (Android data was reset to fix networking; apps reinstall when opened)' : ' (your data was not touched)'}
+${a.running ? '切换到前台' : '打开'}	${a.running ? 'Switch to foreground' : 'Open'}
+${a.running ? '运行中' : `v${esc(a.versionName)}${a.lastLaunchAt ? ' · ' + relTime(a.lastLaunchAt) : ''}`}	${a.running ? 'Running' : `v${esc(a.versionName)}${a.lastLaunchAt ? ' · ' + relTime(a.lastLaunchAt) : ''}`}
+${errs} 个严重	${errs} critical
+${errs} 项待修复	${errs} issues to fix
+${greetingOf(h)}，欢迎回来	${greetingOf(h)}, welcome back
+${issues.length} 项提示	${issues.length} notices
+${lines.join('\n')}\n\n只删除「旧版本程序目录 / 已失效的卸载项 / 更新临时文件」，	${lines.join('\n')}\n\nOnly "old program folders / stale uninstall entries / update temp files" are deleted;
+${Math.floor(d / 3600000)} 小时前	${Math.floor(d / 3600000)} h ago
+${Math.floor(d / 60000)} 分钟前	${Math.floor(d / 60000)} min ago
+${Math.floor(d / 86400000)} 天前	${Math.floor(d / 86400000)} d ago
+${n} 个应用	${n} apps
+${r.airplane ? ' · 飞行模式' : ''} · 音量 ${r.volume}%	${r.airplane ? ' · airplane mode' : ''} · volume ${r.volume}%
+${r.app.label} 兼容性提示	${r.app.label} compatibility notice
+${r.app.label} 已安装	${r.app.label} installed
+${s}\n同包名但签名不同（常见于从别的渠道装过）。在应用卡片右键「卸载」后再装。	${s}\nSame package name with a different signature (usually installed from another store). Right-click the app card → "Uninstall", then install again.
+${s}\n安卓数据分区不够用：设置 → 性能与资源占用 → 安卓数据分区调大后点「立即扩容」。	${s}\nNot enough Android data space: Settings → Performance & resources → enlarge the Android data partition, then click "Expand now".
+${s}\n已装版本更高，先在右键菜单里卸载再装。	${s}\nA newer version is already installed. Uninstall it from the context menu first.
+${s}\n这个包只有 ARM 库，正在自动切换兼容镜像后重试。	${s}\nThis package only ships ARM libraries; switching to the compatible image and retrying.
+${s}\n这个安装包过大或内存不足，解析被系统拒绝了。请确认磁盘与内存充足后重试；	${s}\nThe package is too large or memory is low, so the system refused to parse it. Check free disk and RAM, then retry;
+${warns} 个提示	${warns} warnings
+1. 冷启动虚拟机（不加载快照）后等待联网 —— 不影响任何数据\n	1. Cold-boot the VM (no snapshot) and wait for networking — no data affected\n
+2. 仍不行才重置安卓数据 —— 应用清单保留、点开会自动重装，\n	2. Only if that fails, reset the Android data — the app list is kept and apps reinstall when opened,\n
+adb 工具链	adb toolchain
+adb 路径	adb path
+Android ${r.sdk || '?'} · ${r.wifi ? 'Wi-Fi 已开' : 'Wi-Fi 已关'}	Android ${r.sdk || '?'} · ${r.wifi ? 'Wi-Fi on' : 'Wi-Fi off'}
+Android ${s.android || ''} 已就绪 · 应用窗口会按屏幕自动适配	Android ${s.android || ''} ready · app windows adapt to your screen
+Android 运行时	Android runtime
+Android-x86 / Bliss OS 的 ISO 或 IMG 路径，留空使用默认位置	Path to the Android-x86 / Bliss OS ISO or IMG; empty uses the default location
+ApkStart 已就绪	ApkStart is ready
+ApkStart${ver ? ` v${ver}` : ''} · ${ready ? '运行时就绪，点开即用' : '运行时会按需自动准备'}	ApkStart${ver ? ` v${ver}` : ''} · ${ready ? 'runtime ready, click and go' : 'runtime prepares itself on demand'}
+ARM 兼容模式已开启	ARM compatibility mode enabled
+ARM 兼容镜像就绪	ARM compatible image ready
+cfdisk 分区	cfdisk partitioning
+CPU 核心（0 = 自动）	CPU cores (0 = auto)
+Gitee 只读 token（一般不用填）	Gitee read-only token (usually not needed)
+Gitee 更新源（可选）	Gitee update source (optional)
+GitHub 直连太慢时，额外测速 ghfast.top / gh-proxy.com 这两个公开转发服务（只转发公开的发布文件，不涉及账号）。关掉后只用直连和你自己填的前缀。	When direct GitHub is too slow, also benchmark the public ghfast.top / gh-proxy.com proxies (they only forward public release files, no accounts). Off means direct connections plus your own prefix only.
+VC++ 运行库已安装	VC++ runtime already installed
+Wi-Fi 已关	Wi-Fi off
+Wi-Fi 已关闭	Wi-Fi turned off
+Wi-Fi 已开	Wi-Fi on
+Wi-Fi 已开启	Wi-Fi turned on
+Windows 搜索能搜到应用名，任务栏也按应用分组	Windows Search finds the app name and the taskbar groups by app
+一切就绪	All set
+一键修复全部	Fix all
+一键卸载	One-click uninstall
+一键完成	One-click setup
+一键流畅优化	One-click smoothness tune
+上次启动失败：${lf.diagnosis.title}	Last start failed: ${lf.diagnosis.title}
+上次启动自动诊断：${s.diagnosis.title}	Auto diagnosis of the last start: ${s.diagnosis.title}
+下一次打开应用生效	Takes effect the next time you open an app
+下午好	Good afternoon
+下次启动不再自动弹出	Don't show this again
+下次打开应用或切换应用时生效	Takes effect when you next open or switch apps
+下载 ARM 兼容镜像	Download ARM compatible image
+下载与更新源	Download & update sources
+下载兼容镜像	Download compatible image
+下载线程数（1–16，默认 8）	Download threads (1-16, default 8)
+下载镜像前缀（可选，加速 GitHub）	Download mirror prefix (optional, speeds up GitHub)
+两侧目录会持续双向同步；在安卓应用里保存到该目录的文件，会出现在本机共享目录中。	The two folders sync both ways continuously; files an Android app saves there appear in the host shared folder.
+中 · 900 × 1600	Medium · 900 × 1600
+中午好	Good afternoon
+仍失败请把安装包路径换成纯英文短路径（如 D:\\a.apk）。	if it still fails, move the APK to a short ASCII path (e.g. D:\\a.apk).
+从 GitHub（RoutineMiku/apkstart）获取最新版本；轻量版会下载便携包并自动替换程序文件，<NL>            运行时、已装应用与快照都不受影响。	Fetches the latest version from GitHub (RoutineMiku/apkstart); the lightweight build downloads the portable package and replaces program files automatically, leaving the runtime, installed apps and snapshots untouched.
+以上映射只在应用窗口前台生效；切回桌面或关闭窗口后，鼠标行为完全恢复 Windows 原生。	These mappings only apply while an app window is focused; back on the desktop or after closing the window, mouse behaviour is fully native Windows.
+优化失败，运行时可能未启动	Optimization failed, the runtime may not be running
+你好	Hello
+例如 https://ghfast.top/	e.g. https://ghfast.top/
+侧键映射需要全局鼠标钩子。钩子只在 ApkStart 应用窗口处于前台时安装，失焦或关闭立即卸载，不会拖慢桌面。	Side-button mapping needs a global mouse hook. The hook is installed only while an ApkStart app window is focused and removed on blur or close, so it never slows the desktop.
+便携版无法自动卸载	The portable build cannot uninstall itself
+保存失败	Save failed
+保存并迁移	Save & migrate
+保留快速启动快照（推荐）	Keep quick-boot snapshot (recommended)
+修复	Fix
+修复会按「代价从小到大」依次尝试：\n\n	The repair tries the cheapest fix first:\n\n
+修复失败	Repair failed
+修复网络	Repair network
+修复虚拟机网络？	Repair the VM network?
+修改后旧目录里已有的文件会自动搬到新目录；正在运行的文件互通不受影响。	Existing files in the old folder are moved to the new one; running file sharing is unaffected.
+停止内置虚拟机	Stop built-in VM
+停止运行时	Stop runtime
+先选一个容量	Choose a size first
+全屏（铺满屏幕，保持手机比例两侧留黑）	Fullscreen (fills the screen, keeps the phone aspect ratio with black bars)
+全自动：无需选择镜像、无需启用加速、无需调内存	Fully automatic: no image to pick, no acceleration to enable, no memory to tune
+共 ${u.totalText} · 可回收 ${u.reclaimableText}（${u.count} 项）	Total ${u.totalText} · ${u.reclaimableText} reclaimable (${u.count} items)
+共 ${u.totalText}${u.reclaimable ? ` · 可回收 ${u.reclaimableText}（${u.count} 项）` : ' · 已是精简状态'}	Total ${u.totalText}${u.reclaimable ? ` · ${u.reclaimableText} reclaimable (${u.count} items)` : ' · already slim'}
+共享目录已更新	Shared folder updated
+关于	About
+关掉后界面切换明显更快，功能不受影响。	Off makes UI transitions noticeably faster with no functional loss.
+关窗口只是退出那个应用，安卓环境会留着，下次点开更快	Closing the window only exits that app; the Android environment stays for a faster next launch
+关联 .apk 文件	Associate .apk files
+关闭	Close
+关闭 · 不拦截滚轮	Off · don't intercept the wheel
+关闭系统动画、放开后台进程上限并把当前应用加入电池白名单，低配电脑体感最明显。	Turns off system animations, raises the background process limit and whitelists the app for battery — the biggest win on low-end PCs.
+兼容镜像	Compatible image
+兼容镜像下载失败	Compatible image download failed
+内存 (MB，0 = 自动)	Memory (MB, 0 = auto)
+内存、核心数、渲染后端、端口、加速方式全部自动选择；启动失败会自动降级重试，不需要手动改。	Memory, cores, render backend, port and acceleration are all chosen automatically; failed starts fall back and retry, no manual tweaks needed.
+再确认一次	One more confirmation
+最大化	Maximize
+最小化	Minimize
+决定安卓虚拟机吃多少 CPU、画面多细腻。红果/抖音发卡就切「流畅」，只想挂着跑小应用就切「省资源」。改完下一次打开应用生效。	Decides how much CPU and detail the Android VM gets. Switch to "Smooth" when video apps stutter, use "Eco" for small apps left running. Applies the next time you open an app.
+准备中…	Preparing…
+准备失败	Setup failed
+切换到前台	Switch to foreground
+刚刚	Just now
+创建桌面快捷方式	Create desktop shortcut
+初始化失败	Initialization failed
+删除 ${c.removed.length} 项，释放 ${c.freedMB || 0} MB${failNote}。	Removed ${c.removed.length} items, freed ${c.freedMB || 0} MB${failNote}.
+刷新	Refresh
+加速未启用	Acceleration not enabled
+卸载	Uninstall
+卸载 ApkStart	Uninstall ApkStart
+卸载会取消 .apk 关联并移除程序；便携版请按提示手动删除目录。	Uninstalling removes the .apk association and the program; the portable build asks you to delete the folder manually.
+卸载失败	Uninstall failed
+卸载程序已启动，ApkStart 即将退出	The uninstaller started; ApkStart will exit now
+原生 · 交给模拟器逐格处理	Native · let the emulator handle each tick
+双击 APK 直接安装到 ApkStart（仅写入当前用户，无需管理员）	Double-clicking an APK installs it in ApkStart (current user only, no admin needed)
+双击即装的 Windows 安卓应用启动器：APK 安装、桌面快捷方式、独立窗口运行、文件双向互通。	A double-click Android app launcher for Windows: APK install, desktop shortcuts, separate windows, two-way file sharing.
+双击应用卡片即可在独立窗口中运行，右上角可旋转 / 缩放 / 关闭	Double-click an app card to run it in its own window; rotate / resize / close from the top right
+发现新版本 ${info.tag}	New version ${info.tag}
+发现新版本 ${info.tag}${src ? `（${src}）` : ''}${bad ? `；${bad} 不可达` : ''}${stale}	New version ${info.tag}${src ? ` (${src})` : ''}${bad ? `; ${bad} unreachable` : ''}${stale}
+取消固定	Unpin
+只影响当前 AVD，系统镜像和本机 APK 缓存都不动。整个过程约 1–5 分钟。是否继续？	Only the current AVD is affected; the system image and local APK cache are untouched. This takes 1-5 minutes. Continue?
+只用 Gitee（国内通常最快）	Gitee only (usually fastest in China)
+只用 GitHub	GitHub only
+只能拖入 .apk 文件	Only .apk files can be dropped here
+可在应用卡片右键创建桌面快捷方式。	You can create a desktop shortcut from the app card's context menu.
+可放心的是：系统镜像、其它 AVD、本机的 APK 缓存和图标都不会动。	What is safe: the system image, other AVDs, the local APK cache and icons are not touched.
+可整体搬过去再删。	can be moved over as a whole and then deleted.
+可直接启动运行时	You can start the runtime now
+右键 · 安卓返回	Right · Android back
+同时添加到开始菜单	Also add to the Start Menu
+同步失败	Sync failed
+启动 ApkStart 后就在后台把安卓环境引导好（窗口全程隐藏，不会看到模拟器）。之后点任何应用只剩一次「打开」，实测从 20 多秒降到几乎不用等。代价是空闲时常驻约 1GB 内存，关掉后第一次打开应用需要冷启动。	ApkStart boots the Android environment in the background right after launch (the window stays hidden, you never see the emulator). Opening any app then costs one "open" — measured from 20+ seconds down to almost nothing. Costs ~1 GB of RAM while idle; with it off, the first app launch is a cold boot.
+启动失败	Launch failed
+启动失败：${r.error}	Start failed: ${r.error}
+启动菜单	Boot menu
+启动运行时	Start runtime
+回到图形界面。	to return to the graphical UI.
+固定到顶部	Pin to top
+在 设置 → 系统集成 里修改「运行时数据目录」，再重启软件。	Change "Runtime data folder" in Settings → System integration, then restart the app.
+均衡 · 720 × 1280	Balanced · 720 × 1280
+均衡 · 一半物理核 / 让出前台 / 720p（推荐）	Balanced · half the physical cores / yields to foreground / 720p (recommended)
+均衡（推荐）· 运行时让着前台窗口	Balanced (recommended) · the runtime yields to foreground windows
+填了就只用你填的前缀，不再尝试上面那两个公共镜像；留空则由「自动」逻辑决定。下载器会把它拼在真实地址前面。	When set, only your prefix is used and the two public mirrors above are skipped; leave empty to let "Auto" decide. The downloader prepends it to the real URL.
+声音设置	Sound settings
+夜深了	Good night
+大	Large
+大 · 1080 × 1920	Large · 1080 × 1920
+大文件按块并行下载。默认 8 线程已经能跑满大多数家宽；网络稳定时可以试 16。	Large files download in parallel chunks. 8 threads already saturate most home connections; try 16 on a stable line.
+失败：${(r && r.error) || '运行时未就绪'}	Failed: ${(r && r.error) || 'runtime not ready'}
+如果之后提示 adb 未连接：在虚拟机窗口按	If adb later reports as disconnected: in the VM window press
+媒体音量	Media volume
+字体大小	Font size
+字体大小已调整	Font size updated
+安卓内对应目录	Matching folder in Android
+安卓原生设置	Native Android settings
+安卓声音	Android audio
+安卓数据分区（应用与游戏装这里）	Android data partition (apps and games live here)
+安卓数据已重置	Android data reset
+安卓数据目录（应用、游戏与快速启动快照）	Android data folder (apps, games and quick-boot snapshots)
+安卓数据目录已更新	Android data folder updated
+安卓环境只开机一次并常驻；之后打开应用不再重跑整个系统，只启动该应用并停掉其他应用进程。关掉最后一个窗口会清后台、停放容器，下次点开仍是秒进。	Android boots once and stays resident; opening an app no longer re-runs the system, it just starts that app and stops the others. Closing the last window frees background processes and parks the container, and the next launch is still instant.
+安卓系统设置（不用进安卓桌面）	Android system settings (without entering the Android desktop)
+安卓虚拟机内部的无线网，关掉可省一点 CPU。	The Android VM's wireless network; turning it off saves a little CPU.
+安卓虚拟机没有网络时（应用里联网页面一直黑屏/转圈），用这个把安卓数据重置掉来修网络。应用清单会保留，点开应用会自动重装	When the Android VM has no network (online pages stay black or spinning), this resets the Android data to fix networking. The app list is kept and apps reinstall when opened
+安卓运行时	Android runtime
+安装 Android 到虚拟磁盘	Install Android to a virtual disk
+安装 APK	Install APK
+安装中	Installing
+安装后自动创建桌面快捷方式	Create a desktop shortcut after install
+安装失败：${name}	Installation failed: ${name}
+安装完成，运行时已接管	Installation complete, the runtime took over
+安装完成后会自动生成桌面图标，双击即以独立窗口运行，和普通 Windows 软件一样。	Installs finish with a desktop icon; double-click it to run the app in its own window, just like a Windows program.
+安装未完成	Installation did not complete
+安装程序运行中 —— 请在虚拟机窗口里完成安装	Installer running — finish the installation in the VM window
+完成	Finish
+容器细节（高级）	Container details (advanced)
+宽松	Roomy
+导入失败	Import failed
+导出失败	Export failed
+导出诊断报告	Export diagnostic report
+将把 /data 调整为 ${gb} GB（就地扩容，已装应用和存档都会保留）。	/data will become ${gb} GB (expanded in place; installed apps and saves are kept).
+小	Small
+小 · 720 × 1280	Small · 720 × 1280
+尚未检查	Not checked yet
+就绪	Ready
+左键 · 确认 / 点击	Left · confirm / tap
+已下载 v${r.version}，正在重启完成安装…	Downloaded v${r.version}, restarting to finish…
+已优化：动画关闭、后台放宽、电池白名单	Optimized: animations off, background limits relaxed, battery whitelist added
+已保存	Saved
+已停止内置虚拟机	Built-in VM stopped
+已关联 · 点击取消	Associated · click to remove
+已切全屏	Switched to fullscreen
+已切竖屏窗口	Switched to portrait window
+已卸载	Uninstalled
+已同步共享目录	Shared folder synced
+已启动	Launched
+已安装的 app 和它们的数据将被永久删除，确定要重置吗？	Installed apps and their data will be permanently deleted. Reset anyway?
+已完成 · 点此复查	Done · click to re-check
+已就绪 · Android ${s.android || ''}	Ready · Android ${s.android || ''}
+已就绪：${r.engine}	Ready: ${r.engine}
+已就绪（${(env.playImage.size / 1073741824).toFixed(2)} GB）	Ready (${(env.playImage.size / 1073741824).toFixed(2)} GB)
+已恢复系统组件	System components restored
+已打开微软官方下载页，请下载 x64 版本	Opened Microsoft's download page; get the x64 version
+已是最新版本（v${info.current}）${src ? ` · 经由 ${src}` : ''}${stale}	Up to date (v${info.current})${src ? ` · via ${src}` : ''}${stale}
+已有部署任务进行中	A deployment is already running
+已注册 .apk 关联时，在资源管理器里双击 APK 也会直接装到 ApkStart。	With the .apk association enabled, double-clicking an APK in Explorer also installs it in ApkStart.
+已清理旧版本残留	Old version leftovers cleaned
+已清理残留锁文件	Stale lock files removed
+已生效	Applied
+已经是精简状态	Already slim
+已联网	Online
+已自动完成	Done automatically
+已补齐快捷方式	Shortcuts restored
+已装应用	Installed apps
+已进入飞行模式	Airplane mode on
+已退出飞行模式	Airplane mode off
+已选新目录	New folder selected
+平滑（推荐）· 合并多次滚动为一次流畅滑动	Smooth (recommended) · merges several wheel ticks into one smooth swipe
+平滑模式把一小段时间内的滚动合并成一次滑动手势，避免逐格抽搐，也不会每格都拉起一个 adb 进程。	Smooth mode merges wheel ticks within a short window into one swipe gesture, so it doesn't stutter and doesn't spawn an adb process per tick.
+应用正在独立窗口中运行（顶部可旋转屏幕）。	The app runs in its own window (rotate from the top bar).
+应用窗口	App windows
+应用管理	App management
+应用里需要联网的页面一直黑屏/转圈，通常是安卓虚拟机没有网络。	Online pages in apps stuck on a black screen or spinner usually mean the Android VM has no network.
+建议改到纯英文目录	Consider a plain ASCII folder
+开始下载 ARM 兼容镜像	Downloading the ARM compatible image
+开始使用	Get started
+开始修复	Start repair
+开始扩容	Start expanding
+开始清理	Start cleanup
+开机未完成	Boot did not finish
+开机自动启动（默认开启）	Start with Windows (on by default)
+开机预热（推荐）	Prewarm on startup (recommended)
+引导与系统	Bootloader & system
+引导中	Booting
+引擎	Engine
+引擎模式	Engine mode
+当前数据分区镜像：${img}${auto ? '（自动）' : ''} · 所在磁盘剩余 ${free}。	Current data partition image: ${img}${auto ? ' (auto)' : ''} · ${free} free on that disk.
+当前正在运行的版本和你的应用数据都不会动。	the running version and your app data are untouched.
+当前版本	Current version
+彻底断网（含移动数据），需要安静时打开。	Cuts all networking (mobile data included); turn it on when you want quiet.
+待下载镜像	Image needed
+待命	Standby
+待安装	Not installed
+待开机	Ready to boot
+待机	Idle
+很干净	All clean
+微信公众号二维码	WeChat account QR code
+快捷方式已重建	Shortcuts rebuilt
+快捷方式带真实应用图标，双击直接进应用	Shortcuts carry the real app icon; double-click to open the app
+快捷方式目录	Shortcut folder
+快捷方式都在	All shortcuts present
+快捷方式都还在	All shortcuts present
+性能与资源占用	Performance & resources
+性能优先 · 运行时与前台同等优先级	Performance · same priority as foreground
+我已安装完成	I've finished installing
+或右键托盘切换；全屏只放大窗口，不改变画面比例，切换不重启应用。	at any time, or right-click the tray icon to switch; fullscreen only enlarges the window, keeps the aspect ratio and does not restart the app.
+打开	Open
+打开 APK 所在位置	Show APK in folder
+打开下载页	Open download page
+打开应用	Open app
+打开设置	Open settings
+扩容中…	Expanding…
+扩容失败	Expansion failed
+扩容是就地做的：已装应用与存档都保留，只是下次打开应用会多花十几秒。	Expansion is done in place: installed apps and saves are kept, the next app launch just takes ~10s longer.
+扩容需要先关掉正在运行的安卓应用，完成后下次打开应用会重新引导，约多花十几秒。	Expanding closes running Android apps; the next app launch re-boots and takes ~10s longer.
+扫描失败	Scan failed
+扫描并清掉旧版本留下的程序目录、失效的卸载项和更新临时文件	Scan and remove program folders, stale uninstall entries and update temp files left by older versions
+扫码关注公众号	Scan to follow the WeChat account
+找到 ${items.length} 项残留，约 ${mb} MB：	Found ${items.length} leftovers, about ${mb} MB:
+把 APK 拖进来就能装	Drop an APK here to install
+把 APK 拖进窗口就能安装，装完会自动生成桌面图标	Drop an APK into the window to install it; a desktop icon is created automatically
+抖音 · @日常MIKU（联系作者）	Douyin · @DailyMIKU (contact the author)
+抖音 · 日常MIKU	Douyin · Daily MIKU
+抖音二维码	Douyin QR code
+按下方 6 步完成安装；装好后点「我已安装完成」。	Follow the 6 steps below; when done click "I've finished installing".
+探测	Probe
+探测中…	Probing…
+提示：所有应用共享同一个 Android 运行时，所以第二个应用的启动几乎是瞬时的。	Tip: all apps share one Android runtime, so the second app starts almost instantly.
+搜索已安装应用	Search installed apps
+操作失败	Operation failed
+支持单个或多个 .apk 文件	One or more .apk files supported
+收敛 vCPU 配额并降低进程优先级，CPU 优先让给 Windows 桌面。上面的「资源策略」已经会自动设置这一项。	Caps the vCPU quota and lowers process priority so the Windows desktop gets CPU first. The "Resource profile" above already sets this.
+数据分区已扩容	Data partition expanded
+数据已清除	Data cleared
+数据目录已更新	Data folder updated
+文件互通	File sharing
+无法启动安装环境	Could not start the setup environment
+旧目录里已有的文件已迁移到新目录	Existing files were migrated to the new folder
+早上好	Good morning
+显示大小	Display size
+显示大小已调整	Display size updated
+显示模式	Display mode
+显示设置	Display settings
+晚上好	Good evening
+暂不支持自动修复	Automatic repair is not supported for this
+暂无应用	No apps yet
+更新与下载源	Update & download sources
+更新中…	Updating…
+更新内容：\n${brief}	What's new:\n${brief}
+更新失败	Update failed
+更新失败：${p.message || ''}	Update failed: ${p.message || ''}
+更新失败：${r.error}	Update failed: ${r.error}
+未关联 · 点击开启	Not associated · click to enable
+未发现已运行的运行时	No running runtime found
+未找到内置安装包	Built-in installer not found
+未检测到硬件加速：已自动回退软件模拟（首次开机较慢）	No hardware acceleration detected: falling back to software emulation (first boot is slow)
+未知	Unknown
+未知步骤	Unknown step
+未知错误	Unknown error
+未能开启	Could not enable it
+未连接运行时	Runtime not connected
+本机共享目录	Host shared folder
+本机自适应参数	Auto-tuned for this PC
+本项目仓库已公开，Gitee 的发行版列表匿名就能读，留空也能用 Gitee 源。<NL>              只有在「Gitee 被限流（返回 403/429）」或你想读私有分支时才需要填：<NL>              gitee.com → 设置 → 私人令牌，只勾「projects」即可，它只用于读取发行版列表，<NL>              不会上传任何东西。	This repo is public and Gitee's release list can be read anonymously, so leaving it empty still uses the Gitee source. Fill it only if Gitee rate-limits you (403/429) or you want a private fork: gitee.com → Settings → Private token, tick only "projects" — it is used to read the release list and never uploads anything.
+松手开始安装	Release to start installing
+标准	Standard
+格式化	Format
+桌面与应用	Desktop & apps
+桌面与开始菜单入口正常	Desktop and Start Menu entries look fine
+桌面图标被误删或被安全软件拦掉时，点这里按当前设置全部补齐。	If desktop icons were deleted or blocked by security software, click here to restore them all from the current settings.
+桌面快捷方式已创建	Desktop shortcut created
+桌面快捷方式已创建，双击即可直接打开。	Desktop shortcut created — double-click it to open the app.
+检查中…	Checking…
+检查失败：${e.message}	Check failed: ${e.message}
+检查失败：${info.error || '网络不可用'}	Check failed: ${info.error || 'network unavailable'}
+模拟器原生把左键当成手指点击，按住拖动就是滑动，无需额外设置。	The emulator treats the left button as a finger tap natively; press and drag to swipe, nothing to configure.
+模拟器默认把右键也当成一次点击（容易误触）。开启后右键只执行返回，不再触发点击。	By default the right button also counts as a tap (easy to trigger by accident). When enabled, the right button only goes back and never taps.
+横屏 / 竖屏（Ctrl+R）	Landscape / portrait (Ctrl+R)
+正在卸载…	Uninstalling…
+正在启动…	Starting…
+正在启动运行时…	Starting the runtime…
+正在安装 ${name}	Installing ${name}
+正在安装 ${pr.meta.label}	Installing ${pr.meta.label}
+正在安装硬件加速驱动…	Installing the hardware acceleration driver…
+正在开启硬件加速…	Enabling hardware acceleration…
+正在引导 Android…	Booting Android…
+正在打开 ${app ? app.label : pkg}	Opening ${app ? app.label : pkg}
+正在更新…	Updating…
+正在检查…	Checking…
+正在检查运行时…	Checking the runtime…
+正在检测…	Detecting…
+正在统计…	Calculating…
+正在补齐缺失的运行时组件…	Restoring missing runtime components…
+正在读取数据分区…	Reading the data partition…
+正在运行	Running
+正在连接 GitHub…	Contacting GitHub…
+此操作不可撤销。是否继续？	This cannot be undone. Continue?
+没有发现旧版本残留。	No leftovers from older versions found.
+没有可回收的旧镜像或快照。	No old images or snapshots to reclaim.
+没有需要重建的入口	Nothing needed rebuilding
+流畅 · 540 × 960	Smooth · 540 × 960
+流畅 · 不限核数 / 与前台同优先级（视频、游戏）	Smooth · all cores / same priority as foreground (video, games)
+浏览	Browse
+深度裁剪关闭，后台包正在恢复	Deep trim disabled, restoring background packages
+深度裁剪系统后台	Deep-trim system background
+清理可回收文件	Clean reclaimable files
+清理失败	Cleanup failed
+清理完成	Cleanup complete
+清理旧版本残留	Clean old version leftovers
+清理旧版本残留？	Clean up old version leftovers?
+清空安卓 /data 用户数据 + 已装应用 + 快速启动快照，还原成刚装好系统的干净状态	Wipes Android /data, installed apps and the quick-boot snapshot, restoring a freshly installed state
+清除「${app.label}」的全部数据？此操作不可撤销。	Clear all data for "${app.label}"? This cannot be undone.
+清除失败	Clearing failed
+清除应用数据	Clear app data
+游戏 / 低延迟 · 运行时高优先级，适合 FPS、音游	Game / low latency · high runtime priority, for FPS and rhythm games
+游戏提示「存储空间不足」就把这里调大后点「立即扩容」——扩容是就地做的，已装应用与存档都保留。	If a game says "not enough storage", enlarge this and click "Expand now" — expansion is done in place, installed apps and saves are kept.
+游戏模式会让安卓虚拟机保持较高 CPU 优先级并减少宿主侧轮询，输入与画面延迟最低；代价是整机其他程序会变慢。没有应用窗口时容器仍会自动降优先级停放。	Game mode keeps the Android VM at a higher CPU priority and reduces host-side polling, minimising input and frame latency; other programs on the machine get slower. The container still drops priority when no app window is open.
+滚轮 · 滑动	Wheel · scroll
+点「保存并迁移」把旧文件搬过去	Click "Save & migrate" to move the old files over
+点「立即更新」自动下载安装	Click "Update now" to download and install
+特大	Extra large
+状态检查失败：${e.message}	Status check failed: ${e.message}
+环境自检	Environment check
+环境自检通过，没有发现会影响运行的问题。	Environment check passed, nothing that would affect running.
+现在双击 APK 会直接安装到 ApkStart	Double-clicking an APK now installs it in ApkStart
+现在只有一个 Android 14 通用镜像，x86 与 ARM 应用都能跑，首次遇到 ARM 应用时会自动下载，不需要手动切换。此开关仅用于旧配置兼容。	There is now a single universal Android 14 image that runs both x86 and ARM apps; it downloads automatically the first time an ARM app shows up, no manual switching. This switch only exists for old configurations.
+现在可以直接把 APK 拖进来安装了。	You can now drop APKs in to install them.
+现在把 APK 拖进窗口，或双击桌面图标即可。	Now drop an APK into the window, or double-click a desktop icon.
+现在约 ${r.imageGB || gb} GB 可用	About ${r.imageGB || gb} GB available now
+画质（安卓内部渲染分辨率）	Quality (Android internal render resolution)
+画面大小已更新	Screen size updated
+留空 = 桌面	Empty = desktop
+留空则自动在 PATH / Android SDK 中查找	Leave empty to look in PATH / Android SDK
+留空即可：公开仓库匿名也能读	Leave empty: public repos can be read anonymously
+省资源 · 2 核 / 让出前台 / 540p（老机器、挂机）	Eco · 2 cores / yields to foreground / 540p (old PCs, idle running)
+真正吃盘的是这一块：数据分区（默认 6 GB，可在上面对大）+ 快速启动快照（约 2–3 GB）。<NL>            磁盘紧张时把它指到另一个盘（如 D:），重启软件后生效；旧目录里的	This is what really uses disk: the data partition (6 GB by default, enlarge it above) + the quick-boot snapshot (~2-3 GB). Point it at another drive (e.g. D:) when disk is tight; it applies after a restart. The old folder's
+硬件加速已启用	Hardware acceleration enabled
+确定卸载 ApkStart？\n\n将取消 .apk 文件关联并移除程序。此操作不可撤销。	Uninstall ApkStart?\n\nThe .apk association will be removed and the program deleted. This cannot be undone.
+确定卸载「${app.label}」？\n\n应用数据会一并被清除，桌面快捷方式也会被删除。	Uninstall "${app.label}"?\n\nApp data will be erased and the desktop shortcut removed.
+确定重置	Yes, reset
+磁盘总占用（运行时 + 安卓数据 + 缓存）	Total disk usage (runtime + Android data + cache)
+稍后再说	Later
+空闲回收（分钟，0 = 不回收）	Idle reclaim (minutes, 0 = never)
+窗口模式下可拖动边框任意缩放；这里调的是 Android 内部渲染尺寸，越小越省性能。	In window mode drag the border to resize freely; this sets Android's internal render size, smaller is cheaper.
+立刻把安卓数据分区扩容？	Expand the Android data partition now?
+立即同步	Sync now
+立即扩容	Expand now
+竖屏画面大小	Portrait screen size
+竖屏窗口（可自由拉伸，记住每个应用的大小）	Portrait window (freely resizable, size remembered per app)
+第二次打开应用只要几秒，代价是磁盘上多一份约 2–3 GB 的	The second launch takes seconds, at the cost of an extra 2-3 GB on disk
+系统动画	System animations
+系统动画已关闭，界面更快	System animations off, the UI is faster
+系统动画已开启	System animations on
+系统镜像（ISO）	System image (ISO)
+系统镜像全机共享一份，应用数据用差分层保存；旧镜像、旧快照、日志和锁文件都可回收。日志超过上限会自动滚动，不会无限增长。「重置安卓数据」会真实删除数 GB 用户数据，仅保留系统本身。	One system image is shared machine-wide; app data lives in a differential layer. Old images, snapshots, logs and lock files can all be reclaimed. Logs roll over at the size limit and never grow without bound. "Reset Android data" really deletes gigabytes of user data and keeps only the system itself.
+系统镜像已导入	System image imported
+系统集成	System integration
+紧凑（省性能）	Compact (cheaper)
+组件已就绪，正在自动开机…	Components ready, booting automatically…
+组件齐全 · 待开机（打开应用时自动拉起）	All components present · standby (boots when you open an app)
+组件齐全，双击任意 APK 或桌面图标即会自动开机	All components present — double-click any APK or desktop icon to boot
+给安卓指定国内公共 DNS（阿里 / 腾讯）。安卓默认走主机的 DNS，主机挂着 VPN 或走公司网时解析会拖到几百毫秒，视频类应用首屏发慢。内网域名访问异常时可关掉。	Points Android at public CN DNS servers (Alibaba / Tencent). By default Android uses the host's DNS; with a VPN or corporate network, lookups can take hundreds of ms and video apps start slowly. Turn off if internal domains misbehave.
+统计不可用	Statistics unavailable
+继续	Continue
+缺少 ${missing.join('、')}${accelOk ? '' : '（无硬件加速，将回退软件模拟）'}	Missing ${missing.join(', ')}${accelOk ? '' : ' (no hardware acceleration, falling back to software emulation)'}
+缺少 Android 14 通用系统镜像 —— 设置 → 运行时里下载（约 1.5GB，只下一次）	Android 14 system image missing — download it in Settings → Runtime (~1.5 GB, one time only)
+网络不可用	Network unavailable
+网络仍未恢复	Network is still down
+网络加速（推荐）	Network boost (recommended)
+网络已恢复	Network restored
+自动	Automatic
+自动（按加速状态）	Auto (based on acceleration)
+自动尝试公共加速镜像	Try public acceleration mirrors automatically
+自动模式	Automatic mode
+自动模式（默认，无需设置）	Automatic (default, nothing to configure)
+自动选择较快的源（推荐）	Pick the faster source automatically (recommended)
+自带运行时（推荐，QEMU + Android-x86，无第三方依赖）	Built-in runtime (recommended, QEMU + Android-x86, no third-party dependencies)
+虚拟机优先级	VM priority
+虚拟机窗口已打开	VM window opened
+虚拟机窗口已打开。按下面 6 步操作一次，之后 ApkStart 会直接从磁盘启动，不再需要镜像。	The VM window is open. Do these 6 steps once; after that ApkStart boots straight from the disk and needs no image.
+虚拟磁盘已导入	Virtual disk imported
+解析 APK…	Parsing APK…
+让应用提示音、视频声音正常播放。仅在你完全不需要声音、想再省一点 CPU 时关闭。	Plays notification and video sound. Turn off only if you never need audio and want to save a little CPU.
+设备 / 端口	Device / port
+设备地址	Device address
+设置修改后立即生效	Settings apply immediately
+诊断报告已导出	Diagnostic report exported
+诊断报告用于排障；重建会补齐桌面 + 开始菜单入口	Reports help with troubleshooting; rebuilding restores desktop + Start Menu entries
+语言设置	Language settings
+请先填写或浏览目录	Enter or browse a folder first
+请在弹出的是否允许窗口点「是」	Click "Yes" in the permission prompt
+请在弹出的窗口点「是」	Click "Yes" in the prompt
+请导出诊断报告查看原因	Export a diagnostic report to see why
+请手动删除程序目录（${r.exeDir}）与数据目录（${r.dataDir}）	Delete the program folder (${r.exeDir}) and the data folder (${r.dataDir}) manually
+请检查网络后重试	Check your network and try again
+请等当前应用装完再继续。	Wait until the current app finishes installing.
+请重启 ApkStart 使其生效。旧目录里的 apkstart.avd 可以整体搬到新目录，再删掉旧的。	Restart ApkStart to apply. You can move apkstart.avd from the old folder to the new one, then delete the old one.
+请重启 ApkStart 使其生效（旧数据不会自动搬移）	Restart ApkStart to apply (old data is not moved automatically)
+请重启电脑以获得最佳性能	Restart your PC for best performance
+请重试	Please try again
+读取中…	Reading…
+读取数据分区信息失败	Could not read data partition info
+资源策略	Resource profile
+资源策略已切换	Resource profile switched
+超大 · 1440 × 2560	Extra large · 1440 × 2560
+软件更新	Software update
+轻量容器	Lightweight container
+运行中	Running
+运行时	Runtime
+运行时与环境	Runtime & environment
+运行时会按需自动准备	The runtime prepares itself on demand
+运行时会话已结束	The runtime session ended
+运行时尚未安装 Android 系统 —— 打开设置 → 运行时继续	Android is not installed yet — open Settings → Runtime to continue
+运行时就绪，点开即用	Runtime ready, click and go
+运行时已就绪 —— 安装 APK 或双击桌面图标会自动开机	Runtime ready — install an APK or double-click a desktop icon to boot it
+运行时已就绪 · Android ${s.android || '?'}${s.freeform ? ' · 独立窗口已启用' : ''}	Runtime ready · Android ${s.android || '?'}${s.freeform ? ' · separate windows' : ''}
+运行时引擎未安装 —— 打开设置 → 运行时一键完成	Runtime engine not installed — open Settings → Runtime and click one-click setup
+运行时待机（安装或打开应用时会自动拉起）	Runtime idle (starts automatically when you install or open an app)
+运行时数据目录（系统镜像 · 已装应用 · 快照）	Runtime data folder (system image · installed apps · snapshots)
+运行时未启动	Runtime not started
+运行时未就绪（${String(r.error).slice(0, 36)}）	Runtime not ready (${String(r.error).slice(0, 36)})
+运行时未就绪时会跳过同步	Sync is skipped while the runtime is not ready
+运行时未部署 —— 打开设置 → 运行时，一键完成	Runtime not set up — open Settings → Runtime and click one-click setup
+运行状态	Status
+还差 ${left.join('、')}；点下面「一键完成」，会在后台一次装好并自动开机	Still missing ${left.join(', ')}; click "One-click setup" below to install everything in the background and boot automatically
+还需要下载 Google Play 兼容镜像（Android 14，约 1.5GB），点击下方按钮开始	The Google Play compatible image is also needed (Android 14, ~1.5 GB); click the button below to start
+这会把安卓系统还原成「刚装好系统」的干净状态：	This restores Android to a freshly installed state:
+这里占用空间最大（数 GB）。改到非系统盘可大幅减轻 C 盘压力；修改后需重启软件，已存在的数据不会自动搬移（请手动复制后删除旧目录）。	This takes the most space (several GB). Moving it off the system drive relieves C:; restart the app after changing it — existing data is not moved automatically (copy it manually, then delete the old folder).
+进入终端，执行	to open a terminal, run
+连当前 AVD 的快速启动快照也一起清（会先停运行时，能真正回收几 GB 快照）	Also clear the current AVD's quick-boot snapshot (stops the runtime first; really reclaims the multi-GB snapshot)
+连接已有运行时（高级：复用 WSA / 其他模拟器的 adb 端口）	Connect to an existing runtime (advanced: reuse WSA / another emulator's adb port)
+选	choose
+选到	to select
+选择 APK 文件	Choose APK file
+通用兼容镜像（自动管理）	Universal compatible image (managed automatically)
+释放约 ${((r.saved || 0) / 1048576).toFixed(0)} MB	Freed about ${((r.saved || 0) / 1048576).toFixed(0)} MB
+释放约 ${(r.saved / 1048576).toFixed(0)} MB（${r.removed.length} 项），已安装应用保留。	Freed about ${(r.saved / 1048576).toFixed(0)} MB (${r.removed.length} items); installed apps kept.
+释放约 ${r.reclaimedMB} MB，已安装应用记录已清空。	Freed about ${r.reclaimedMB} MB; the installed-app list is cleared.
+重启运行时后生效	Takes effect after the runtime restarts
+重建快捷方式	Rebuild shortcuts
+重新检查	Check again
+重置后虚拟机还是没网，请检查本机网络/防火墙是否拦住了模拟器。	The VM still has no network after the reset. Check whether your network/firewall blocks the emulator.
+重置失败	Reset failed
+重置安卓数据	Reset Android data
+重置安卓数据？	Reset Android data?
+随 Windows 登录常驻托盘，双击桌面图标秒开应用，无需手动启动。	Lives in the tray after Windows sign-in; desktop icons open apps instantly, no manual start needed.
+随时按	Press
+需要先打开一次应用，让运行时启动	Open an app once first so the runtime starts
+需要部署	Setup needed
+音量已调整	Volume updated
+额外禁用 Play 商店、设置向导、打印服务等后台包，只留打开应用必需的环境。若遇到应用提示缺少 Google Play 服务，关掉此开关会自动恢复。	Also disables Play Store, setup wizard, print service and other background packages, keeping only what apps need. Turn it off and they are restored automatically if an app complains about missing Google Play services.
+飞行模式	Airplane mode
+首次使用：打开右上角设置 → 运行时 → 一键完成，再回来安装应用即可。	First time here? Open Settings (top right) → Runtime → One-click setup, then come back and install an app.
+首次启动需要引导 Android 系统	The first start boots the Android system
+首次启动需要预热运行时，请稍候…	The first launch warms up the runtime, please wait…
+首次约 1-3 分钟，之后几秒即可。	About 1-3 minutes the first time, a few seconds afterwards.
+高清 · 1080 × 1920	HD · 1080 × 1920
+高级：连接已有运行时	Advanced: connect to an existing runtime
+高级参数（一般无需修改）	Advanced settings (usually no changes needed)
+默认：C 盘用户数据目录	Default: user data folder on C:
+默认：运行时目录下的 avd 文件夹	Default: the avd folder inside the runtime folder
+鼠标侧键 · 返回 / 前进（默认关闭）	Side buttons · back / forward (off by default)
+鼠标键位	Mouse buttons

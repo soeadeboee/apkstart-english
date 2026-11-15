@@ -1,0 +1,59 @@
+name: upstream-watch
+
+on:
+  schedule:
+    - cron: '17 3 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Compare with the latest upstream release
+        id: check
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -eu
+          latest=$(gh api repos/RoutineMiku/apkstart/releases/latest --jq .tag_name)
+          current=$(node -p "require('./patch/manifest.json').upstream.tag")
+          echo "patch targets $current, upstream latest is $latest"
+          if [ "$latest" != "$current" ]; then
+            echo "newer=1" >> "$GITHUB_OUTPUT"
+            echo "latest=$latest" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Open a tracking issue
+        if: steps.check.outputs.newer == '1'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          LATEST: ${{ steps.check.outputs.latest }}
+        run: |
+          set -eu
+          title="Upstream $LATEST released: rebuild the English patch"
+          existing=$(gh issue list --state open --search "$title in:title" --json number --jq '.[0].number // empty')
+          if [ -n "$existing" ]; then
+            echo "tracking issue already open: #$existing"
+            exit 0
+          fi
+          {
+            echo "Upstream ApkStart published **$LATEST**, but this repo is pinned to the sources of the previous release."
+            echo
+            echo "Checklist:"
+            echo "- [ ] Download the new official portable build and extract \`resources/app\`"
+            echo "- [ ] \`node scripts/build-en.js --src <new app> --out build/app\` and read \`build/i18n-report.json\`"
+            echo "- [ ] Translate new/changed strings into \`locales/*.tsv\` (add \`fixes.tsv\` rows for mixed text or plural forms)"
+            echo "- [ ] \`node scripts/make-patch.js --src <new app> --built build/app\`"
+            echo "- [ ] \`node scripts/verify-patch.js --src <new app>\` and \`node scripts/lint-patch.js\`"
+            echo "- [ ] Smoke-test both the main window and Settings in English"
+            echo "- [ ] Publish release \`<upstream version>-en.N\` and the rebuilt portable zip"
+            echo
+            echo "See CONTRIBUTING.md, section \"Updating to a new upstream release\"."
+          } > body.md
+          gh issue create --title "$title" --body-file body.md

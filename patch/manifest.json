@@ -1,0 +1,190 @@
+{
+  "name": "apkstart-english",
+  "upstream": {
+    "repo": "https://github.com/RoutineMiku/apkstart",
+    "tag": "v0.4.3",
+    "version": "0.4.3"
+  },
+  "builtWith": "scripts/build-en.js",
+  "catalog": {
+    "entries": 1024,
+    "replacements": 2315
+  },
+  "files": {
+    "src/core/adb.js": {
+      "upstream": "463e1c56d906b5d5faa2a944c643138d002e40f8c8a9a006a25aef1dfdf62eea",
+      "english": "b85fe0936878297cdd4c78f3c48df0f63cdabc4cb067c130a12aa0358c5422cb",
+      "size": 37620
+    },
+    "src/core/agent.js": {
+      "upstream": "be317aa7de8ad031d00990ca182b45b0ce39fdc1d3a37b9ebda2fa4ebaa27b64",
+      "english": "49206b26081880c55e8718ad62de1a9c10ab8d6388c63658ecf0ba96a00013e4",
+      "size": 11573
+    },
+    "src/core/android.js": {
+      "upstream": "3338af34c05698c067c9abc3195b58f21e158e4f2bf970a0e15e5e0988545269",
+      "english": "65ccce5a2b0d33fe328fea0199693be50837adbf6bafa43879716ba37e91c0db",
+      "size": 5663
+    },
+    "src/core/apk.js": {
+      "upstream": "fb8bc7d55d4bc96c53b2c1f01a3c3515612b5e60f5236042476e3c161a95a125",
+      "english": "82c2eb945a49e1c4b9ce8e5c58695462bce7a88ea1aca1d14801375007515f31",
+      "size": 8392
+    },
+    "src/core/appwin.js": {
+      "upstream": "62f025f7a43733501c8cf7ba1d1b3bbb981920ec6cd0dc4be773bb70d9af6ce9",
+      "english": "13eada9baa680dc5848d8c8397a2e996791506b492d2b9ec73e169b603210bbf",
+      "size": 14944
+    },
+    "src/core/arsc.js": {
+      "upstream": "0e8664a30cf36965221392c45d0f5f9a15ea661c9686fb7fbb039d33d5b58bbc",
+      "english": "ca9d8b132424aaaa95695fb95b73a3d9472e9f433fde5bec3aab52cb5ba6e63d",
+      "size": 8008
+    },
+    "src/core/assoc.js": {
+      "upstream": "fe6970ea38f35078a667d6cabcb77c5a53c23b4272dff8d08bf315438b3f35e7",
+      "english": "6da062ed69be701d00580c04b913ab13292a7be11a7ad7b346da402e337a1632",
+      "size": 4755
+    },
+    "src/core/axml.js": {
+      "upstream": "bce2c3a03580ed8c9193cc8bd2b771163cad5b79adc39b7c9d14e06273ac287c",
+      "english": "9bf9a61bb17072d2e0a0ed91ff91d7ae54dad9b7df76c9988a83b01e3094af4e",
+      "size": 5700
+    },
+    "src/core/container.js": {
+      "upstream": "bc8bc4abe6082b337f59f3131f6c8882859bfa32e37c6a473ea485cc7931486d",
+      "english": "4ccaf4de62b61f97be4564de454e428c8e4887066bff56e6e266db033a26746f",
+      "size": 6638
+    },
+    "src/core/display.js": {
+      "upstream": "9ea027882b7e2788ab781774c86e4205e25df0ba3600a93718f48ad181d04551",
+      "english": "d6192f17c7c5ba6ea592ff822f6f7fe41702a33515852185a4f7ab7cab81e48a",
+      "size": 2294
+    },
+    "src/core/doctor.js": {
+      "upstream": "47a2664b74562bfb99c9fe2ac3d693779b175cb47627d62a6a5a364c6fb0eb8d",
+      "english": "dccc1a1699ae96e870010fbf852856700b4f33d66157d99b8291258dc072be4d",
+      "size": 25330
+    },
+    "src/core/download.js": {
+      "upstream": "227d3ef6e7f6ab54f8df6b18fc7f2a573c7a309ef856944d42237292e14c6b19",
+      "english": "55c39da5ae0ad69dbbff818fb6a2c39ae7a8e8b232301b6c29b3ef98706ec993",
+      "size": 20982
+    },
+    "src/core/emulator.js": {
+      "upstream": "00dc239f4d6a40c7cb00fe2478daa675e1963548426edf64ca20f3ec89f592a9",
+      "english": "66767795108ec33bfc7abb86836c54920d29624ff508391fa8cf0f990db375dc",
+      "size": 63114
+    },
+    "src/core/engine.js": {
+      "upstream": "14a23e40f636599756b8c03ddadc9add1096cf559540beedd034191c75cd82ae",
+      "english": "16b1a5b3686714b793ef31675698f1f1db12e4dcb93ccf138aa8c181cbc86f56",
+      "size": 53711
+    },
+    "src/core/installer.js": {
+      "upstream": "949845f0e5154d124db28e9f61a4a5806a730be109f498993aff41595587a083",
+      "english": "31bd36fd082a7eec6e804cdb2cf7899268003a5b81ee669bfc6cf0e712af44d0",
+      "size": 25978
+    },
+    "src/core/layers.js": {
+      "upstream": "842640ed53c4bcc0ad0e1f6b420a6939db5705e656327d13efa0e191ee6717c8",
+      "english": "f9828d4f257cdec8bfa5177891804869e476e5a04908df9ccc120a686c64200d",
+      "size": 7994
+    },
+    "src/core/leftovers.js": {
+      "upstream": "b82ec00ec6aafb46efc20f1725efe209c9bc8a7b841e66beda3e121078977e6e",
+      "english": "b6a00ca66c9032a3ada5c93ed4cae2f21e83c73e5e26f073bc4559d0c4096e73",
+      "size": 8054
+    },
+    "src/core/logfile.js": {
+      "upstream": "24b98f92cbeb4eec84592a9f05e2ae28bcf089f5d6e813ac5074ddfed28e922c",
+      "english": "14a1c7534a936594fabf100d32b8d555e45bce2ae40d93ba8420a8079a398d0e",
+      "size": 2009
+    },
+    "src/core/notify.js": {
+      "upstream": "341da0276105ec77e15c759451917f52bd8f7e630d42e01bb392e95667109c01",
+      "english": "1c8fe40ca3cac5a5aa6bd54436cf0aa771bd382027c497dc9aaedbec7df5c469",
+      "size": 4512
+    },
+    "src/core/pointer.js": {
+      "upstream": "19c2d6f714cac64441425f35e4c9fc87d5f621b085e1a1acd22e66720c4ded3d",
+      "english": "337276d8ac39fb8c622be1983e2114cea82e33ee729fc50d47c961c668fead4d",
+      "size": 6356
+    },
+    "src/core/provision.js": {
+      "upstream": "c95d94fcbaad7d87a0d4771483443e6d1584bac96e0488dbc9adb47d61711367",
+      "english": "5de6b9336e4155edae0f6f9982b6360e8b1a55e6fd98ae8f1178a22ae9b3da32",
+      "size": 58545
+    },
+    "src/core/sharer.js": {
+      "upstream": "9f3140c73f1e2e150c55d3438ea61b3b72b468259a8c1e96d9324969c809f184",
+      "english": "034921e7d3ef5c4c99fb614b56b66a7024795d8220d9871c1b0e174f3ab0a9ac",
+      "size": 7358
+    },
+    "src/core/shortcut.js": {
+      "upstream": "ee9ee88e8f029da9624b01623140ef685511373ad4bfb08936b3534883e642a3",
+      "english": "ef729bc3297527f7580e4eef904c7a1fb152df4e07ccf19d4645d2a0d5284866",
+      "size": 6422
+    },
+    "src/core/sources.js": {
+      "upstream": "784eee80b5669e8384745a98390da50c2d8efc8346a75503c9cbab6343942150",
+      "english": "ca39f75251807d15d8348fa6b66ec5bda9c5c2cc27a9ba411e3d4f5af6a6d31d",
+      "size": 21638
+    },
+    "src/core/store.js": {
+      "upstream": "31e4405de48bbe643ee58fb6ec8612b11b6ea8f7a3b868aa09514784d60da7cc",
+      "english": "152256095fdb7c01ec21ac48d9700969de8931115d4050e68a38efaab0b0c4b8",
+      "size": 12074
+    },
+    "src/core/updater.js": {
+      "upstream": "199c796f4faa0c839e4a36bb5ac5c65e558919e898a79be47b60059cf55a464f",
+      "english": "e0abbf11ed3513e884d9d5f34dbbd4a79fec533559f06adffc3f3a78ac90d7a9",
+      "size": 15403
+    },
+    "src/core/userdata.js": {
+      "upstream": "ab71b2c57217f8026813807e558c9c86b1f8737baff8659115845fd87dca2213",
+      "english": "382cf63342f2dc1258265c432a6a078af11c511c9a928d186f8ed101021c700a",
+      "size": 12497
+    },
+    "src/core/windowctl.js": {
+      "upstream": "68c3b29d80d8ee1f66dee61796419c0de09de1b28e24d4a827e7783db2405638",
+      "english": "14aca1fb66e0308cf9780adf30d9abc5a63f7ac56e939c85f779ac39b36e0d22",
+      "size": 3412
+    },
+    "src/core/zip.js": {
+      "upstream": "bf18e8e0a03b25815d545d45267df3281909459f260af4fc70785875ed8820a4",
+      "english": "72a7f564ab66f00e600c6454ab9dca23e8649e15e5c25e14018196ccadeb8afe",
+      "size": 13814
+    },
+    "src/main.js": {
+      "upstream": "ea9c1a7f986221e4215390d653927521090e2e09b90b9a4bdaea65bc57ebe620",
+      "english": "61de1c63b4603e96a6b76149040d6ee04652852b0e52a33a9f849f59ba918373",
+      "size": 88600
+    },
+    "src/preload.js": {
+      "upstream": "36e0f3c7e6caaf3dcddecc943eb59781626928b5903d0a7129f1da84fd5e9f07",
+      "english": "53d55e12559feb4294eec4494fbab740313308195e870d710ba6bfc920b62be0",
+      "size": 5940
+    },
+    "src/ui/app.js": {
+      "upstream": "3c1ca727fb88e366ac9bdf750772a0bc39acf568f1efde3d475141424b0de494",
+      "english": "8035aaef2705c098a3aa61bfeafe76964abe8d7d8e1d86a6c40e1b9d8bccacbd",
+      "size": 79277
+    },
+    "src/ui/index.html": {
+      "upstream": "67e879a645b18226de828e315e90eab2e8809ac928df9430789bf8e371a268c8",
+      "english": "b90604103ec3586e9ba823ef7c5697a31adbac401694164d86ba84c72d3fa1ba",
+      "size": 37758
+    },
+    "src/ui/shell.html": {
+      "upstream": "4607b8e5a487eab7c0ea36b46f26b705fe1dd434617d75103ed8fb4637a759a1",
+      "english": "7b44c067959acdd7ce4348d2ac1f874c79831d3b9a7d6e5222ed94890ab74274",
+      "size": 1883
+    },
+    "src/ui/shell.js": {
+      "upstream": "d326dc88555da40c09f6ce93b4e5002e85493e4e08194edb88f50ace80d016a9",
+      "english": "06eb16ff359ddfcd8ea7af00d2aefe47240108ec4bebe201c0723e0ca8f16a22",
+      "size": 1855
+    }
+  }
+}
