@@ -9,7 +9,7 @@
 </head>
 <body>
 
-<!-- 品牌标记：Small尺寸下也要认得出来，所以用矢量而不是 1024 的位图缩到 22px -->
+<!-- 品牌标记: Small尺寸下也要认得出来，所以用矢量而不是 1024 的位图缩到 22px -->
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
   <defs>
     <linearGradient id="brandGrad" x1="0" y1="0" x2="1" y2="1">
@@ -82,6 +82,8 @@
       <button class="status-chip" id="envChip" hidden></button>
     </div>
     <div class="status-right">
+      <span class="status-item status-net" id="statusNet" hidden></span>
+      <span class="sep" id="statusNetSep" hidden></span>
       <span class="status-item" id="statusDevice"></span>
       <span class="sep"></span>
       <span class="status-item" id="statusStats"></span>
@@ -91,7 +93,7 @@
   </footer>
 </main>
 
-<!-- 启动欢迎卡：替代原来散落的各种启动Small提示 -->
+<!-- 启动欢迎卡: 替代原来散落的各种启动Small提示 -->
 <div class="modal-mask welcome-mask" id="welcomeMask" hidden>
   <div class="welcome" role="dialog" aria-modal="true" aria-labelledby="welcomeHi">
     <div class="welcome-hero">
@@ -163,13 +165,13 @@
           <ol class="guide-list">
             <li><b>Boot menu</b>: use <kbd>↓</kbd> to select <code>Installation - Install Android-x86 to harddisk</code>, then Enter</li>
             <li><b>Choose Partition</b>: choose <code>Create/Modify partitions</code>; when asked about GPT, choose <code>No</code></li>
-            <li><b>cfdisk partitioning</b>：<code>New</code> → <code>Primary</code> → press Enter for the size <code>Bootable</code> → <code>Write</code> → type <code>yes</code> → <code>Quit</code></li>
+            <li><b>cfdisk partitioning</b>: <code>New</code> → <code>Primary</code> → press Enter for the size → <code>Bootable</code> → <code>Write</code> → type <code>yes</code> → <code>Quit</code></li>
             <li><b>Format</b>: choose <code>vda1</code> → when asked to format, choose <code>ext4</code> → <code>Yes</code></li>
-            <li><b>Bootloader & system</b>：<code>Install GRUB</code> choose <code>Yes</code>；<code>Install /system as read-write</code> choose <code>Yes</code></li>
+            <li><b>Bootloader & system</b>: <code>Install GRUB</code> choose <code>Yes</code>; <code>Install /system as read-write</code> choose <code>Yes</code></li>
             <li><b>Finish</b>: when it reaches 100% click “I’ve finished installing” below (ApkStart restarts and takes over)</li>
           </ol>
           <p class="guide-tip">If adb later reports as disconnected: in the VM window press <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>F1</kbd> to open a terminal, run
-            <code>setprop service.adb.tcp.port 5555</code>、<code>stop adbd</code>、<code>start adbd</code>,
+            <code>setprop service.adb.tcp.port 5555</code>, <code>stop adbd</code>, <code>start adbd</code>,
             then press <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>F7</kbd> to return to the graphical UI.</p>
           <div class="guide-foot">
             <button class="btn primary" id="btnMarkInstalled">I’ve finished installing</button>
@@ -183,7 +185,12 @@
         <div class="field">
           <label>Auto-tuned for this PC</label>
           <div class="inline-note" id="autoProfileText">Detecting…</div>
-          <span class="sub">Memory, cores, render backend, port and acceleration are all chosen automatically; failed starts fall back and retry, no manual tweaks needed.</span>
+          <span class="sub">Memory, core count, render backend, port and acceleration are all chosen automatically; a failed start is retried with a fallback, no manual tuning needed.
+            ApkStart uses <b>a dedicated adb server port 5044</b> (your own adb uses 5037), so from a terminal
+            <code>adb devices</code> you cannot see this Android device — the isolation is intentional. To connect, use
+            <code>$env:ANDROID_ADB_SERVER_PORT=5044</code> and run adb again.
+            Note: do not manually <code>adb connect</code> on port 5555; that pops the Allow USB debugging system dialog
+            on top of running apps.</span>
         </div>
         <div class="field">
           <label>Total disk usage (runtime + Android data + cache)</label>
@@ -223,6 +230,57 @@
             <option value="fullscreen">Fullscreen (fills the screen, keeps the phone aspect ratio with black bars)</option>
           </select>
           <span class="sub">Press <b>F11</b> at any time, or right-click the tray icon to switch; fullscreen only enlarges the window, keeps the aspect ratio and does not restart the app.</span>
+        </div>
+        <div class="field">
+          <label>Auto full screen</label>
+          <select id="setAutoFullscreen">
+            <option value="off">Off (follow the display mode selected above)</option>
+            <option value="on">On · go full screen every time an app starts</option>
+          </select>
+          <span class="sub">When enabled, opening an app fills the screen without pressing F11. Works best together with Landscape below
+            — a landscape panel already matches the screen aspect ratio, so full screen leaves no black bars.</span>
+        </div>
+        <div class="field">
+          <label>Screen orientation</label>
+          <select id="setOrientationMode">
+            <option value="auto">Follow app (recommended · picks portrait or landscape automatically, fills the screen with no black bars)</option>
+            <option value="portrait">Force portrait (phone ratio, good for short videos and reading)</option>
+            <option value="landscape">Force landscape (wide, fills the screen, good for shows and games)</option>
+          </select>
+          <span class="sub">Android orientation follows the <b>actual orientation of the virtual phone panel</b>. When the panel orientation differs from the one the app declares,
+            Android only gives the app a narrow strip in the middle with black bars on both sides — resizing the window or changing the resolution will not fill it.
+            Follow app mode reads the app orientation when the APK is installed and switches the panel to match at launch,
+            so apps like Hongguo Short Drama and Modu open upright and fill the screen. The runtime only restarts once when the orientation is wrong (about ten seconds),
+            and apps in that orientation open instantly afterwards.</span>
+        </div>
+        <div class="field">
+          <label>Tablet layout</label>
+          <select id="setTabletMode">
+            <option value="on">On (recommended · 190dpi logical density, sw606dp tablet layout)</option>
+            <option value="off">Off (image default density, phone layout)</option>
+          </select>
+          <span class="sub">At 720 wide and 190dpi that is 606dp, just past the Android 600dp tablet breakpoint,
+            so the two-column episode page in Hongguo Short Drama and the split settings pages only appear in this layout. Turning it off returns to phone layout
+            (larger text, less information). Applies the next time an app is opened.</span>
+        </div>
+        <div class="field">
+          <label>Current panel orientation</label>
+          <select id="setLandscape">
+            <option value="portrait">Portrait panel</option>
+            <option value="landscape">Landscape panel</option>
+          </select>
+          <span class="sub">This is the <b>current</b> physical panel orientation in use, written automatically by the policy above.
+            Only in forced mode is it entirely up to you.</span>
+        </div>
+        <div class="field">
+          <label>Window hosting</label>
+          <select id="setWindowEmbed">
+            <option value="embed">Embedded (default) · Android screen inside the ApkStart window, consistent look</option>
+            <option value="detached">Detached window · the emulator opens its own window, avoiding glitches, black bars and misclicks</option>
+          </select>
+          <span class="sub">Embedded mode looks most like one window per app, but it has to squeeze the emulator window into our own,
+            which tends to show black bars or misplaced clicks when resizing, rotating or switching between windows. In detached mode orientation, scaling and input are handled natively by the emulator,
+            so those problems do not occur, at the cost of one extra taskbar icon. Changes apply the next time an app is opened.</span>
         </div>
         <div class="field" id="portraitField">
           <label>Portrait screen size</label>
@@ -270,6 +328,21 @@
         </div>
       </div>
 
+      <div class="group">
+        <div class="group-title">Key mapping (gamepad)</div>
+        <div class="field switch-field">
+          <div>
+            <label>Enable key mapping</label>
+            <span class="sub">Map keyboard keys to Android taps and swipes. Great for playing mobile games with a keyboard (WASD to move, J/K for skills, and so on).
+              Each app can be configured separately: right-click an app card → Key mapping to pick a preset template or a custom one.</span>
+          </div>
+          <input type="checkbox" id="setKeymapEnabled" class="switch" />
+        </div>
+        <div class="field">
+          <span class="sub" id="keymapHint">No key mapping configured for this app. Right-click an app card to apply a preset template.</span>
+        </div>
+      </div>
+
       <div class="group" id="perfGroup">
         <div class="group-title">Performance & resources</div>
         <div class="field">
@@ -313,6 +386,26 @@
         <div class="field">
           <span class="sub" id="dataNote">Reading the data partition…</span>
         </div>
+        <div class="field">
+          <label>System language</label>
+          <select id="setLocale">
+            <option value="zh-CN">Simplified Chinese (recommended)</option>
+            <option value="zh-TW">Traditional Chinese</option>
+            <option value="en-US">English (native to image)</option>
+            <option value="ja-JP">Japanese</option>
+            <option value="ko-KR">Korean</option>
+          </select>
+          <span class="sub">Language for system settings, permission dialogs and date formats. Injected into the VM at boot,
+            <b>takes effect the next time the runtime restarts</b>. The Chinese IME is not affected and has its own switch below.</span>
+        </div>
+        <div class="field switch-field">
+          <div>
+            <label>Chinese IME (recommended)</label>
+            <span class="sub">The image only ships an English keyboard; ticking this silently installs and enables the bundled Google Pinyin IME,
+              so you can type Chinese directly in Android apps. Turning it off keeps the system IME.</span>
+          </div>
+          <input type="checkbox" id="setChineseIme" class="switch" />
+        </div>
         <div class="field switch-field">
           <div>
             <label>Network boost (recommended)</label>
@@ -330,7 +423,7 @@
         <div class="field switch-field">
           <div>
             <label>Keep quick-boot snapshot (recommended)</label>
-            <span class="sub">The second launch takes seconds, at the cost of an extra 2-3 GB on disk <code>ram.bin</code>. Turn it off when disk is tight: it only affects launch speed, not apps or saves.</span>
+            <span class="sub">The second launch takes seconds, at the cost of an extra 2-3 GB <code>ram.bin</code>. Turn it off when disk is tight: it only affects launch speed, not apps or saves.</span>
           </div>
           <input type="checkbox" id="setKeepSnapshot" class="switch" />
         </div>
@@ -418,8 +511,26 @@
           <label>Engine mode</label>
           <select id="setEngineMode">
             <option value="builtin">Built-in runtime (recommended, QEMU + Android-x86, no third-party dependencies)</option>
+            <option value="mumu">MuMu Player 12 (reuse the NetEase emulator already installed)</option>
+            <option value="fydeos">FydeOS Android subsystem (FydeOS installed on this PC, or running in VMware / VirtualBox)</option>
             <option value="attach">Connect to an existing runtime (advanced: reuse WSA / another emulator’s adb port)</option>
           </select>
+          <span class="sub">The built-in runtime downloads the Android image itself; choosing a third-party emulator downloads nothing,
+            it just drives the one already installed on your PC, so your apps and its own apps share one environment.
+            The FydeOS backend drives the Android environment built into FydeOS (you must first enable ADB debugging in its Android settings);
+            when FydeOS runs inside a VM, enter that VM address below. It does not embed a window; FydeOS shows the screen itself.</span>
+        </div>
+        <div class="field" id="fydeosHostField" hidden>
+          <label>FydeOS Android subsystem address</label>
+          <input id="setFydeosHost" type="text" placeholder="127.0.0.1:5555, or the VM LAN IP:5555" />
+          <span class="sub">Required when FydeOS runs in VMware / VirtualBox. The easiest setup is to forward ports for the VM
+            (host 5555 → guest 5555) and then enter <b>127.0.0.1:5555</b>. Leave it empty
+            when FydeOS is installed on this PC (arc:5555 and similar are detected automatically).</span>
+        </div>
+        <div class="field" id="mumuPathField" hidden>
+          <label>MuMu install directory (leave empty to detect)</label>
+          <input id="setMumuPath" type="text" placeholder="for example D:\MuMu Player 12" />
+          <span class="sub">MuMuManager.exe is found automatically through the registry and common paths; set it here if it lives on an unusual drive.</span>
         </div>
         <div class="field">
           <label>adb path</label>

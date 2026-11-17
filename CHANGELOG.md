@@ -1,5 +1,36 @@
 # Changelog
 
+## v0.5.3-en.1 — 2026-11-17
+
+Rebuilt for ApkStart **v0.5.3**, which replaced the single runtime with pluggable
+backends (built-in QEMU, MuMu, FydeOS, attach-to-existing) and added key mapping.
+
+**Translation**
+
+- 249 new strings translated for v0.5.3; the catalogs now hold 1,273 rows.
+- 6,242 replacements across 46 files, plus 11 version-specific fixes.
+- New coverage: runtime backend picker, per-backend setup hints and checks,
+  environment self-check panel, keyboard/gamepad key mapping, first-run setup
+  guide, splash screen, lightweight container and data-partition growth.
+- 0 Chinese characters left outside code comments and regex literals; 0 glued
+  fragments where a short key and the next word ran together.
+
+**Tooling**
+
+- Catalogs keep the raw-Chinese-keyed TSV format; whole-sentence keys were
+  extracted with an AST pass over the v0.5.3 sources so sentences stay natural.
+- `install-en.ps1` now verifies stock v0.5.3 SHA-256 hashes (46 files).
+- Release asset: `ApkStart-v0.5.3-win64-portable-en.zip`, the official portable
+  build with translated `resources/app` files.
+
+**Verified**
+
+- Rebuilding from the pristine v0.5.3 sources reproduces the shipped English files
+  byte for byte (46/46 files).
+- `node --check` passes on every translated `.js` file; `lint-patch.js` is clean.
+- Smoke screenshots of the main window and every Settings section show English
+  throughout.
+
 ## v0.4.3-en.1 — 2026-11-15
 
 First release, based on ApkStart **v0.4.3**.

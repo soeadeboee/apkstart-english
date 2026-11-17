@@ -1,14 +1,14 @@
 'use strict';
 /**
- * Mouse buttons映射（纯计算，不依赖 Electron / adb，便于单测）
+ * Mouse buttons映射 (纯计算，不依赖 Electron / adb，便于单测)
  *
- * App windows里嵌的是 Android Emulator 的 Qt 子窗口，原生行为是：
- *   左键 = 手指点击（正好就是「OK」，不需要我们介入）
- *   右键 = 也当成一次手指点击（会误触，必须拦下来改成「返回」）
+ * App windows里嵌的是 Android Emulator 的 Qt 子窗口，原生行为是: 
+ *   左键 = 手指点击 (正好就是「OK」，不需要我们介入)
+ *   右键 = 也当成一次手指点击 (会误触，必须拦下来改成「返回」)
  *   滚轮 = 单指滑动，但 Qt 每一格都单独发一次触摸事件，画面会抽搐
  *
  * 因此 ApkStart 只在「App windows处于前台」时装一个专用线程上的低级钩子，
- * 拦下右键与滚轮；滚轮按时间窗合并后翻译成一条 `input swipe`，
+ * 拦下右键与滚轮; 滚轮按时间窗合并后翻译成一条 `input swipe`，
  * 既平滑又不会每次滚动都拉起一个 adb 进程。
  */
 
@@ -24,7 +24,7 @@ function clampInt(v, lo, hi) { return Math.round(clamp(v, lo, hi)); }
 
 /**
  * 读取Settings，得到钩子需要的开关。
- * 老配置里没有这些键时，按「右键返回 + 平滑滚轮、侧键Close」迁移。
+ * 老配置里没有这些键时，按「右键返回 + 平滑滚轮, 侧键Close」迁移。
  */
 function pointerOptions(settings = {}) {
   const e = (settings && settings.engine) || {};
@@ -38,7 +38,7 @@ function pointerOptions(settings = {}) {
 /** 把任意来源的配置收敛成 agent 能直接消费的 0/1 组合 */
 function hookOptions(raw = {}) {
   let v = raw;
-  // 兼容旧的布尔写法：true = 只开侧键映射
+  // 兼容旧的布尔写法: true = 只开侧键映射
   if (typeof v === 'boolean') v = { enabled: v, rightBack: false, wheel: 'off', side: v };
   if (typeof v === 'function') v = v();
   if (!v || typeof v !== 'object') v = {};
@@ -70,7 +70,7 @@ function wheelToSwipe({ dx = 0, dy = 0, nx = 0.5, ny = 0.5, width = 900, height 
   const delta = vertical ? (Number(dy) || 0) : (Number(dx) || 0);
   if (!delta) return null;
 
-  // 一格滚轮 = 约 30% 屏宽的滑动；连续快滚合并成一次更长的滑动（最多 78% 屏宽）
+  // 一格滚轮 = 约 30% 屏宽的滑动; 连续快滚合并成一次更长的滑动 (最多 78% 屏宽)
   const steps = clamp(Math.abs(delta) / WHEEL_NOTCH, 0.6, 6);
   const axis = vertical ? h : w;
   const span = clamp(Math.round(axis * 0.30 * steps), 80, Math.round(axis * 0.78));
@@ -80,12 +80,12 @@ function wheelToSwipe({ dx = 0, dy = 0, nx = 0.5, ny = 0.5, width = 900, height 
 
   let x1 = cx, y1 = cy, x2 = cx, y2 = cy;
   if (vertical) {
-    // dy > 0（滚轮向上/远离）→ 手指向下滑，内容往顶部滚
+    // dy > 0 (滚轮向上/远离)→ 手指向下滑，内容往顶部滚
     const dir = delta > 0 ? 1 : -1;
     y1 = clampInt(cy - half * dir, 1, h - 1);
     y2 = clampInt(cy + half * dir, 1, h - 1);
   } else {
-    // dx > 0（横向滚轮向右）→ 手指向左滑
+    // dx > 0 (横向滚轮向右)→ 手指向左滑
     const dir = delta > 0 ? -1 : 1;
     x1 = clampInt(cx - half * dir, 1, w - 1);
     x2 = clampInt(cx + half * dir, 1, w - 1);
@@ -100,8 +100,8 @@ function swipeToCommand(swipe) {
 }
 
 /**
- * 滚轮合并器：一个时间窗内的所有滚动只产生一条滑动命令。
- * 注入是异步的（adb shell 里 input swipe 要跑完整个手势），期间Continue累计，
+ * 滚轮合并器: 一个时间窗内的所有滚动只产生一条滑动命令。
+ * 注入是异步的 (adb shell 里 input swipe 要跑完整个手势)，期间Continue累计，
  * Finish后再补发一次，避免命令在 shell 里排队造成越滚越卡。
  */
 class WheelRouter {

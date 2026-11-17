@@ -2,179 +2,224 @@
   "name": "apkstart-english",
   "upstream": {
     "repo": "https://github.com/RoutineMiku/apkstart",
-    "tag": "v0.4.3",
-    "version": "0.4.3"
+    "tag": "v0.5.3",
+    "version": "0.5.3"
   },
   "builtWith": "scripts/build-en.js",
   "catalog": {
-    "entries": 1024,
-    "replacements": 2315
+    "entries": 1273,
+    "replacements": 6242
   },
   "files": {
     "src/core/adb.js": {
-      "upstream": "463e1c56d906b5d5faa2a944c643138d002e40f8c8a9a006a25aef1dfdf62eea",
-      "english": "b85fe0936878297cdd4c78f3c48df0f63cdabc4cb067c130a12aa0358c5422cb",
-      "size": 37620
+      "upstream": "04d0560a916dcbe3824455e93006197912adcaf0da4626c948a67c7274cd91c6",
+      "english": "39f90b2f7c955ca2f8d32c3767d4e1092ddfa55900cb4c11036eb2e993456475",
+      "size": 44126
     },
     "src/core/agent.js": {
-      "upstream": "be317aa7de8ad031d00990ca182b45b0ce39fdc1d3a37b9ebda2fa4ebaa27b64",
-      "english": "49206b26081880c55e8718ad62de1a9c10ab8d6388c63658ecf0ba96a00013e4",
-      "size": 11573
+      "upstream": "5685d00b1dcfe2f287ca317e52e84ac4310ccc9ac83dee6cd84745af54e8bc2f",
+      "english": "2d35b3852da6e1f4d5d78f5ed1a920c8424f7ef4d9989a62cea1b1fbb0c90d64",
+      "size": 13422
     },
     "src/core/android.js": {
       "upstream": "3338af34c05698c067c9abc3195b58f21e158e4f2bf970a0e15e5e0988545269",
-      "english": "65ccce5a2b0d33fe328fea0199693be50837adbf6bafa43879716ba37e91c0db",
-      "size": 5663
+      "english": "13aaf7feae584aa7bf57175ee0ccc5c550402968234275b10156f3a549f97d2c",
+      "size": 5657
     },
     "src/core/apk.js": {
-      "upstream": "fb8bc7d55d4bc96c53b2c1f01a3c3515612b5e60f5236042476e3c161a95a125",
-      "english": "82c2eb945a49e1c4b9ce8e5c58695462bce7a88ea1aca1d14801375007515f31",
-      "size": 8392
+      "upstream": "45ee6dfb800f098844fa656ff0ea649d1208a03a3a58b23e59b5fb051b5c8003",
+      "english": "7249aafc1c485a004bd6562c8a3d3382a9d3212da0f446af2423136e4455a0b4",
+      "size": 10781
     },
     "src/core/appwin.js": {
-      "upstream": "62f025f7a43733501c8cf7ba1d1b3bbb981920ec6cd0dc4be773bb70d9af6ce9",
-      "english": "13eada9baa680dc5848d8c8397a2e996791506b492d2b9ec73e169b603210bbf",
-      "size": 14944
+      "upstream": "7e62bce89672805af53e8207585c7c9c1ed9abfe9061dec4baf4303170aea5ae",
+      "english": "ab2ad05b17b8a76f6dac0aa10c6d11d04d261a064e9f1ffe1f0e2fdc7aca61f9",
+      "size": 25750
     },
     "src/core/arsc.js": {
       "upstream": "0e8664a30cf36965221392c45d0f5f9a15ea661c9686fb7fbb039d33d5b58bbc",
-      "english": "ca9d8b132424aaaa95695fb95b73a3d9472e9f433fde5bec3aab52cb5ba6e63d",
-      "size": 8008
+      "english": "0e20623b9ed457ce0cb0b34a35c98746573cd2c24d1be282ad09283e9975e5ef",
+      "size": 7991
     },
     "src/core/assoc.js": {
       "upstream": "fe6970ea38f35078a667d6cabcb77c5a53c23b4272dff8d08bf315438b3f35e7",
-      "english": "6da062ed69be701d00580c04b913ab13292a7be11a7ad7b346da402e337a1632",
-      "size": 4755
+      "english": "3e1a7f36b2f5a4f2b8bf516d4f52fa35caa68fcc775df01d66c8cf3fbba37b0a",
+      "size": 4741
     },
     "src/core/axml.js": {
       "upstream": "bce2c3a03580ed8c9193cc8bd2b771163cad5b79adc39b7c9d14e06273ac287c",
-      "english": "9bf9a61bb17072d2e0a0ed91ff91d7ae54dad9b7df76c9988a83b01e3094af4e",
-      "size": 5700
+      "english": "04cfa8537fd27db5714ba4e92ca2d338de6f176869806fb3837e14f9b1b12b94",
+      "size": 5694
+    },
+    "src/core/backends/base.js": {
+      "upstream": "a794a296c525a532ef5c753a9e11684df9a3beef039b48c5be828bdad276daba",
+      "english": "1147f3e32914aff61cb00b5acb5341d807e25e07ed5e766eac500f64d51c9a80",
+      "size": 7138
+    },
+    "src/core/backends/builtin.js": {
+      "upstream": "680b45bbb788fa7fc830419132640dfda4102e7d65e81dbefb28c5e8183a5963",
+      "english": "d16b6988fcb5fba75bd14c93ce50d0bb39afc1f4788482a740aa4819773a7dde",
+      "size": 5764
+    },
+    "src/core/backends/fydeos.js": {
+      "upstream": "1bcdf5fc1b5010077c99408385eff1af57c61c728879c3a3237040479be1af0d",
+      "english": "aa6b19caea04d26aa2d41350ae1e82c9ec9b811c43c3f9418d2746b2091c2193",
+      "size": 14534
+    },
+    "src/core/backends/index.js": {
+      "upstream": "f645514d45cf6f330ace22c58056ac6b30728b80437944416f715b4d055a1414",
+      "english": "099c81f4b1e6d2368444fcd9158dcd19b44a9606f755f608dfaa8096c088de56",
+      "size": 3474
+    },
+    "src/core/backends/mumu.js": {
+      "upstream": "47c1881d43aa9a1a9f14f9adbd01a6e85a639b4298d413e8ff8eeb745e046cde",
+      "english": "d564135535026d8c1321ba0303105f85796b332950de804eda914cdca179bf32",
+      "size": 15451
     },
     "src/core/container.js": {
-      "upstream": "bc8bc4abe6082b337f59f3131f6c8882859bfa32e37c6a473ea485cc7931486d",
-      "english": "4ccaf4de62b61f97be4564de454e428c8e4887066bff56e6e266db033a26746f",
-      "size": 6638
+      "upstream": "52b625db8c7bda3512c26845da7d83a4bb739eaf4b6db97c34badbdd88179c22",
+      "english": "9f804189f0481f82459cbfd019cd58b71362f3ff498f5a41af55693e6c5d9b82",
+      "size": 8957
     },
     "src/core/display.js": {
       "upstream": "9ea027882b7e2788ab781774c86e4205e25df0ba3600a93718f48ad181d04551",
-      "english": "d6192f17c7c5ba6ea592ff822f6f7fe41702a33515852185a4f7ab7cab81e48a",
-      "size": 2294
+      "english": "a4eaae39f29fe178c78a53d2ba0e298a1298cd16c41108f465a489eb2103b4d3",
+      "size": 2277
     },
     "src/core/doctor.js": {
-      "upstream": "47a2664b74562bfb99c9fe2ac3d693779b175cb47627d62a6a5a364c6fb0eb8d",
-      "english": "dccc1a1699ae96e870010fbf852856700b4f33d66157d99b8291258dc072be4d",
-      "size": 25330
+      "upstream": "b3f85593c61e815a9837f6c6f0571410158debfa3c9d7ffb9eeaa0f7ed1c715e",
+      "english": "f6dad8fbfa15fae1d8b7a2e9701c49075c4f08fe24f72d977468df1ef085443b",
+      "size": 27128
     },
     "src/core/download.js": {
-      "upstream": "227d3ef6e7f6ab54f8df6b18fc7f2a573c7a309ef856944d42237292e14c6b19",
-      "english": "55c39da5ae0ad69dbbff818fb6a2c39ae7a8e8b232301b6c29b3ef98706ec993",
-      "size": 20982
+      "upstream": "b278ee0ac11b96e56a895141934cb64f273406383c57ce34b9b204bccb6d8a50",
+      "english": "0f4362b7787d5fbdf40e51d97a85f022d0d654cce6bbaa842db57d1e5e0d1bdc",
+      "size": 23318
     },
     "src/core/emulator.js": {
-      "upstream": "00dc239f4d6a40c7cb00fe2478daa675e1963548426edf64ca20f3ec89f592a9",
-      "english": "66767795108ec33bfc7abb86836c54920d29624ff508391fa8cf0f990db375dc",
-      "size": 63114
+      "upstream": "f22fd52abdbd6aac241e45f03363970f87d7b73026237f5d2b2d7ef502e217e0",
+      "english": "f143bc8df9b2e10bd6d31365f0632b2e847e45811e3ecfd826ea73df57eff0b3",
+      "size": 72031
     },
     "src/core/engine.js": {
-      "upstream": "14a23e40f636599756b8c03ddadc9add1096cf559540beedd034191c75cd82ae",
-      "english": "16b1a5b3686714b793ef31675698f1f1db12e4dcb93ccf138aa8c181cbc86f56",
-      "size": 53711
+      "upstream": "8cc09bf48f64f5639b113299ed5fed820487f9a5fe4c1a6c4a2e923abc6e7fc6",
+      "english": "352ea50747afbc72570f3d84ce37cc2e42add3aa3f427a6754b27ca4f20d9ea3",
+      "size": 77996
     },
     "src/core/installer.js": {
-      "upstream": "949845f0e5154d124db28e9f61a4a5806a730be109f498993aff41595587a083",
-      "english": "31bd36fd082a7eec6e804cdb2cf7899268003a5b81ee669bfc6cf0e712af44d0",
-      "size": 25978
+      "upstream": "5a57d92f589c22b43a4c464a4bc0d977f0fc8798225ef3e2c2a8737db1074633",
+      "english": "e179f05c2e5b04c69a2871a296fd911264d68aa48252d45d3d57687f9c1fb4d1",
+      "size": 29697
+    },
+    "src/core/keymap-engine.js": {
+      "upstream": "a14eb20b081458f43acc3109f8f7b571532924e762a9b8e0269a17760778c010",
+      "english": "977859159589ee5d79fbae200ca8b7c6485442f773ebf110ce49af07dbc4d049",
+      "size": 2743
+    },
+    "src/core/keymap.js": {
+      "upstream": "0c445bfe2dd66f09b057c956932ed18eebe747a1faebc2b9616bc5c566bbb627",
+      "english": "bcb3b9cb08bc432931341d7924ad71c66738047a31a2aa3bf72088078e906817",
+      "size": 4013
     },
     "src/core/layers.js": {
       "upstream": "842640ed53c4bcc0ad0e1f6b420a6939db5705e656327d13efa0e191ee6717c8",
-      "english": "f9828d4f257cdec8bfa5177891804869e476e5a04908df9ccc120a686c64200d",
-      "size": 7994
+      "english": "b4a0a3823e169f7cb438c42300499ca8fc5d236eb2a438c9c40b80e140430eb8",
+      "size": 7964
     },
     "src/core/leftovers.js": {
-      "upstream": "b82ec00ec6aafb46efc20f1725efe209c9bc8a7b841e66beda3e121078977e6e",
-      "english": "b6a00ca66c9032a3ada5c93ed4cae2f21e83c73e5e26f073bc4559d0c4096e73",
-      "size": 8054
+      "upstream": "67d4b7e0eeb4811fcdfa23d092f8b01fb0fdeeffb2ee119a8f99dde44bc8e24e",
+      "english": "1a25372cb00f61a684e59a1db33ce92f65277ba7fd4b4e7216a744f6d60b4499",
+      "size": 11631
     },
     "src/core/logfile.js": {
       "upstream": "24b98f92cbeb4eec84592a9f05e2ae28bcf089f5d6e813ac5074ddfed28e922c",
-      "english": "14a1c7534a936594fabf100d32b8d555e45bce2ae40d93ba8420a8079a398d0e",
-      "size": 2009
+      "english": "3da422abfa4e13a83ba177a927d876cae8d67092ffb023872d9c77ddaedb5b11",
+      "size": 1996
     },
     "src/core/notify.js": {
       "upstream": "341da0276105ec77e15c759451917f52bd8f7e630d42e01bb392e95667109c01",
-      "english": "1c8fe40ca3cac5a5aa6bd54436cf0aa771bd382027c497dc9aaedbec7df5c469",
-      "size": 4512
+      "english": "1ba438c9b957da6194cb8c0179fcbc5c7e8f340b785e81072a6c3ef0e584ccf4",
+      "size": 4507
+    },
+    "src/core/png.js": {
+      "upstream": "12f9d59c8386ef0aba7e8b3b51d11b8da54949e2442d32b15902d30ccdb2d25f",
+      "english": "bb1d10f5b9e9f466d4e62a7ce1ea4374727c2dcc1b1b14f30e1c4b2e46dbbfb2",
+      "size": 4061
     },
     "src/core/pointer.js": {
       "upstream": "19c2d6f714cac64441425f35e4c9fc87d5f621b085e1a1acd22e66720c4ded3d",
-      "english": "337276d8ac39fb8c622be1983e2114cea82e33ee729fc50d47c961c668fead4d",
-      "size": 6356
+      "english": "8a30effb678c4408f20c5ab48ba1c7125a67ff12e0b2ad34bfa209c344dfc95e",
+      "size": 6329
     },
     "src/core/provision.js": {
-      "upstream": "c95d94fcbaad7d87a0d4771483443e6d1584bac96e0488dbc9adb47d61711367",
-      "english": "5de6b9336e4155edae0f6f9982b6360e8b1a55e6fd98ae8f1178a22ae9b3da32",
-      "size": 58545
+      "upstream": "7a8f671c89ba8c4a356da126a9e819c48df6bcc0310aff8986c58a54e4763f42",
+      "english": "96c329a16e2ba1fd7f43cb06445b52f82233bac8a07cdc37f64f52234997801a",
+      "size": 63839
     },
     "src/core/sharer.js": {
       "upstream": "9f3140c73f1e2e150c55d3438ea61b3b72b468259a8c1e96d9324969c809f184",
-      "english": "034921e7d3ef5c4c99fb614b56b66a7024795d8220d9871c1b0e174f3ab0a9ac",
-      "size": 7358
+      "english": "dd2d51ffb515758b5ba8b6a85f6accd50a743d3da647ca7182b484096625004e",
+      "size": 7341
     },
     "src/core/shortcut.js": {
-      "upstream": "ee9ee88e8f029da9624b01623140ef685511373ad4bfb08936b3534883e642a3",
-      "english": "ef729bc3297527f7580e4eef904c7a1fb152df4e07ccf19d4645d2a0d5284866",
-      "size": 6422
+      "upstream": "62d36a31cd2c7c97e6ceb298ccdf52a2882e5fb1e4e2453c5f4ce204b1887fb6",
+      "english": "ea18bbb38aecc2566e8c7d24e5a84b1d4f25f623894160d58d8d631c19df820e",
+      "size": 8894
     },
     "src/core/sources.js": {
       "upstream": "784eee80b5669e8384745a98390da50c2d8efc8346a75503c9cbab6343942150",
-      "english": "ca39f75251807d15d8348fa6b66ec5bda9c5c2cc27a9ba411e3d4f5af6a6d31d",
-      "size": 21638
+      "english": "5a2194a76f64aff8debbe1aae91e1effaef320d4e3474f4313ba7a188901f692",
+      "size": 21523
     },
     "src/core/store.js": {
-      "upstream": "31e4405de48bbe643ee58fb6ec8612b11b6ea8f7a3b868aa09514784d60da7cc",
-      "english": "152256095fdb7c01ec21ac48d9700969de8931115d4050e68a38efaab0b0c4b8",
-      "size": 12074
+      "upstream": "ba974127de663473b8ad720c7da5541d82754b37ab36babbbc389e6b97ec9a09",
+      "english": "f8add139e272715796e221c6c568e8d4bdc52cc10d3efa3f73e7d5f000718ba7",
+      "size": 15771
     },
     "src/core/updater.js": {
       "upstream": "199c796f4faa0c839e4a36bb5ac5c65e558919e898a79be47b60059cf55a464f",
-      "english": "e0abbf11ed3513e884d9d5f34dbbd4a79fec533559f06adffc3f3a78ac90d7a9",
-      "size": 15403
+      "english": "f01dc2703c7ba86f38435b418f5032fd7accf6abd9ab904888548a2208d439aa",
+      "size": 15340
     },
     "src/core/userdata.js": {
       "upstream": "ab71b2c57217f8026813807e558c9c86b1f8737baff8659115845fd87dca2213",
-      "english": "382cf63342f2dc1258265c432a6a078af11c511c9a928d186f8ed101021c700a",
-      "size": 12497
+      "english": "2869d7eecc08bd3034037b28442acfc8f80e23fca53e964abaffd4d67b1d60de",
+      "size": 12411
     },
     "src/core/windowctl.js": {
       "upstream": "68c3b29d80d8ee1f66dee61796419c0de09de1b28e24d4a827e7783db2405638",
-      "english": "14aca1fb66e0308cf9780adf30d9abc5a63f7ac56e939c85f779ac39b36e0d22",
-      "size": 3412
+      "english": "221384f9e9eb2fc0a09ceae0da9fb8e352194894dc31d7667a24a19238b882ae",
+      "size": 3406
     },
     "src/core/zip.js": {
       "upstream": "bf18e8e0a03b25815d545d45267df3281909459f260af4fc70785875ed8820a4",
-      "english": "72a7f564ab66f00e600c6454ab9dca23e8649e15e5c25e14018196ccadeb8afe",
-      "size": 13814
+      "english": "df9b81b256ec2a7e7f84f2808499388f1474415a383b31424c630c0557f18b2b",
+      "size": 13767
     },
     "src/main.js": {
-      "upstream": "ea9c1a7f986221e4215390d653927521090e2e09b90b9a4bdaea65bc57ebe620",
-      "english": "61de1c63b4603e96a6b76149040d6ee04652852b0e52a33a9f849f59ba918373",
-      "size": 88600
+      "upstream": "4c1ee4f14fcee34070a2303a659688135e8636622194599425f5aba379e37764",
+      "english": "43c50a8c2ab93dd9a54cbb2a9b1d8798c7b60e350b1ca2061ca91d5d6bea4383",
+      "size": 130221
     },
     "src/preload.js": {
-      "upstream": "36e0f3c7e6caaf3dcddecc943eb59781626928b5903d0a7129f1da84fd5e9f07",
-      "english": "53d55e12559feb4294eec4494fbab740313308195e870d710ba6bfc920b62be0",
-      "size": 5940
+      "upstream": "8ad7b772d84dcd073d64b96425ae5d5d29f38f1c4a199e928ec63e09a5d94f2c",
+      "english": "8f096e6d9d2ca2a68a19eeb9df86de66536a7abdf8b58f2b188536db1205a202",
+      "size": 6635
+    },
+    "src/splash-preload.js": {
+      "upstream": "4fc4784c34974c8b3788ce56aaebcede5b248b1cb1a74094f7378dfb60efad06",
+      "english": "43f6373a4f5cc8d426f1cec289913b1d7dac0e9febeca91b098cd2ec4efb72d0",
+      "size": 766
     },
     "src/ui/app.js": {
-      "upstream": "3c1ca727fb88e366ac9bdf750772a0bc39acf568f1efde3d475141424b0de494",
-      "english": "8035aaef2705c098a3aa61bfeafe76964abe8d7d8e1d86a6c40e1b9d8bccacbd",
-      "size": 79277
+      "upstream": "3607de86468986b62d332bdfd5ed52e848385c61aa1782dd7b9581d793410b81",
+      "english": "377b873a02fa163d004cd7b9d7b56c3a07dd6144a3a5e07d7d8214931fc08e2f",
+      "size": 90275
     },
     "src/ui/index.html": {
-      "upstream": "67e879a645b18226de828e315e90eab2e8809ac928df9430789bf8e371a268c8",
-      "english": "b90604103ec3586e9ba823ef7c5697a31adbac401694164d86ba84c72d3fa1ba",
-      "size": 37758
+      "upstream": "8bc105d369370b84db92280a33d8a19e3378d979dc2a29880b0d6e5b8b35f9ec",
+      "english": "61ed36a5bac1e688b91206bc1ac413eded681d926fdcb58e1b1c2d0a8c2541f2",
+      "size": 45925
     },
     "src/ui/shell.html": {
       "upstream": "4607b8e5a487eab7c0ea36b46f26b705fe1dd434617d75103ed8fb4637a759a1",
@@ -182,9 +227,19 @@
       "size": 1883
     },
     "src/ui/shell.js": {
-      "upstream": "d326dc88555da40c09f6ce93b4e5002e85493e4e08194edb88f50ace80d016a9",
-      "english": "06eb16ff359ddfcd8ea7af00d2aefe47240108ec4bebe201c0723e0ca8f16a22",
-      "size": 1855
+      "upstream": "1bcacaad5bf553d15567dca080fa70ba49f7054f538ef41d50101554dd379da1",
+      "english": "1fd629207663aaa530de18326fd1b54f1518ae6bbd847068824300bb247dac7c",
+      "size": 2000
+    },
+    "src/ui/splash.html": {
+      "upstream": "a558bfba37a4f3d64554c959a5ae379b6e546a198527a4c7c67348705d042c10",
+      "english": "c3c674596e969e7e49788c332982a03e8c2128e91e345a0c692c8681da1d8e65",
+      "size": 1515
+    },
+    "src/ui/splash.js": {
+      "upstream": "404d914ee3223e404e19ec2a2551e18a183bdbcdb6461c376eda85ad12655fd4",
+      "english": "a789bbc5fb1b07b4f37e32d029ab571ccc59bf7091b1246c9654746c8c3905cb",
+      "size": 1893
     }
   }
 }

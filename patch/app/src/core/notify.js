@@ -2,7 +2,7 @@
 /**
  * 安卓通知 → Windows 原生通知。
  *
- * 模拟器没有把通知接到 Windows 上，这里按 2.5 秒轮询 `dumpsys notification`（只读、低开销），
+ * 模拟器没有把通知接到 Windows 上，这里按 2.5 秒轮询 `dumpsys notification` (只读, 低开销)，
  * 解析出「新出现的通知」再用 Electron 的 Notification 走系统通知中心 / 操作中心。
  * 点通知直接回到对应的App windows。
  */
@@ -109,7 +109,7 @@ class NotifyBridge {
         this.seen.add(id);
         fresh.push(n);
       }
-      // 防内存增长：只在最近 500 条里做去重
+      // 防内存增长: 只在最近 500 条里做去重
       if (this.seen.size > 500) this.seen = new Set([...this.seen].slice(-300));
       for (const n of fresh) this._show(n);
     } catch (_) { /* runtime not ready时忽略 */ }

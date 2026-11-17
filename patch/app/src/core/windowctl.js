@@ -2,13 +2,13 @@
 /**
  * 把 Android Emulator 的 Qt 窗口打扮成「一个App一个原生窗口」。
  *
- * 为什么不投屏：无头模式下 SurfaceFlinger 不出 VSYNC（实测 screenrecord 3 秒只有 2 帧），
+ * 为什么不投屏: 无头模式下 SurfaceFlinger 不出 VSYNC (实测 screenrecord 3 秒只有 2 帧)，
  * 软件投屏既卡又吃 CPU。带窗口的模拟器本身就是原生 60fps + 原生鼠标键盘，
  * 这里只做「改标题 / 换图标 / 设尺寸 / 全屏」这几下 Win32 操作，成本近乎为零。
  *
  * PowerShell 是 Windows 自带组件，脚本为纯 ASCII，中文标题通过 UTF-8 JSON 传入，
  * 避免 Windows PowerShell 5.1 按 ANSI 读 .ps1 造成乱码。
- * 任何失败都静默降级：窗口照样能用，只是没有改名/全屏。
+ * 任何失败都静默降级: 窗口照样能用，只是没有改名/全屏。
  */
 const fs = require('fs');
 const os = require('os');
@@ -70,7 +70,7 @@ async function getBounds(pid) {
  */
 async function present(o) {
   const { pid, label, icon, mode, bounds, screen } = o || {};
-  // pid=0 是合法输入：复用别的进程拉起的模拟器时没有句柄，交给脚本按进程名找窗口
+  // pid=0 是合法输入: 复用别的进程拉起的模拟器时没有句柄，交给脚本按进程名找窗口
   if (pid === undefined || pid === null) return null;
   return call({
     pid,

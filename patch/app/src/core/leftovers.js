@@ -2,13 +2,13 @@
 /**
  * Clean old version leftovers。
  *
- * 用户升级 ApkStart 常出现「装过好几个版本、Uninstall不干净」：便携版每换一次版本就多一个
- * ApkStart-vX.Y.Z-win64-portable 目录；NSIS 安装版升级后可能留下指向已删除目录的
- * Uninstall项；更新过程还会在数据目录里留下一堆临时包。
+ * 用户升级 ApkStart 常出现「装过好几个版本, Uninstall不干净」: 便携版每换一次版本就多一个
+ * ApkStart-vX.Y.Z-win64-portable 目录; NSIS 安装版升级后可能留下指向已删除目录的
+ * Uninstall项; 更新过程还会在数据目录里留下一堆临时包。
  *
- * 这里只做**可证明安全**的清理：
- *   - 只认「目录里确实有 ApkStart.exe」的旧版本目录，且绝不碰当前Running的那个；
- *   - 只删除「InstallLocation 已经不存在」的注册表Uninstall项（那个本来就已经是死条目）；
+ * 这里只做**可证明安全**的清理: 
+ *   - 只认「目录里确实有 ApkStart.exe」的旧版本目录，且绝不碰当前Running的那个; 
+ *   - 只删除「InstallLocation 已经不存在」的注册表Uninstall项 (那个本来就已经是死条目); 
  *   - 只删自己更新缓存里的临时文件与指向不存在目标的开始菜单/桌面快捷方式。
  * 任何一步拿不准就跳过，并把原因如实返回给界面。
  */
@@ -40,38 +40,122 @@ function norm(p) {
   try { return path.resolve(p).toLowerCase(); } catch (_) { return String(p).toLowerCase(); }
 }
 
-/** 在若干「可能放程序的」目录里找旧版本目录 */
+/**
+ * 在若干「可能放程序的」目录里找旧版本目录。
+ *
+ * 以前只扫当前 exe 的父目录 + LOCALAPPDATA\Programs + ProgramFiles，结果用户把
+ * 便携版解压到别的地方 (E:\下载, 桌面, 某个项目目录)就永远扫不到 —— 这正是
+ * 「其他文件夹里的旧版本清不掉」的原因。current多路发现: 
+ *   - 常见安装位置; 
+ *   - 各磁盘根目录下的浅层 (很多便携版直接丢在 D:\ApkStart-…); 
+ *   - 桌面 / 开始菜单里现存快捷方式指向的真实 exe 所在目录 (最准，用户装过就一定有)。
+ */
 function candidateRoots(installDir) {
   const roots = new Set();
-  const parent = path.dirname(installDir);
-  if (parent) roots.add(parent);
+  const add = (p) => { if (p) roots.add(p); };
+  add(path.dirname(installDir));
   const local = process.env.LOCALAPPDATA;
-  if (local) roots.add(path.join(local, 'Programs'));
-  const pf = process.env.ProgramFiles;
-  if (pf) roots.add(pf);
+  if (local) add(path.join(local, 'Programs'));
+  add(process.env.ProgramFiles);
+  add(process.env['ProgramFiles(x86)']);
+  // 用户主目录下几个高频位置
+  const home = os.homedir();
+  if (home) {
+    add(path.join(home, 'Downloads'));
+    add(path.join(home, 'Desktop'));
+    add(path.join(home, 'Documents'));
+  }
+  // 每个本地磁盘根目录 (便携版常直接放盘根)
+  try {
+    for (const drv of ['C:\\', 'D:\\', 'E:\\', 'F:\\', 'G:\\', 'H:\\']) {
+      if (fs.existsSync(drv)) add(drv.replace(/\\+$/, ''));
+    }
+  } catch (_) { /* ignore */ }
   return [...roots];
 }
 
-/** 旧版本程序目录：形如 ApkStart*，且里面有 ApkStart.exe，且不是当前安装目录 */
+/**
+ * 从快捷方式 (.lnk / .desktop)反查 ApkStart.exe 的真实所在目录。
+ * 这是最可靠的发现手段: 只要用户曾经创建过桌面图标或开始菜单项，目标路径就在里面，
+ * 无论它被放在哪个盘, 哪个深层文件夹。
+ */
+function rootsFromShortcuts() {
+  const dirs = new Set();
+  const homes = [os.homedir(), process.env.APPDATA, process.env.LOCALAPPDATA]
+    .filter(Boolean);
+  const linkDirs = [];
+  for (const h of homes) {
+    linkDirs.push(path.join(h, 'Desktop'));
+    linkDirs.push(path.join(h, 'AppData', 'Roaming', 'Microsoft', 'Windows', 'Start Menu', 'Programs'));
+    linkDirs.push(path.join(h, 'AppData', 'Roaming', 'Microsoft', 'Windows', 'Start Menu', 'Programs', 'ApkStart'));
+  }
+  for (const d of linkDirs) {
+    let list = [];
+    try { list = fs.readdirSync(d, { withFileTypes: true }); } catch (_) { continue; }
+    for (const e of list) {
+      if (!/\.(lnk|desktop)$/i.test(e.name)) continue;
+      const full = path.join(d, e.name);
+      try {
+        if (/\.desktop$/i.test(e.name)) {
+          const txt = fs.readFileSync(full, 'utf8');
+          const m = /^Exec=(.+)$/m.exec(txt);
+          if (m) {
+            const exePath = m[1].trim().replace(/^"|"$/g, '').split(/\s+/)[0];
+            if (exePath && /[\\/]ApkStart(\.exe)?$/i.test(exePath)) dirs.add(path.dirname(exePath));
+          }
+        } else {
+          // .lnk 是二进制，但目标路径以可读形式内嵌，直接扫字节里的 ApkStart*.exe
+          const buf = fs.readFileSync(full);
+          const s = buf.toString('latin1');
+          const re = /[A-Za-z]:\\[^\x00\x01-\x1f]*?ApkStart(?:-[^\x00\x01-\x1f]*)?[\\/]?ApkStart\.exe|[A-Za-z]:\\[^\x00\x01-\x1f]*?ApkStart\.exe/gi;
+          let mm;
+          while ((mm = re.exec(s))) {
+            dirs.add(path.dirname(mm[0].replace(/\x00.*$/, '')));
+          }
+        }
+      } catch (_) { /* 读不动就跳过 */ }
+    }
+  }
+  return [...dirs];
+}
+
+/** 旧版本程序目录: 形如 ApkStart*，且里面有 ApkStart.exe，且不是当前安装目录 */
 function scanDirs(installDir) {
   const out = [];
+  const seen = new Set();
   const cur = norm(installDir);
+  const consider = (full) => {
+    const key = norm(full);
+    if (seen.has(key)) return;
+    seen.add(key);
+    if (key === cur) return;
+    // 必须是「真的是 ApkStart」的目录，避免误删同名文件夹
+    if (!fs.existsSync(path.join(full, EXE))) return;
+    out.push({
+      kind: 'dir',
+      path: full,
+      size: dirSize(full),
+      note: 'old program folder (contains ' + EXE + ')',
+    });
+  };
   for (const root of candidateRoots(installDir)) {
     let list = [];
     try { list = fs.readdirSync(root, { withFileTypes: true }); } catch (_) { continue; }
     for (const e of list) {
       if (!e.isDirectory()) continue;
       if (!/^ApkStart/i.test(e.name)) continue;
-      const full = path.join(root, e.name);
-      if (norm(full) === cur) continue;
-      // 必须是「真的是 ApkStart」的目录，避免误删同名文件夹
-      if (!fs.existsSync(path.join(full, EXE))) continue;
-      out.push({
-        kind: 'dir',
-        path: full,
-        size: dirSize(full),
-        note: 'old program folder (contains ' + EXE + '）',
-      });
+      consider(path.join(root, e.name));
+    }
+  }
+  // 快捷方式反查到的目录: 本身可能就是旧版本目录，或其父/子目录是
+  for (const d of rootsFromShortcuts()) {
+    if (/^ApkStart/i.test(path.basename(d))) consider(d);
+    // 也看看它的同级 (dist 下往往并排好几个版本目录)
+    const parent = path.dirname(d);
+    let sib = [];
+    try { sib = fs.readdirSync(parent, { withFileTypes: true }); } catch (_) { continue; }
+    for (const e of sib) {
+      if (e.isDirectory() && /^ApkStart/i.test(e.name)) consider(path.join(parent, e.name));
     }
   }
   return out;
@@ -103,7 +187,7 @@ function scanRegistry() {
       const install = (loc || '').trim().replace(/^"|"$/g, '');
       const uninsPath = (unins || '').trim().replace(/^"|"$/g, '');
       const installMissing = install ? !fs.existsSync(install) : false;
-      // 只处理「明明已经没装、却还挂在App列表里」的死条目
+      // 只处理「明明已经没装, 却还挂在App列表里」的死条目
       const deadUninstaller = uninsPath && !fs.existsSync(uninsPath.split('"')[0]);
       if (!installMissing && !deadUninstaller) continue;
       out.push({
@@ -138,7 +222,7 @@ function scanTemp(dataDir) {
   return out;
 }
 
-/** 旧/废弃的快速启动快照：default_boot 是早期版本留下的（一份 ram.img 约 3GB），
+/** 旧/废弃的快速启动快照: default_boot 是早期版本留下的 (一份 ram.img 约 3GB)，
  *  *.stale-* 是「删不掉就改名」的残留。当前快照名是 apkstart，绝不碰。 */
 function scanSnapshots(avdHome) {
   const out = [];
@@ -186,7 +270,7 @@ function clean(items, { installDir }) {
   for (const it of items || []) {
     try {
       if (it.kind === 'dir') {
-        // 双保险：绝不删当前Running的目录
+        // 双保险: 绝不删当前Running的目录
         if (norm(it.path) === cur) { failed.push({ path: it.path, reason: 'this is the running version' }); continue; }
         if (!fs.existsSync(path.join(it.path, EXE))) { failed.push({ path: it.path, reason: 'the folder has no ' + EXE }); continue; }
         if (rm(it.path)) { freed += it.size || 0; removed.push(it.path); }

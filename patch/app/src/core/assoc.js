@@ -1,6 +1,6 @@
 'use strict';
 /**
- * .apk 文件关联（仅写 HKCU，不需要管理员权限）
+ * .apk 文件关联 (仅写 HKCU，不需要管理员权限)
  * 双击 apk → apkstart.exe "%1" → Automatic安装 → Automatic建桌面快捷方式
  */
 const { execFileSync } = require('child_process');
@@ -21,7 +21,7 @@ function reg(args) {
   }
 }
 
-/** 读某个键的默认值（REG_SZ），读不到返回空串 */
+/** 读某个键的默认值 (REG_SZ)，读不到返回空串 */
 function regDefault(key) {
   try {
     const out = execFileSync('reg', ['query', key, '/ve'], { windowsHide: true, encoding: 'utf8' });
@@ -60,7 +60,7 @@ try {
 }
 
 /**
- * @param {string} exePath apkstart 主程序路径（开发模式下是 electron.exe）
+ * @param {string} exePath apkstart 主程序路径 (开发模式下是 electron.exe)
  * @param {string} [iconPath] 可choose ico
  * @param {string} [extraArgs] 开发模式下需要先传App目录，例如 "\"C:\\path\\apkstart\""
  */
@@ -92,10 +92,10 @@ function registerAssociation(exePath, iconPath, extraArgs) {
 
 /**
  * Cancel关联。
- * 旧实现无条件把 .apk 的默认值清空（注释写了「仅当仍指向我们自己」，但代码没做），
- * 用户Uninstall ApkStart 时会把原本的 .apk 关联一起抹掉。现在：
- *  1) 有关联前记录 → 原样还原；
- *  2) 没有记录且当前默认值仍是我们的 → 才清空；
+ * 旧实现无条件把 .apk 的默认值清空 (注释写了「仅当仍指向我们自己」，但代码没做)，
+ * 用户Uninstall ApkStart 时会把原本的 .apk 关联一起抹掉。current: 
+ *  1) 有关联前记录 → 原样还原; 
+ *  2) 没有记录且当前默认值仍是我们的 → 才清空; 
  *  3) 当前默认值是别人的 → 一个字节都不动。
  */
 function unregisterAssociation() {

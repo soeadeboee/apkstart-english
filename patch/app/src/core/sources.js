@@ -1,18 +1,18 @@
 'use strict';
 /**
- * 双源（GitHub / Gitee）+ 镜像前缀的统一下载来源管理。
+ * 双源 (GitHub / Gitee)+ 镜像前缀的统一下载来源管理。
  *
- * 国内直连 GitHub 有两个坑：
- *   1. api.github.com 经常几十秒才响应，甚至直接超时 —— 表现是「Check for updates转圈」；
- *   2. 资产下载（objects.githubusercontent.com）单连接限速，常在 100KB/s 上下 ——
+ * 国内直连 GitHub 有两个坑: 
+ *   1. api.github.com 经常几十秒才响应，甚至直接超时 —— 表现是「Check for updates转圈」; 
+ *   2. 资产下载 (objects.githubusercontent.com)单连接限速，常在 100KB/s 上下 ——
  *      1.5 GB 的Runtime包要下 4 个Small时。
  *
- * 所以这里不预设「谁是主源」，而是每次用真实字节测速：
- *   - 版本信息：GitHub / Gitee 两边**并发**问，谁先给出更高版本用谁的；
- *   - 下载地址：把「GitHub 直连 / Gitee 同名资产 / 镜像前缀拼接」全部列出来，
+ * 所以这里不预设「谁是主源」，而是每次用真实字节测速: 
+ *   - 版本信息: GitHub / Gitee 两边**并发**问，谁先给出更高版本用谁的; 
+ *   - 下载地址: 把「GitHub 直连 / Gitee 同名资产 / 镜像前缀拼接」全部列出来，
  *     每个地址真下 128KB，按实测速度排序，取最快的那个。
  *
- * 测速结果在内存里缓存 30 分钟（同一进程内反复Check for updates/下多个组件不必重复测）。
+ * 测速结果在内存里缓存 30 分钟 (同一进程内反复Check for updates/下多个组件不必重复测)。
  */
 const https = require('https');
 const http = require('http');
@@ -46,7 +46,7 @@ const KNOWN_MIRRORS = [
 
 /**
  * 一次测速的采样字节数。
- * 128KB 太Small：握手 + TLS 就有几百毫秒，测出来的「速度」其实主要在测延迟，
+ * 128KB 太Small: 握手 + TLS 就有几百毫秒，测出来的「速度」其实主要在测延迟，
  * 会把「延迟高但带宽Large」的源误判成慢。256KB 能把两者分开，流量也可以接受。
  */
 const SAMPLE_BYTES = 256 * 1024;
@@ -80,7 +80,7 @@ function openUrl(url, { timeout = 10000, headers = {}, redirects = 0, followRedi
   });
 }
 
-/** 取一Small段 JSON（带重定向、超时、LargeSmall上限） */
+/** 取一Small段 JSON (带重定向, 超时, LargeSmall上限) */
 async function getJson(url, timeout = 10000) {
   const res = await openUrl(url, { timeout });
   if (res.statusCode < 200 || res.statusCode >= 300) {
@@ -117,7 +117,7 @@ function measure(url, { bytes = SAMPLE_BYTES, timeoutMs = 9000 } = {}) {
       settled = true;
       try { req?.destroy(); } catch (_) { /* ignore */ }
       const now = Date.now();
-      // 吞吐只算「开始收到字节之后」的时间：TLS 握手 + DNS 那几百毫秒是固定开销，
+      // 吞吐只算「开始收到字节之后」的时间: TLS 握手 + DNS 那几百毫秒是固定开销，
       // 对 1.4GB 的包几乎不影响总耗时，混进速度里会把判断带偏。
       const span = Math.max(1, now - (firstAt || t0));
       resolve({
@@ -149,7 +149,7 @@ function measure(url, { bytes = SAMPLE_BYTES, timeoutMs = 9000 } = {}) {
         got += c.length;
         if (got >= bytes) { clearTimeout(timer); done(true); }
       });
-      // 资产本身比样本还Small：读到 EOF 也算成功
+      // 资产本身比样本还Small: 读到 EOF 也算成功
       res.on('end', () => { clearTimeout(timer); done(got > 0); });
       res.on('error', (e) => { clearTimeout(timer); done(false, e.message); });
     }).catch((e) => { clearTimeout(timer); done(false, e.message); });
@@ -165,9 +165,9 @@ function withMirror(url, prefix) {
 
 /**
  * Gitee 发行版附件单文件上限 100MB，安装包 105~110MB 装不下，所以发布时切成
- * xxx.zip.part1 / xxx.zip.part2。这里把分片还原成一个逻辑资产：
+ * xxx.zip.part1 / xxx.zip.part2。这里把分片还原成一个逻辑资产: 
  *   { name: 'xxx.zip', size: 总和, parts: [{index, size, urls:[...]}] }
- * 分片必须从 part1 开始连续，否则视为残缺、丢弃（宁可用整包，也不下一个坏包）。
+ * 分片必须从 part1 开始连续，否则视为残缺, 丢弃 (宁可用整包，也不下一个坏包)。
  */
 function groupParts(assets) {
   const groups = new Map();
@@ -195,15 +195,15 @@ function groupParts(assets) {
     g.parts.sort((x, y) => x.index - y.index);
     const contiguous = g.parts.every((p, i) => p.index === i + 1);
     g.size = g.parts.reduce((n, p) => n + (Number(p.size) || 0), 0);
-    // 注意：Gitee 的发行版资产条目只有 name/url，**没有 size**。
-    // 以「size>0」作为完整性条件会把整组分片判成残缺而丢弃（实测踩过），
-    // 所以这里只要求「分片连续 + 每个分片有地址」；LargeSmallUnknown时进度按已收字节显示。
+    // 注意: Gitee 的发行版资产条目只有 name/url，**没有 size**。
+    // 以「size>0」作为完整性条件会把整组分片判成残缺而丢弃 (实测踩过)，
+    // 所以这里只要求「分片连续 + 每个分片有地址」; LargeSmallUnknown时进度按已收字节显示。
     if (!contiguous || !g.parts.every((p) => p.urls.length)) g.broken = true;
   }
   return { list: out.filter((a) => !a.broken), broken: [...groups.values()].filter((g) => g.broken).map((g) => g.name) };
 }
 
-/** mirrors 列表: use户自定义优先，其次内置（autoMirror 关掉就只用自定义的） */
+/** mirrors 列表: use户自定义优先，其次内置 (autoMirror 关掉就只用自定义的) */
 function mirrorList(settings) {
   const r = (settings && settings.runtime) || {};
   const custom = String(r.mirrorPrefix || process.env.APKSTART_MIRROR || '').trim();
@@ -217,32 +217,32 @@ class Sources {
     this.settings = typeof settingsFn === 'function' ? settingsFn : () => ({});
     this._rankCache = new Map();   // url -> {at, speed, ok}
     this._rankTtl = 30 * 60 * 1000;
-    // 版本检查结果缓存：Gitee 的匿名调用限流很紧（连续几次就 403），
+    // 版本检查结果缓存: Gitee 的匿名调用限流很紧 (连续几次就 403)，
     // 而「有没有新版本」本来也不需要秒级新鲜度。
     this._relCache = { at: 0, key: '', value: null };
     this._relTtl = 10 * 60 * 1000;
-    // 熔断：某个源被限流/报错后，一段时间内直接跳过它，不再每次启动都撞墙
+    // 熔断: 某个源被限流/报错后，一段时间内直接跳过它，不再每次启动都撞墙
     this._blocked = new Map();     // sourceId -> until(ms)
     this._blockMs = 15 * 60 * 1000;
   }
 
-  /** 该源是否处于熔断期；返回 null 表示可用，否则返回给用户看的原因 */
+  /** 该源是否处于熔断期; 返回 null 表示可用，否则返回给用户看的原因 */
   blockedReason(id) {
     const until = this._blocked.get(id) || 0;
     if (until <= Date.now()) return null;
     return `skipping for now (no retry within ${Math.ceil((until - Date.now()) / 60000)} min)`;
   }
 
-  /** 各源的最新 release（并发，任何一个失败都不影响另一个） */
+  /** 各源的最新 release (并发，任何一个失败都不影响另一个) */
   /**
-   * 不依赖 API 的兜底：直接跟随 `/releases/latest` 的 302 拿到 tag。
+   * 不依赖 API 的兜底: 直接跟随 `/releases/latest` 的 302 拿到 tag。
    *
-   * 为什么必须有这一条：GitHub 的匿名 API 每个 IP 每Small时只有 60 次，
-   * Gitee 的匿名 API 更紧（实测连点几次就 403 Rate Limit Exceeded）。
-   * 公司/校园网、运营商 NAT 出口下，用户很容易「Check for updates失败」——
+   * 为什么必须有这一条: GitHub 的匿名 API 每个 IP 每Small时只有 60 次，
+   * Gitee 的匿名 API 更紧 (实测连点几次就 403 Rate Limit Exceeded)。
+   * 公司/校园网, 运营商 NAT 出口下，用户很容易「Check for updates failed」——
    * 而 `releases/latest` 这个网页跳转是走 CDN 的，不消耗 API 额度。
    *
-   * 拿到 tag 之后资产名可以按发布约定拼出来：
+   * 拿到 tag 之后资产名可以按发布约定拼出来: 
    *   ApkStart-<tag>-win64-portable.zip / ApkStart-<version>-Setup.exe / ApkStart-runtime-<tag>.zip
    */
   async _releaseTagViaRedirect(id) {
@@ -255,7 +255,7 @@ class Sources {
     return m ? decodeURIComponent(m[1]) : '';
   }
 
-  /** 用 tag 拼一份「最Small可用」的 release（没有 API 时用） */
+  /** 用 tag 拼一份「最Small可用」的 release (没有 API 时用) */
   _syntheticRelease(id, tag) {
     const s = SOURCES[id];
     const ver = String(tag).replace(/^v/i, '');
@@ -265,7 +265,7 @@ class Sources {
       `ApkStart-runtime-${tag}.zip`,
     ];
     // GitHub 和 Gitee 都支持 /releases/download/<tag>/<文件名> 这种规范地址
-    // （实测 Gitee 会 302 到 foruda.gitee.com 的附件地址，能正常下到完整字节），
+    //  (实测 Gitee 会 302 到 foruda.gitee.com 的附件地址，能正常下到完整字节)，
     // 所以没有 API 时也能拼出可用的下载地址。Gitee 上没有的资产会 404，
     // 后面的测速排序会Automatic跳过它。
     const assets = names.map((n) => ({
@@ -287,8 +287,8 @@ class Sources {
   async fetchReleases() {
     const prefs = String((this.settings().runtime || {}).sourcePreference || 'auto');
     const ids = prefs === 'github' || prefs === 'gitee' ? [prefs] : ['github', 'gitee'];
-    // 公开仓库的 releases 接口匿名就能读；仓库若是私有的，Gitee 会回 404
-    // "Not Found Project"（而不是 401），那种情况才需要在这里填一个只读 token。
+    // 公开仓库的 releases 接口匿名就能读; 仓库若是私有的，Gitee 会回 404
+    // "Not Found Project" (而不是 401)，那种情况才需要在这里填一个只读 token。
     // 另外匿名调用有频率限制，感兴趣的用户可以填 token 提高额度。
     const token = String((this.settings().runtime || {}).giteeToken || '').trim();
     const withToken = (id, url) => (id === 'gitee' && token
@@ -303,13 +303,13 @@ class Sources {
         const rel = await getJson(withToken(id, `${s.api}/releases/latest`), 9000);
         return { source: id, name: s.name, web: s.web, rel };
       } catch (e) {
-        // Gitee 没有正式 release、或 GitHub 被墙，都退回列表取第一条
+        // Gitee 没有正式 release, 或 GitHub 被墙，都退回列表取第一条
         try {
           const list = await getJson(withToken(id, `${s.api}/releases?per_page=10`), 9000);
           const first = (Array.isArray(list) ? list : []).find((r) => r && !r.draft);
           if (first) return { source: id, name: s.name, web: s.web, rel: first };
         } catch (_) { /* Continue尝试不依赖 API 的兜底 */ }
-        // API 被限流/被墙时的兜底：网页跳转拿 tag，资产名按约定拼
+        // API 被限流/被墙时的兜底: 网页跳转拿 tag，资产名按约定拼
         try {
           const tag = await this._releaseTagViaRedirect(id);
           if (tag) {
@@ -328,8 +328,8 @@ class Sources {
   }
 
   /**
-   * 合并两边的最新版本：版本号更高的胜出，但**资产列表取并集**，
-   * 这样即使 Gitee 只放了元数据、资产在 GitHub，也能两条路都试。
+   * 合并两边的最新版本: 版本号更高的胜出，但**资产列表取并集**，
+   * 这样即使 Gitee 只放了元数据, 资产在 GitHub，也能两条路都试。
    */
   async latest({ force = false } = {}) {
     const pref = String((this.settings().runtime || {}).sourcePreference || 'auto');
@@ -338,8 +338,8 @@ class Sources {
       return cached.value;
     }
     const all = await this.fetchReleases();
-    // 被限流的源记入熔断（放在这里而不是 fetchReleases 内部，是为了让「谁来提供
-    // 结果」这件事可被替换/测试，同时保证任何入口拿到的 403 都会触发熔断）
+    // 被限流的源记入熔断 (放在这里而不是 fetchReleases 内部，是为了让「谁来提供
+    // 结果」这件事可被替换/测试，同时保证任何入口拿到的 403 都会触发熔断)
     for (const x of all) {
       if (x && x.error && /\b(403|429)\b/.test(x.error)) {
         this._blocked.set(x.source, Date.now() + this._blockMs);
@@ -347,8 +347,8 @@ class Sources {
     }
     const ok = all.filter((x) => x && x.rel);
     if (!ok.length) {
-      const why = all.map((x) => `${x.name || x.source}: ${x.error || 'no data'}`).join('；');
-      // 全挂了但手里有上一次的结果：宁可给一份「可能是旧的」版本信息，
+      const why = all.map((x) => `${x.name || x.source}: ${x.error || 'no data'}`).join('; ');
+      // 全挂了但手里有上一次的结果: 宁可给一份「可能是旧的」版本信息，
       // 也不要让界面直接报错 —— 用户至少还能看到Current version和发布页入口。
       if (cached.value) return { ...cached.value, stale: true, staleReason: why };
       throw new Error(`cannot reach the update server (${why})`);
@@ -358,8 +358,8 @@ class Sources {
     const tag = String(top.rel.tag_name || top.rel.name || '');
     const version = tag.replace(/^v/i, '');
 
-    // 只有同版本的资产才算数（不同源的旧版本资产不能拿来装）。
-    // 同名整包 + 分片组同时存在时优先用整包：分片要拼装，多一个失败点。
+    // 只有同版本的资产才算数 (不同源的旧版本资产不能拿来装)。
+    // 同名整包 + 分片组同时存在时优先用整包: 分片要拼装，多一个失败点。
     let raw = [];
     for (const item of ok) {
       const t = String(item.rel.tag_name || item.rel.name || '').replace(/^v/i, '');
@@ -367,7 +367,7 @@ class Sources {
       for (const a of (item.rel.assets || [])) {
         const key = String(a.name || '');
         if (!key) continue;
-        // Gitee 会把「源码包」Automatic挂成资产（v0.3.2.zip / v0.3.2.tar.gz），
+        // Gitee 会把「源码包」Automatic挂成资产 (v0.3.2.zip / v0.3.2.tar.gz)，
         // 这些不是安装包，`\.zip$` 的匹配规则会把它当成更新包下载下来 —— 必须排除。
         // 我们自己的发布资产统一以 ApkStart 开头，按这个前缀白名单更安全。
         if (!/^ApkStart/i.test(key)) continue;
@@ -383,10 +383,10 @@ class Sources {
     const wholeNames = new Set(grouped.list.filter((a) => !a.partial).map((a) => a.name));
     raw = grouped.list.filter((a) => !(a.partial && wholeNames.has(a.name)));
 
-    // 同名资产两个源都有（整包不再切分片以后就是这种常态）：把地址都留着当候choose。
-    // 以前是「按名字去重、谁先来用谁」—— GitHub 排在前面，Gitee 的地址就被丢掉了，
-    // 「Automaticchoose网络更好的源」实际退化成只走 GitHub。现在按实测速度挑（见 rank()）。
-    // 每个地址的LargeSmall单独记：两个源的包不是同一份字节（压缩器/构建机不同，能差几 MB），
+    // 同名资产两个源都有 (整包不再切分片以后就是这种常态): 把地址都留着当候choose。
+    // 以前是「按名字去重, 谁先来用谁」—— GitHub 排在前面，Gitee 的地址就被丢掉了，
+    // 「Automaticchoose网络更好的源」实际退化成只走 GitHub。current按实测速度挑 (见 rank())。
+    // 每个地址的LargeSmall单独记: 两个源的包不是同一份字节 (压缩器/构建机不同，能差几 MB)，
     // downloadMulti 只会混用「声明总LargeSmall一致」的地址，所以绝不能把两者的LargeSmall平均掉。
     const assets = [];
     const byName = new Map();
@@ -421,12 +421,12 @@ class Sources {
   }
 
   /**
-   * 某个资产在所有源 + 镜像下的候choose地址（去重、保序：源站优先，其次镜像）。
-   * 镜像只套在 GitHub 的地址上：ghfast / gh-proxy 只代理 GitHub，
+   * 某个资产在所有源 + 镜像下的候choose地址 (去重, 保序: 源站优先，其次镜像)。
+   * 镜像只套在 GitHub 的地址上: ghfast / gh-proxy 只代理 GitHub，
    * 把 Gitee 的链接拼上去只会得到一个 403，白白多测一次速。
    */
   candidates(assetOrUrl) {
-    // 支持三种入参：单个地址、资产对象（url）、合并后的资产对象（urls 数组，含两个源）
+    // 支持三种入参: 单个地址, 资产对象 (url), 合并后的资产对象 (urls 数组，含两个源)
     const urls = (typeof assetOrUrl === 'string'
       ? [assetOrUrl]
       : (assetOrUrl && (assetOrUrl.urls && assetOrUrl.urls.length ? assetOrUrl.urls : [assetOrUrl.url])))
@@ -450,8 +450,8 @@ class Sources {
   }
 
   /**
-   * 按实测速度排序候choose地址。测速结果缓存 30 分钟；
-   * 全部测速失败就退回原始顺序（保证「最坏情况还是能下」）。
+   * 按实测速度排序候choose地址。测速结果缓存 30 分钟; 
+   * 全部测速失败就退回原始顺序 (保证「最坏情况还是能下」)。
    */
   async rank(urls, { onProgress } = {}) {
     const list = (urls || []).filter(Boolean);
@@ -464,10 +464,10 @@ class Sources {
     }
     if (need.length) {
       onProgress?.({ stage: 'probe', message: `benchmarking ${need.length} download sources…` });
-      // 顺序测而不是并发测：并发会互相抢带宽，测出来的名次变成「谁抢得凶」，
+      // 顺序测而不是并发测: 并发会互相抢带宽，测出来的名次变成「谁抢得凶」，
       // 而不是「谁真的快」。每个源 256KB，正常也就一秒左右。
-      // 单个源最多等 6 秒就放弃（旧版 9 秒 × 4 个源 = 最长 36 秒没有任何字节进度，
-      // 用户看到的就是「卡在准备Runtime」）；测速失败只会排到最后，不影响能下载。
+      // 单个源最多等 6 秒就放弃 (旧版 9 秒 × 4 个源 = 最长 36 秒没有任何字节进度，
+      // 用户看到的就是「卡在准备Runtime」); 测速失败只会排到最后，不影响能下载。
       let i = 0;
       for (const u of need) {
         i += 1;
@@ -495,7 +495,7 @@ class Sources {
     return sorted;
   }
 
-  /** 测速缓存清空（用户改了镜像前缀 / 换了网络后调用） */
+  /** 测速缓存清空 (用户改了镜像前缀 / 换了网络后调用) */
   reset() {
     this._rankCache.clear();
     this._relCache = { at: 0, key: '', value: null };

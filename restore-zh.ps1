@@ -1,7 +1,7 @@
 #requires -Version 5.1
 <#
 .SYNOPSIS
-    Restores the original Chinese files of ApkStart v0.4.3.
+    Restores the original Chinese files of ApkStart v0.5.3.
 
 .DESCRIPTION
     Shortcut for "install-en.ps1 -Restore". Uses the newest backup created by

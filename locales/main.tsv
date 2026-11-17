@@ -91,3 +91,47 @@ GitHub 运行时不可用（${e.message}），改用官方源…	GitHub runtime 
 需要先下载 Android 系统镜像（约 1.5GB）。	The Android system image must be downloaded first (~1.5 GB).
 需要先部署运行时引擎（约 440MB）。	The runtime engine must be deployed first (~440 MB).
 驱动安装失败（退出码 ${code}）	Driver installation failed (exit code ${code})
+
+
+
+
+
+
+
+# --- untranslated strings added for upstream v0.5.3 (English) ---
+orientation mismatch (panel=${cur ? 'landscape' : 'portrait'}, want=${wantLand}) 重启校正	orientation mismatch (panel=${cur ? 'landscape' : 'portrait'}, want=${wantLand}), restarting to correct
+将释放约 ${(preview.candidates.reduce((n, c) => n + c.size, 0) / 1048576).toFixed(0)} MB	Will free about ${(preview.candidates.reduce((n, c) => n + c.size, 0) / 1048576).toFixed(0)} MB
+正在为《${String(label).slice(0, 20)}》切换到${land ? '横屏' : '竖屏'}（重启安卓环境，约 40 秒，只需一次）…	Switching ${String(label).slice(0, 20)} to ${land ? 'landscape' : 'portrait'} (restarting the Android environment, about 40 seconds, only once)…
+autoDeploy 冷却中（上次失败于 ${new Date(lastFail).toISOString()}），跳过自动重试	autoDeploy cooling down (last failure at ${new Date(lastFail).toISOString()}), skipping the automatic retry
+autoDeploy 跳过联网下载：运行时目录随包内置（${bundledRuntimeDir}），交给诊断流程	autoDeploy skipping the network download: the runtime directory is bundled (${bundledRuntimeDir}), handing over to diagnostics
+你取消了管理员授权，硬件加速没有改动。可以再点一次「修复」，或手动开启「Windows 虚拟机监控程序平台」。	You cancelled the administrator prompt, so hardware acceleration is unchanged. Click Repair again, or enable Windows Hypervisor Platform manually.
+按 Win+R → 输入 optionalfeatures → 勾选「Windows 虚拟机监控程序平台」	Press Win+R → type optionalfeatures → tick Windows Hypervisor Platform
+launch queued ${pkg}（等待 ${launchInFlight.pkg} 启动完成）	launch queued ${pkg} (waiting for ${launchInFlight.pkg} to finish launching)
+autoDeploy 跳过：运行时随包内置（${bundledRuntimeDir}），无需联网	autoDeploy skipped: the runtime is bundled (${bundledRuntimeDir}), no network needed
+（HypervisorPlatform，WHPX 真正需要的那个），确定后重启电脑。	(HypervisorPlatform, the one WHPX actually needs), then restart the PC.
+开启「Windows 虚拟机监控程序平台」后重启一次，速度可提升 5~10 倍。	Enabling Windows Hypervisor Platform and restarting once can make it 5-10 times faster.
+商店版更新由 Microsoft Store 负责，已打开商店的「下载和更新」	Store builds update through Microsoft Store; opened Downloads and updates
+已请求开启「Windows 虚拟机监控程序平台」，重启电脑后硬件加速才会生效	Requested Windows Hypervisor Platform; hardware acceleration takes effect after a restart
+设置 → 环境自检 → 修复 可一键开启（需管理员授权），之后重启一次。	Settings → Environment check → Repair turns it on in one click (needs administrator approval), then restart once.
+${accel.note || '将回退软件模拟（能跑但很慢）。'}	${accel.note || 'It will fall back to software emulation (runs, but very slowly).'}
+已切换运行时底座：${runtime.backend.label}	Switched runtime backend: ${runtime.backend.label}
+点右侧「修复」会自动开启（需要管理员授权，可能要重启一次）；	 Repair on the right enables it automatically (needs administrator approval, may require one restart); 
+已开启「Windows 虚拟机监控程序平台」，重启电脑后生效	Enabled Windows Hypervisor Platform; takes effect after a restart
+（商店版无法代你提权，需要你手动操作一次，之后重启。）	(Store builds cannot elevate for you; do it manually once, then restart.)
+等待 ${backend.label} 的画面窗口…	Waiting for the ${backend.label} screen window…
+${be.label} 自己管理画面窗口，跳过接管	${be.label} manages its own screen window, skipping takeover
+设置 → 环境自检 → 修复 会直接打开该窗口。	Settings → Environment check → Repair opens that window directly.
+关闭当前应用（${runningLabel}）	Close the current app (${runningLabel})
+需要开启「Windows 虚拟机监控程序平台」	Windows Hypervisor Platform must be enabled
+没有它只能跑纯软件模拟，开机会慢到几分钟。	Without it everything runs in pure software emulation and boot takes minutes.
+商店版无法自行提权。请手动开启一次：	Store builds cannot elevate themselves. Enable it manually once:
+失败时会自动改装 AEHD 驱动。	If that fails, the AEHD driver is installed instead.
+，镜像将在首次启动时本地展开	, the image expands locally on first boot
+app up (提前接画面)	app up (attaching the screen early)
+正在以软件模拟运行（很慢）	Running in software emulation (very slow)
+切回竖屏（需重启运行时）	Switch back to portrait (runtime restart needed)
+切换横屏（需重启运行时）	Switch to landscape (runtime restart needed)
+没有正在运行的应用	No app is running
+正在切换到横屏…	Switching to landscape…
+正在切换到竖屏…	Switching to portrait…
+关闭当前应用	Close current app

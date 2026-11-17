@@ -10,6 +10,7 @@ contextBridge.exposeInMainWorld('apkstart', {
   parseApk: (p) => invoke('apk:parse', p),
   installApk: (p) => invoke('apk:install', p),
   launch: (pkg) => invoke('app:launch', pkg),
+  stop: (pkg) => invoke('app:stop', pkg),
   uninstall: (pkg) => invoke('app:uninstall', pkg),
   createShortcut: (pkg) => invoke('app:shortcut', pkg),
   clearData: (pkg) => invoke('app:clearData', pkg),
@@ -48,7 +49,7 @@ contextBridge.exposeInMainWorld('apkstart', {
   displaySet: (patch) => invoke('display:set', patch || {}),
   displayToggle: () => invoke('display:toggle'),
   rebuildShortcuts: () => invoke('shortcut:rebuild'),
-  autoDeploy: () => invoke('runtime:autoDeploy'),
+  autoDeploy: (opts) => invoke('runtime:autoDeploy', opts || {}),
   startInstaller: () => invoke('runtime:startInstaller'),
   markInstalled: () => invoke('runtime:markInstalled'),
   resetInstall: () => invoke('runtime:resetInstall'),
@@ -63,6 +64,8 @@ contextBridge.exposeInMainWorld('apkstart', {
   installAehd: () => invoke('provision:installAehd'),
   enableAccel: () => invoke('provision:enableAccel'),
   enableVirtualization: () => invoke('provision:enableVirtualization'),
+  // Open「启用或Close Windows 功能」对话框 (商店版只能引导用户自己去勾choose)
+  openWindowsFeatures: () => invoke('provision:openWindowsFeatures'),
   downloadIso: () => invoke('provision:downloadIso'),
   createDisk: (gb) => invoke('provision:createDisk', gb),
   importIso: () => invoke('provision:importIso'),
@@ -73,7 +76,7 @@ contextBridge.exposeInMainWorld('apkstart', {
   removeSelf: () => invoke('app:removeSelf'),
   setSharedDir: (dir) => invoke('settings:setSharedDir', dir),
 
-  // 在线更新（GitHub Releases）
+  // 在线更新 (GitHub Releases)
   updateCheck: (opts) => invoke('app:updateCheck', opts || {}),
   updateApply: () => invoke('app:updateApply'),
   updateCancel: () => invoke('app:updateCancel'),
@@ -94,7 +97,7 @@ contextBridge.exposeInMainWorld('apkstart', {
   winHide: () => invoke('window:hide'),
   bringAppToFront: () => invoke('app:foreground'),
 
-  // App windows（只有 旋转 / Minimize / Maximize / Close）用到的接口
+  // App windows (只有 旋转 / Minimize / Maximize / Close)用到的接口
   shell: {
     state: () => invoke('shell:state'),
     minimize: () => invoke('shell:minimize'),
@@ -103,6 +106,7 @@ contextBridge.exposeInMainWorld('apkstart', {
     rotate: () => invoke('shell:rotate'),
     back: () => invoke('shell:back'),
     forward: () => invoke('shell:forward'),
+    keyEvent: (key) => invoke('shell:keyEvent', key),
     onState: (cb) => {
       const handler = (_e, payload) => cb(payload);
       ipcRenderer.on('shell:state', handler);
@@ -110,7 +114,7 @@ contextBridge.exposeInMainWorld('apkstart', {
     },
   },
 
-  // 安卓系统Settings（WiFi / 音量 / 显示 / 动画 / 权限 …）
+  // 安卓系统Settings (WiFi / 音量 / 显示 / 动画 / 权限 …)
   android: {
     status: () => invoke('android:status'),
     set: (key, value) => invoke('android:set', { key, value }),
@@ -118,6 +122,16 @@ contextBridge.exposeInMainWorld('apkstart', {
     tune: (pkg) => invoke('android:tune', pkg),
     permissions: (pkg) => invoke('android:permissions', pkg),
     grantAll: (pkg) => invoke('android:grantAll', pkg),
+  },
+
+  // 按键映射 (游戏键盘→触屏)
+  keymap: {
+    getPresets: () => invoke('keymap:getPresets'),
+    getMap: (pkg) => invoke('keymap:getMap', pkg),
+    setMap: (pkg, mappings) => invoke('keymap:setMap', pkg, mappings),
+    setEnabled: (on) => invoke('keymap:setEnabled', on),
+    isEnabled: () => invoke('keymap:isEnabled'),
+    applyPreset: (pkg, presetId) => invoke('keymap:applyPreset', pkg, presetId),
   },
 
   pathForFile: (file) => webUtils.getPathForFile(file),

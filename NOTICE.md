@@ -7,12 +7,12 @@ Copyright (c) 2026 ApkStart contributors
 Licensed under the MIT License.
 <https://github.com/RoutineMiku/apkstart>
 
-This repository is an **unofficial English translation** of ApkStart v0.4.3. It is
+This repository is an **unofficial English translation** of ApkStart v0.5.3. It is
 not affiliated with, endorsed by, or supported by the upstream author.
 
 ## What this repository contains
 
-- `patch/app/` — modified copies of 35 files from ApkStart v0.4.3. Only user-facing
+- `patch/app/` — modified copies of 46 files from ApkStart v0.5.3. Only user-facing
   Chinese strings were changed; program logic, identifiers and comments are
   untouched. Every file's upstream and English SHA-256 is recorded in
   `patch/manifest.json`.

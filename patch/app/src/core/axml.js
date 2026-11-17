@@ -43,7 +43,7 @@ function readStringPool(buf, start) {
   for (let i = 0; i < count; i++) {
     let p = base + offsets[i];
     if (isUtf8) {
-      // utf16 长度（1~2 字节）
+      // utf16 长度 (1~2 字节)
       let len = buf[p++];
       if (len & 0x80) { len = ((len & 0x7f) << 8) | buf[p++]; }
       // utf8 字节长度
@@ -102,7 +102,7 @@ function parseAxml(buffer) {
       const attrCount = buf.readUInt16LE(pos + 28);
 
       const node = { name: pool[nameIdx], attrs: [], children: [], parent: stack[stack.length - 1] };
-      // attributeStart 相对 ResXMLTree_attrExt（chunk + 16）起算
+      // attributeStart 相对 ResXMLTree_attrExt (chunk + 16)起算
       const attrBase = pos + 16 + attrStart;
       for (let i = 0; i < attrCount; i++) {
         const a = attrBase + i * attrSize;

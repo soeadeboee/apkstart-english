@@ -1,6 +1,6 @@
 'use strict';
 /**
- * 安卓系统Settings：不需要进安卓桌面，也不用装第三方工具，
+ * 安卓系统Settings: 不需要进安卓桌面，也不用装第三方工具，
  * 直接通过 adb 把常用的系统开关做成 ApkStart Settings页里的按钮。
  * 所有命令都是官方 shell 接口，不依赖 root。
  */
@@ -99,7 +99,7 @@ class AndroidSettings {
     return { ok: true, fontScale: Number(v) };
   }
 
-  /** Display size：改 dpi，越Large内容越Large（相当于系统「Display size」档位） */
+  /** Display size: 改 dpi，越Large内容越Large (相当于系统「Display size」档位) */
   async setDensity(dpi) {
     const v = Math.max(120, Math.min(640, Math.round(Number(dpi) || 0)));
     if (!v) return { ok: false };
@@ -107,7 +107,7 @@ class AndroidSettings {
     return { ok: true, density: v };
   }
 
-  /** 一键整理：关动画 + 关遥测类服务 + 电池白名单，让App更跟手 */
+  /** 一键整理: 关动画 + 关遥测类服务 + 电池白名单，让App更跟手 */
   async tune({ pkg } = {}) {
     const cmds = [
       'settings put global window_animation_scale 0',

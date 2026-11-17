@@ -10,19 +10,19 @@ const crypto = require('crypto');
 const store = require('./store');
 const { parseApk } = require('./apk');
 const { ZipFile } = require('./zip');
-const { iconToIco, writeShortcut, removeShortcut, safeFileName } = require('./shortcut');
+const { iconToIco, writeShortcut, removeShortcut, safeFileName, shortcutExt } = require('./shortcut');
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
-/** APK 只有 ARM 原生库（国产 App 绝Large多数如此） */
+/** APK 只有 ARM 原生库 (国产 App 绝Large多数如此) */
 function isArmOnly(meta) {
   return !!(meta && meta.abis && meta.abis.length && !meta.abis.some((a) => /x86/i.test(a)));
 }
 
 /**
- * 拆分安装包（.apks / .xapk）：解出里面的分片 APK 到纯 ASCII 临时目录。
- * 用文件版 ZIP 读取器 + 流式落盘：拆分包动辄 2GB+，整包读内存会失败。
- * 返回 { meta, files, cleanup }；meta 来自带 AndroidManifest 的 base APK。
+ * 拆分安装包 (.apks / .xapk): 解出里面的分片 APK 到纯 ASCII 临时目录。
+ * 用文件版 ZIP 读取器 + 流式落盘: 拆分包动辄 2GB+，整包读内存会失败。
+ * 返回 { meta, files, cleanup }; meta 来自带 AndroidManifest 的 base APK。
  */
 async function parseBundle(filePath) {
   const zip = new ZipFile(filePath);
@@ -36,7 +36,7 @@ async function parseBundle(filePath) {
     const files = [];
     for (let i = 0; i < apkNames.length; i++) {
       const target = path.join(dir, `split-${i}.apk`);
-      // 单个分片也可能是几百 MB：流式解压，不经过 Buffer
+      // 单个分片也可能是几百 MB: 流式解压，不经过 Buffer
       // eslint-disable-next-line no-await-in-loop
       await zip.pipeTo(apkNames[i], fs.createWriteStream(target));
       files.push(target);
@@ -80,20 +80,23 @@ class Installer {
   shortcutPath(app) {
     const s = store.getSettings();
     const dir = s.shortcutDir && s.shortcutDir.trim() ? s.shortcutDir : this.ctx.desktopDir;
-    return path.join(dir, `${safeFileName(app.label)}.lnk`);
+    return path.join(dir, `${safeFileName(app.label)}${shortcutExt()}`);
   }
 
   /**
    * 桌面 + 开始菜单两份。
-   * Windows 搜索索引的是「开始菜单 \ 程序」里的 .lnk，只放桌面会搜不到；
+   * Windows 搜索索引的是「开始菜单 \ 程序」里的 .lnk，只放桌面会搜不到; 
    * 有些机器的桌面被 OneDrive 重定向，开始菜单这份也保证入口不丢。
+   *
+   * Linux (FydeOS)那边对应的是 freedesktop 的 .desktop: 
+   * 桌面一份，App菜单 ~/.local/share/applications 一份。
    */
   shortcutPaths(app) {
     const out = [this.shortcutPath(app)];
     if (this.ctx.startMenuDir && store.getSettings().createStartMenuShortcut !== false) {
-      // 放在独立子目录：既能被 Windows 搜索索引到，又不会覆盖同名第三方App的快捷方式
-      // （实测「红果免费短剧」在开始菜单里已被另一个桌面助手占用）
-      out.push(path.join(this.ctx.startMenuDir, 'ApkStart', `${safeFileName(app.label)}.lnk`));
+      // 放在独立子目录: 既能被 Windows 搜索索引到，又不会覆盖同名第三方App的快捷方式
+      //  (实测「红果免费短剧」在开始菜单里已被另一个桌面助手占用)
+      out.push(path.join(this.ctx.startMenuDir, 'ApkStart', `${safeFileName(app.label)}${shortcutExt()}`));
     }
     return [...new Set(out)];
   }
@@ -108,7 +111,7 @@ class Installer {
     return true;
   }
 
-  /** 切换镜像必须重启Runtime；重启后把Installed apps从本地 APK 备份重新灌回去 */
+  /** 切换镜像必须重启Runtime; 重启后把Installed apps从本地 APK 备份重新灌回去 */
   async switchToCompat(onProgress) {
     const apps = store.getApps();
     store.saveSettings({ runtime: { compatImage: true } });
@@ -164,7 +167,7 @@ class Installer {
     });
 
     try {
-      // 零配置：仅含 ARM 库的AppAutomatic补齐带 ARM 翻译层的镜像，用户不用开任何开关
+      // 零配置: 仅含 ARM 库的AppAutomatic补齐带 ARM 翻译层的镜像，用户不用开任何开关
       if (isArmOnly(meta) && !this.runtime.provisioner.playImageInfo().ok) {
         await this.ensureCompatImage(onProgress);
         const switched = await this.switchToCompat(onProgress);
@@ -184,7 +187,7 @@ class Installer {
     }
   }
 
-  /** 安装本体 + 落盘元数据 + 快捷方式；失败时带一次AutomaticFix重试 */
+  /** 安装本体 + 落盘元数据 + 快捷方式; 失败时带一次AutomaticFix重试 */
   async finishInstall(rt, meta, filePath, bundle, onProgress) {
     const client = rt.client;
     const existing = store.getApp(meta.package);
@@ -195,7 +198,7 @@ class Installer {
       if (bundle) await client.installMultiple(bundle.files);
       else await client.install(filePath);
     } catch (e) {
-      // 到了这一步还报 ABI 不匹配：说明当前Runtime是 AOSP 镜像，Automatic切Compatible image再装一次
+      // 到了这一步还报 ABI 不匹配: 说明当前Runtime是 AOSP 镜像，Automatic切Compatible image再装一次
       if (e.code === 'NO_MATCHING_ABIS' && !this.runtime.provisioner.playImageInfo().ok) {
         await this.ensureCompatImage(onProgress);
         const rt2 = await this.switchToCompat(onProgress);
@@ -209,8 +212,8 @@ class Installer {
     this.runtime.touch();
 
     // 图标落盘。APK 图标Large量是 WebP，nativeImage 解不了，交给渲染进程解码 +
-    // 品牌占位图兜底，保证 .lnk 一定带图标（之前 icoPath 一直是 null）。
-    // iconFallback 记录「真实图标解不出来、用了占位图」——这种要作为软警告告诉用户，
+    // 品牌占位图兜底，保证 .lnk 一定带图标 (之前 icoPath 一直是 null)。
+    // iconFallback 记录「真实图标解不出来, 用了占位图」——这种要作为软警告告诉用户，
     // 否则桌面上只有一片绿色三角，用户会以为是 ApkStart 弄错了图标。
     let iconPath = null;
     let icoPath = null;
@@ -239,7 +242,7 @@ class Installer {
       fs.copyFileSync(filePath, apkCopy);
     } catch (_) { /* ignore */ }
 
-    // 启动入口以系统解析结果为准：APK 里解析到的「主 Activity」经常不是
+    // 启动入口以系统解析结果为准: APK 里解析到的「主 Activity」经常不是
     // 真正的 LAUNCHER 入口，直接用它启动会跳过App的初始化页导致闪退。
     let launchActivity = meta.launchActivity;
     try {
@@ -268,6 +271,10 @@ class Installer {
       lastLaunchAt: existing ? existing.lastLaunchAt || 0 : 0,
       shortcutPath: existing ? existing.shortcutPath || null : null,
       bounds: existing ? existing.bounds || null : null,
+      // App天然的横竖屏 (离线从 APK 清单算出来): 
+      // 决定模拟器物理面板用哪个方向，方向一致画面才能铺满窗口不留黑边。
+      // 用户手动设过 orientationOverride 时以用户的为准，这里只是「默认值」。
+      orientation: meta.orientation || (existing ? existing.orientation || null : null),
       pinned: existing ? !!existing.pinned : false,
     };
 
@@ -284,7 +291,7 @@ class Installer {
       }
     }
 
-    // 兼容性提示：只有 ARM 原生库时，x86 Runtime需要转译层
+    // 兼容性提示: 只有 ARM 原生库时，x86 Runtime需要转译层
     const warnings = [];
     if (meta.minSdk && meta.minSdk > 34) {
       warnings.push(`this app requires Android ${meta.minSdk}+, newer than this runtime; it may not run properly.`);
@@ -295,8 +302,8 @@ class Installer {
       warnings.push('failed to decode the app icon (WebP); the shortcut uses a placeholder for now.');
     }
     client.batteryOptimizeOff(meta.package).catch(() => {});
-    // 装App时作废了旧快照，这里补排一次：空闲时把「已装好新App」的状态存下来，
-    // 否则下次开机要重新cold boot（20 多秒）。
+    // 装App时作废了旧快照，这里补排一次: 空闲时把「已装好新App」的状态存下来，
+    // 否则下次开机要重新cold boot (20 多秒)。
     try { this.runtime.scheduleSnapshotSave?.(12000); } catch (_) { /* ignore */ }
 
     onProgress({ stage: 'done', message: `${app.label} installed`, app });
@@ -307,6 +314,9 @@ class Installer {
     const { target, baseArgs } = this.shortcutTarget();
     const args = `${baseArgs ? baseArgs + ' ' : ''}--launch "${app.package}"`.trim();
     const ico = app.icoPath && fs.existsSync(app.icoPath) ? app.icoPath : undefined;
+    // Linux 的 .desktop 只认 PNG/SVG 绝对路径，ICO 无效 —— 所以两条路径都传下去，
+    // 由 writeShortcut 按平台挑。 (Windows 用 ico，FydeOS 用 png)
+    const png = app.iconPath && fs.existsSync(app.iconPath) ? app.iconPath : undefined;
     const paths = this.shortcutPaths(app);
 
     const write = (shortcutPath) => writeShortcut({
@@ -314,9 +324,10 @@ class Installer {
       target,
       args,
       iconIcoPath: ico,
+      iconPngPath: png,
       description: `${app.label} — run by ApkStart`,
       cwd: this.ctx.cwd,
-      // 每个App一个 AUMID：任务栏上按App分组，不会全挤到 ApkStart 里
+      // 每个App一个 AUMID: 任务栏上按App分组，不会全挤到 ApkStart 里
       appUserModelId: `RoutineMiku.ApkStart.${app.package}`.slice(0, 128),
     });
 
@@ -333,10 +344,10 @@ class Installer {
       }
     });
 
-    // 主路径全失败（自定义Shortcut folder不可写 / 被安全软件拦截）：
+    // 主路径全失败 (自定义Shortcut folder不可写 / 被安全软件拦截): 
     // 退回桌面再试一次——桌面上有图标，用户才找得到App。
     if (!first) {
-      const fallback = path.join(this.ctx.desktopDir, `${safeFileName(app.label)}.lnk`);
+      const fallback = path.join(this.ctx.desktopDir, `${safeFileName(app.label)}${shortcutExt()}`);
       try {
         write(fallback);
         first = fallback;
@@ -352,10 +363,10 @@ class Installer {
     return first;
   }
 
-  /** 补全缺失的快捷方式与图标：老版本只建了桌面那份，且 WebP 图标当时没转成功 */
+  /** 补全缺失的快捷方式与图标: 老版本只建了桌面那份，且 WebP 图标当时没转成功 */
   async ensureShortcuts() {
     const made = [];
-    // 用户明确关掉「安装后Automatic创建」、且这个App本来就没有任何入口时不要擅自补，
+    // 用户明确关掉「安装后Automatic创建」, 且这个App本来就没有任何入口时不要擅自补，
     // 否则开关关掉了也挡不住启动时被重建。
     const auto = store.getSettings().createShortcutOnInstall !== false;
     for (const app of store.getApps()) {
@@ -402,9 +413,13 @@ class Installer {
     return true;
   }
 
-  async launch(pkg, { onLog = () => {}, beforeStart = null, onMark = () => {} } = {}) {
+  async launch(pkg, { onLog = () => {}, beforeStart = null, onMark = () => {}, onAppUp = null } = {}) {
     const app = store.getApp(pkg);
-    const rt = await this.runtime.ensure({ onLog });
+    // 用 let: beforeStart 可能因为「面板方向和App方向不一致」而重启Runtime并
+    // 返回一个新的 rt (旧 client 已随 stop 失效)。以前这里是 const，一旦真的
+    // 走了重启分支就抛 "Assignment to constant variable."，把整个启动打断 ——
+    // 表现为「切横屏/竖屏后点App直接失败」。
+    let rt = await this.runtime.ensure({ onLog });
     onMark('ensure done');
     if (!rt.ok) {
       const err = new Error(rt.error || 'runtime unavailable');
@@ -412,26 +427,58 @@ class Installer {
       throw err;
     }
     // 分辨率要在拉起App之前改，避免 wm size 触发配置变更把刚启动的 Activity 重建
-    if (beforeStart) await beforeStart(rt).catch((e) => onLog(`display adaptation skipped: ${e.message}`));
+    if (beforeStart) {
+      const replaced = await beforeStart(rt).catch((e) => { onLog(`display adaptation skipped: ${e.message}`); return null; });
+      // beforeStart 可以返回一个新的 rt (重启Runtime后旧 client 已失效)，
+      // 后续全部用新的。不返回就Continue用原来的。
+      if (replaced && replaced.client) rt = replaced;
+    }
     // 清掉旧版本可能残留在 /data 里的 wm size / density 覆盖与Automatic旋转Settings。
-    // 这些覆盖是持久化的，不清理的话每次启动画面都会被转 90° 躺倒、留黑边、
-    // 鼠标点击也无法对应（用户反馈的「旋转黑边 / 未填满 / 点不动同意」）。
+    // 这些覆盖是持久化的，不清理的话每次启动画面都会被转 90° 躺倒, 留黑边, 
+    // 鼠标点击也无法对应 (用户反馈的「旋转黑边 / 未填满 / 点不动同意」)。
     await rt.client.resetDisplayOverrides(!!(store.getSettings().display || {}).landscape).catch(() => {});
-    // cold boot时顺手做过网络体检：没网就直接说清楚。否则用户只会看到「这个App一直黑屏」，
-    // 完全想不到是虚拟机没网（联网页面拿不到数据就是一块黑底）。
-    // 关键Fix：Wi-Fi 关联往往比 sys.boot_completed 晚几十秒，红果一进去就拉首页数据，
+    // cold boot时顺手做过网络体检: 没网就直接说清楚。否则用户只会看到「这个App一直黑屏」，
+    // 完全想不到是虚拟机没网 (联网页面拿不到数据就是一块黑底)。
+    // 关键Fix: Wi-Fi 关联往往比 sys.boot_completed 晚几十秒，红果一进去就拉首页数据，
     // 没网时首页渲染成整块黑底 —— 这就是「点同意并Continue后一直黑屏」的真正原因。
-    // 所以拉起App前先等网络Ready（最多 90 秒），宁可多等几秒也不要给用户一块黑屏。
-    // 拉起来之前先看一眼网络：**只等，不重启**。
+    // 所以拉起App前先等网络Ready (最多 90 秒)，宁可多等几秒也不要给用户一块黑屏。
+    // 拉起来之前先看一眼网络: **只等，不重启**。
     // 之前这里调的是 ensureNetwork()，网络慢时会「停掉虚拟机 → cold boot」，
     // 结果 adb 设备在安装途中消失，直接变成「红果打不开」。
     // 启动路径上绝不能做这种破坏性动作，等不到就先启动，Large不了页面暂时加载慢。
     if (rt.engine === 'emulator' || rt.engine === 'builtin') {
-      const net = await this.runtime.waitForNetwork({ onLog, timeoutMs: 20000 }).catch(() => null);
+      let net = await this.runtime.waitForNetwork({ onLog, timeoutMs: 20000 }).catch(() => null);
       if (net && net.ok) {
         onLog(`VM network ready (${net.ip || ''})`);
       } else {
-        onLog('VM network is not ready yet; launching the app anyway (online pages may load a little later)');
+        // 等不到网络时，做一次**非破坏性**的补救: 把「Saved但不会Automatic连」
+        // 的 AndroidWifi 点一下。它不重启虚拟机, 不碰用户数据，只是拉起Settings页
+        // 点一条Saved的热点，所以放在启动路径上是安全的。
+        // 实机上「虚拟机一直没网」绝Large多数就是这个原因 (见 emulator.repairWifi)。
+        onLog('The VM cannot reach Wi-Fi; trying to reconnect…');
+        try {
+          // 注意: repairWifi 挂在 engine (this.runtime)上，不在 rt 上。
+          // rt 是 ensure() 的返回对象 { ok, client, engine, ... }，里面只有 client; 
+          // 写成 rt.repairWifi 会是 undefined，一调就抛 TypeError 被 catch 吞掉，
+          // 表现就是「logs打了正在重连，但 1 毫秒后就说还是没网」。
+          const fixed = await this.runtime.repairWifi().catch(() => false);
+          if (fixed) {
+            net = await this.runtime.waitForNetwork({ onLog, timeoutMs: 15000 }).catch(() => null);
+            if (net && net.ok) {
+              onLog(`VM network restored (${net.ip || ''})`);
+              // 关键: 把「网络已连上」这个状态立刻存进快照。
+              // 不存的话下次开机还是从「没网」的旧快照恢复，每次都要再花十几秒重连。
+              // 用 forceSnapshotSave 是因为马上要启动App，永远等不到「空闲」。
+              try { this.runtime.forceSnapshotSave?.(3000); } catch (_) { /* 存不下不影响启动 */ }
+            }
+          }
+        } catch (e) {
+          // 不要把异常吞得无声无息: 这条logs就是「重连到底跑没跑」的唯一证据。
+          onLog(`Automatic Wi-Fi reconnect failed: ${e.message}`);
+        }
+        if (!net || !net.ok) {
+          onLog('VM network is not ready yet; launching the app anyway (online pages may load a little later)');
+        }
       }
     }
     const settings = store.getSettings();
@@ -439,7 +486,7 @@ class Installer {
       freeform: settings.freeform,
       bounds: app ? app.bounds : null,
     });
-    // App可能还没装进当前Runtime（镜像重建 / 清过数据 / 首次），直接拉起会报
+    // App可能还没装进当前Runtime (镜像重建 / 清过数据 / 首次)，直接拉起会报
     // "Invalid packageName"。先在本地缓存里把它装上再启动，这样「点开App」永远能进，
     // 不用先手动装一遍——这正是「点击已安装App直接进入系统」想要的体验。
     if (app && app.apkPath && fs.existsSync(app.apkPath)) {
@@ -450,21 +497,28 @@ class Installer {
       }
     }
     // 观察 25 秒并要求「连续存活 5 秒」才算启动成功。
-    // 关键：进程"还没起来"和"起来过又没了"必须分开看。以前一看到 pidof 为空就判失败，
-    // 结果Large型App（红果这种首启要十几秒的）在加载途中就被 force-stop 重启，
+    // 关键: 进程"还没起来"和"起来过又没了"必须分开看。以前一看到 pidof 为空就判失败，
+    // 结果Large型App (红果这种首启要十几秒的)在加载途中就被 force-stop 重启，
     // 反复三轮才勉强起来，用户感知就是"点了要等一分钟"。
     const staysAlive = async () => {
       const t0 = Date.now();
       let aliveSince = 0;
       let seen = false;
       while (Date.now() - t0 < 25000) {
-        // 先查再睡：常驻容器里热启动往往 1 秒内就能看到进程，
+        // 先查再睡: 常驻容器里热启动往往 1 秒内就能看到进程，
         // 先 sleep 1 秒等于把最快的那条路径硬生生拖慢一秒。
         // eslint-disable-next-line no-await-in-loop
         const pid = await rt.client.shell(`pidof ${pkg}`, { timeout: 6000 }).catch(() => '');
         if (!String(pid).trim()) {
           if (seen) return false; // 起来过又消失 = 真的崩了
         } else {
+          if (!seen && typeof onAppUp === 'function') {
+            // 进程刚出现就把画面接上去 (不等那 4 秒观察期)。
+            // 这 4 秒是在等「OK不会马上崩」，但用户看到的是「点了没反应」; 
+            // 先让他看到App在加载，观感比藏 4 秒好得多。
+            // 回调是 fire-and-forget: 它失败了也不影响后面的存活判定。
+            try { onAppUp(); } catch (_) { /* ignore */ }
+          }
           seen = true;
           if (!aliveSince) aliveSince = Date.now();
           if (Date.now() - aliveSince >= 4000) return true;
@@ -475,7 +529,7 @@ class Installer {
       return seen; // 一直没见过进程才算失败
     };
     try {
-      // 先确保Runtime权限齐备：安装时的 -g 在清过数据后可能失效，
+      // 先确保Runtime权限齐备: 安装时的 -g 在清过数据后可能失效，
       // 缺权限时App会被系统授权框挡住，用户看到的就是「点了没反应/打不开」。
       await rt.client.grantRuntimePermissions(pkg).catch(() => {});
       onMark('permissions granted');
@@ -484,7 +538,7 @@ class Installer {
         if (attempt > 1) {
           // eslint-disable-next-line no-await-in-loop
           await rt.client.forceStop(pkg).catch(() => {});
-          // 授权框挡在最前面时，App看起来就是「打不开」；先补授权再收掉弹窗
+          // 授权框挡在最前面时，App看起来就是「打不开」; 先补授权再收掉弹窗
           // eslint-disable-next-line no-await-in-loop
           await rt.client.grantRuntimePermissions(pkg).catch(() => {});
           // eslint-disable-next-line no-await-in-loop
@@ -497,14 +551,14 @@ class Installer {
           // eslint-disable-next-line no-await-in-loop
           await start();
         } catch (e) {
-          // 有明确崩溃logs才交给外层（可能要切Compatible image）；没有证据多半只是启动慢，重试即可
+          // 有明确崩溃logs才交给外层 (可能要切Compatible image); 没有证据多半只是启动慢，重试即可
           if (e.code === 'APP_CRASHED' && e.crash) throw e;
           started = false;
         }
         onMark(`am start #${attempt} ${started ? 'ok' : 'fail'}`);
         // Activity 起来后立刻把方向锁死。放在这里是因为App启动过程本身会触发
-        // 配置变更（Activity 重建），启动前设的 user-rotation 可能被系统重置回 0 ——
-        // 一旦回 0，横屏面板上的画面就会躺倒 90°（用户看到的就是「转不正」）。
+        // 配置变更 (Activity 重建)，启动前设的 user-rotation 可能被系统重置回 0 ——
+        // 一旦回 0，Landscape panel上的画面就会躺倒 90° (用户看到的就是「转不正」)。
         if (started) {
           // eslint-disable-next-line no-await-in-loop
           await rt.client.setOrientation(!!(store.getSettings().display || {}).landscape).catch(() => {});
@@ -515,8 +569,8 @@ class Installer {
         if (!ok && attempt < 3) onLog(`the app exited after launch (attempt ${attempt}), retrying automatically…`);
       }
       if (!ok) {
-        // 兜底：异常Quit会留下「半初始化」的数据，导致之后每次都崩。
-        // 清一次App数据再拉起来，成功率最高（用户不必自己去Settings里清缓存）。
+        // 兜底: 异常Quit会留下「半初始化」的数据，导致之后每次都崩。
+        // 清一次App数据再拉起来，成功率最高 (用户不必自己去Settings里清缓存)。
         onLog('the app keeps exiting; resetting its data and retrying…');
         await rt.client.shell(`pm clear ${pkg}`, { timeout: 20000 }).catch(() => '');
         await sleep(800);
@@ -535,7 +589,7 @@ class Installer {
       }
     } catch (e) {
       if (e.code === 'APP_CRASHED' && !this.runtime.provisioner.playImageInfo().ok) {
-        // 崩溃来自 ARM 翻译层：Automatic切镜像、重装备份 APK、再启动一次
+        // 崩溃来自 ARM 翻译层: Automatic切镜像, 重装备份 APK, 再启动一次
         onLog('ARM translator crash detected, switching to the compatible image…');
         await this.ensureCompatImage(onLog ? (m) => onLog(m.message || '') : () => {});
         const rt2 = await this.switchToCompat((m) => onLog(m.message || ''));

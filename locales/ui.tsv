@@ -399,7 +399,7 @@ Windows 搜索能搜到应用名，任务栏也按应用分组	Windows Search fi
 清除失败	Clearing failed
 清除应用数据	Clear app data
 游戏 / 低延迟 · 运行时高优先级，适合 FPS、音游	Game / low latency · high runtime priority, for FPS and rhythm games
-游戏提示「存储空间不足」就把这里调大后点「立即扩容」——扩容是就地做的，已装应用与存档都保留。	If a game says "not enough storage", enlarge this and click "Expand now" — expansion is done in place, installed apps and saves are kept.
+游戏提示「存储空间不足」就把这里调大后点「立即扩容」——扩容是就地做的，已装应用与存档都保留。	 If a game says "not enough storage", enlarge this and click "Expand now" — expansion is done in place, installed apps and saves are kept.
 游戏模式会让安卓虚拟机保持较高 CPU 优先级并减少宿主侧轮询，输入与画面延迟最低；代价是整机其他程序会变慢。没有应用窗口时容器仍会自动降优先级停放。	Game mode keeps the Android VM at a higher CPU priority and reduces host-side polling, minimising input and frame latency; other programs on the machine get slower. The container still drops priority when no app window is open.
 滚轮 · 滑动	Wheel · scroll
 点「保存并迁移」把旧文件搬过去	Click "Save & migrate" to move the old files over
@@ -433,7 +433,7 @@ Windows 搜索能搜到应用名，任务栏也按应用分组	Windows Search fi
 立即扩容	Expand now
 竖屏画面大小	Portrait screen size
 竖屏窗口（可自由拉伸，记住每个应用的大小）	Portrait window (freely resizable, size remembered per app)
-第二次打开应用只要几秒，代价是磁盘上多一份约 2–3 GB 的	The second launch takes seconds, at the cost of an extra 2-3 GB on disk
+第二次打开应用只要几秒，代价是磁盘上多一份约 2–3 GB 的	The second launch takes seconds, at the cost of an extra 2-3 GB
 系统动画	System animations
 系统动画已关闭，界面更快	System animations off, the UI is faster
 系统动画已开启	System animations on
@@ -547,3 +547,134 @@ Windows 搜索能搜到应用名，任务栏也按应用分组	Windows Search fi
 默认：运行时目录下的 avd 文件夹	Default: the avd folder inside the runtime folder
 鼠标侧键 · 返回 / 前进（默认关闭）	Side buttons · back / forward (off by default)
 鼠标键位	Mouse buttons
+
+
+
+
+
+
+
+# --- untranslated strings added for upstream v0.5.3 (English) ---
+决定的。面板方向和应用自己声明的方向不一致时，<NL>            安卓只会给应用中间一条窄画面、两侧补黑 —— 换窗口大小、改分辨率都填不满。<NL>            「跟随应用」会在安装 APK 时读出应用的方向，启动时自动把面板换成一致的那个，<NL>            所以红果、墨读这类应用会正立且铺满。方向不对时才重启一次运行时（约十几秒），<NL>            之后再打开同一方向的应用都是秒进。	. When the panel orientation differs from the one the app declares,<NL>            Android only gives the app a narrow strip in the middle with black bars on both sides — resizing the window or changing the resolution will not fill it.<NL>            Follow app mode reads the app orientation when the APK is installed and switches the panel to match at launch,<NL>            so apps like Hongguo Short Drama and Modu open upright and fill the screen. The runtime only restarts once when the orientation is wrong (about ten seconds),<NL>            and apps in that orientation open instantly afterwards.
+「自带运行时」会自己下载安卓镜像；选第三方模拟器时不下载任何东西，<NL>            直接驱动你电脑上已经装好的那台，装的应用和它自己的应用共用一套环境。<NL>            FydeOS 底座驱动 FydeOS 自带的安卓环境（需要先在它的安卓设置里打开「ADB 调试」）；<NL>            FydeOS 跑在虚拟机里时，要在下面填那台虚拟机的地址。它不嵌窗口，画面由 FydeOS 自己显示。	The built-in runtime downloads the Android image itself; choosing a third-party emulator downloads nothing,<NL>            it just drives the one already installed on your PC, so your apps and its own apps share one environment.<NL>            The FydeOS backend drives the Android environment built into FydeOS (you must first enable ADB debugging in its Android settings);<NL>            when FydeOS runs inside a VM, enter that VM address below. It does not embed a window; FydeOS shows the screen itself.
+嵌入模式最像「一个应用一个窗口」，但需要把模拟器的窗口塞进我们自己的窗口，<NL>            容易在缩放、旋转、多窗口切换时出现黑边或点击错位。独立模式下方向、缩放、输入都由模拟器原生处理，<NL>            这类问题不会出现，代价是多一个任务栏图标。改动在下次打开应用时生效。	Embedded mode looks most like one window per app, but it has to squeeze the emulator window into our own,<NL>            which tends to show black bars or misplaced clicks when resizing, rotating or switching between windows. In detached mode orientation, scaling and input are handled natively by the emulator,<NL>            so those problems do not occur, at the cost of one extra taskbar icon. Changes apply the next time an app is opened.
+720 宽按 190dpi 算等于 606dp，正好越过 Android 的 600dp 平板断点，<NL>            红果短剧的双列剧集页、设置页的分栏都只在这个排版下出现。关掉会回到手机排版<NL>            （字更大、信息更少）。切换后下次打开应用生效。	At 720 wide and 190dpi that is 606dp, just past the Android 600dp tablet breakpoint,<NL>            so the two-column episode page in Hongguo Short Drama and the split settings pages only appear in this layout. Turning it off returns to phone layout<NL>            (larger text, less information). Applies the next time an app is opened.
+把键盘按键映射成安卓触屏点击/滑动。适合用键盘玩手游（WASD 移动、J/K 技能等）。<NL>              每个应用可以单独配置，右键应用卡片 → 「按键映射」选择预设模板或自定义。	Map keyboard keys to Android taps and swipes. Great for playing mobile games with a keyboard (WASD to move, J/K for skills, and so on).<NL>              Each app can be configured separately: right-click an app card → Key mapping to pick a preset template or a custom one.
+FydeOS 跑在 VMware / VirtualBox 里时必填。最省事的配法：给虚拟机做端口转发<NL>            （宿主 5555 → guest 5555），然后填 	Required when FydeOS runs in VMware / VirtualBox. The easiest setup is to forward ports for the VM<NL>            (host 5555 → guest 5555) and then enter 
+打开后，每次点开应用直接铺满屏幕，不用再按 F11。配合下面的「横屏」使用效果最好<NL>            —— 横屏面板的宽高比本来就贴合屏幕，全屏不会留黑边。	When enabled, opening an app fills the screen without pressing F11. Works best together with Landscape below<NL>            — a landscape panel already matches the screen aspect ratio, so full screen leaves no black bars.
+镜像只带英文键盘，勾上会静默安装并启用随包的谷歌拼音输入法，<NL>              这样在安卓应用里能直接打中文。关掉则保持系统原生输入法。	The image only ships an English keyboard; ticking this silently installs and enables the bundled Google Pinyin IME,<NL>              so you can type Chinese directly in Android apps. Turning it off keeps the system IME.
+内存、核心数、渲染后端、端口、加速方式全部自动选择；启动失败会自动降级重试，不需要手动改。<NL>            ApkStart 用	Memory, core count, render backend, port and acceleration are all chosen automatically; a failed start is retried with a fallback, no manual tuning needed.<NL>            ApkStart uses 
+发现新版本 <b>${esc(lastUpdate.tag || '')}</b>，可在「设置 → 软件更新」一键更新	New version <b>${esc(lastUpdate.tag || '')}</b> available, update in Settings → Software update
+用的物理面板方向，由上面那条策略自动写入。<NL>            只有在「强制」模式下它才完全由你决定。	 physical panel orientation in use, written automatically by the policy above.<NL>            Only in forced mode is it entirely up to you.
+为「${label}」选择按键映射预设：\n\n${lines.join('\n')}\n\n输入编号：	Choose a key mapping preset for ${label}:\n\n${lines.join('\n')}\n\nEnter a number:
+FydeOS 安卓子系统（FydeOS 装在本机，或跑在 VMware / VirtualBox 里）	FydeOS Android subsystem (FydeOS installed on this PC, or running in VMware / VirtualBox)
+。<NL>            直接装在本机的 FydeOS 可以留空（自动探测 arc:5555 等）。	. Leave it empty<NL>            when FydeOS is installed on this PC (arc:5555 and similar are detected automatically).
+默认会按注册表和常见路径自动找 MuMuManager.exe；装在非常规盘符时在这里指定。	MuMuManager.exe is found automatically through the registry and common paths; set it here if it lives on an unusual drive.
+，那会在正在运行的应用上弹出<NL>            「允许 USB 调试吗」的系统弹窗。	 on port 5555; that pops the Allow USB debugging system dialog<NL>            on top of running apps.
+系统设置、权限弹窗、日期格式的语言。开机时注入到虚拟机，<NL>            	Language for system settings, permission dialogs and date formats. Injected into the VM at boot,<NL>            
+下次打开应用时会重启一次运行时来切换物理面板方向（约十几秒），之后就不会再重启。	The runtime restarts once the next time an app is opened to switch the physical panel orientation (about ten seconds); after that it will not restart again.
+下次打开应用时生效。独立模式下安卓画面由模拟器自己开窗口，方向与缩放都由它处理。	Applies the next time an app is opened. In detached mode the emulator opens its own window, and handles orientation and scaling itself.
+发现：${found.map((f) => f.name).join('、')}	Found: ${found.map((f) => f.name).join(', ')}
+（你系统里自己的 adb 是 5037），所以命令行里<NL>            	 (your own adb uses 5037), so from a terminal<NL>            
+ 看不到这台安卓设备 —— 这是刻意的隔离。想连的话用<NL>            	 you cannot see this Android device — the isolation is intentional. To connect, use<NL>            
+安卓虚拟机没有网络，联网页面会一直是空白/报错。可在「设置 → 修复网络」处理	The Android VM has no network, so online pages stay blank or show errors. Fix it in Settings → Repair network
+ 再执行 adb。<NL>            注意：别对着 5555 端口手动 	 and run adb again.<NL>            Note: do not manually 
+未启用硬件加速：已回退软件模拟（很慢）。点右下角「环境自检 → 修复」开启	Hardware acceleration is off: falling back to software emulation (very slow). Use Environment check → Repair in the lower right to enable it
+在打开的窗口里勾选「Windows 虚拟机监控程序平台」，确定后重启电脑。	Tick Windows Hypervisor Platform in the window that opened, confirm, then restart the PC.
+下次打开应用时会按应用自己的方向选面板，方向不一致的话会重启一次运行时。	The next time an app opens, the panel follows the orientation the app declares, restarting the runtime once if they differ.
+打开（推荐 · 逻辑密度 190dpi，sw606dp 走平板排版）	On (recommended · 190dpi logical density, sw606dp tablet layout)
+嵌入模式（默认）· 安卓画面嵌在 ApkStart 窗口里，观感统一	Embedded (default) · Android screen inside the ApkStart window, consistent look
+<li>把系统镜像展开到用户目录（约 1 分钟，只需一次）</li>	<li>Expand the system image into your user folder (about 1 minute, only once)</li>
+下次打开应用时会重启一次运行时把面板切到指定方向，之后不再重启。	The runtime restarts once the next time an app opens to switch the panel to the chosen orientation, and not again after that.
+127.0.0.1:5555，或虚拟机的局域网 IP:5555	127.0.0.1:5555, or the VM LAN IP:5555
+下载 Android 运行时引擎（约 200MB，只需一次）	Download the Android runtime engine (about 200MB, only once)
+<li>运行时组件已随安装包内置，不再下载任何东西</li>	<li>Runtime components are bundled with the installer, nothing is downloaded</li>
+<li>完成后双击 APK 或桌面图标即可秒开应用</li>	<li>After that, double-click an APK or desktop icon to open apps instantly</li>
+独立窗口 · 由模拟器自己开窗口，避开花屏/黑边/点不准	Detached window · the emulator opens its own window, avoiding glitches, black bars and misclicks
+当前应用未配置按键映射。右键应用卡片可快速套用预设模板。	No key mapping configured for this app. Right-click an app card to apply a preset template.
+网络正常 ${s.network.ip || ''}	Network OK ${s.network.ip || ''}
+下次打开应用时生效（会重启一次运行时来改逻辑密度）。	Applies the next time an app opens (the runtime restarts once to change the logical density).
+跟随应用（推荐 · 自动选横竖屏，画面铺满不留黑边）	Follow app (recommended · picks portrait or landscape automatically, fills the screen with no black bars)
+MuMu 模拟器 12（复用本机已装的网易模拟器）	MuMu Player 12 (reuse the NetEase emulator already installed)
+${label} · 打开应用后键盘即可操控	${label} · the keyboard controls the app once it opens
+强制竖屏（手机比例，适合刷短视频、看小说）	Force portrait (phone ratio, good for short videos and reading)
+。中文输入法不受此项影响，单独在下面开关。	. The Chinese IME is not affected and has its own switch below.
+完成后即可双击 APK 或桌面图标秒开应用	After that, double-click an APK or desktop icon to open apps instantly
+<li>准备硬件加速与中文输入法</li>	<li>Prepare hardware acceleration and the Chinese IME</li>
+安卓虚拟机已联网，联网类应用可以正常加载	The Android VM is online; apps that need network load normally
+已套用「${chosen.label}」	Applied ${chosen.label}
+例如 D:\MuMu Player 12	for example D:\MuMu Player 12
+下载系统镜像（约 1.5GB，只需一次）	Download the system image (about 1.5GB, only once)
+没有拿到管理员授权，硬件加速没有改动。	Administrator approval was not granted; hardware acceleration is unchanged.
+强制横屏（宽屏铺满，适合看剧、玩游戏）	Force landscape (wide, fills the screen, good for shows and games)
+首次启动 · 本地准备中（无需联网）	First run · preparing locally (no network needed)
+MuMu 安装目录（留空自动查找）	MuMu install directory (leave empty to detect)
+Windows 上的安卓应用运行器	An Android app runner for Windows
+专用 adb 服务端口 5044	a dedicated adb server port 5044
+打开 · 每次启动应用都自动全屏	On · go full screen every time an app starts
+关闭（镜像默认密度，手机排版）	Off (image default density, phone layout)
+需要手动开启一次（仅此一次）	Must be enabled manually once (only once)
+关闭（按上面选的显示模式走）	Off (follow the display mode selected above)
+FydeOS 安卓子系统地址	FydeOS Android subsystem address
+English（镜像原生）	English (native to image)
+下次重启安卓运行时后生效	Applies after the Android runtime restarts
+首次使用 · 自动配置中	First run · configuring automatically
+虚拟手机面板的真实方向	actual orientation of the virtual phone panel
+键盘映射（游戏手柄）	Key mapping (gamepad)
+0. 清除当前映射	0. Clear the current mapping
+下次打开应用时生效	Applies the next time an app is opened
+已切到独立窗口模式	Switched to detached window mode
+下次重启运行时生效	takes effect the next time the runtime restarts
+中文输入法（推荐）	Chinese IME (recommended)
+配置硬件加速与网络	Configure hardware acceleration and network
+按键映射设置失败	Failed to set up key mapping
+已开启中文输入法	Chinese IME enabled
+已关闭中文输入法	Chinese IME disabled
+简体中文（推荐）	Simplified Chinese (recommended)
+已清除按键映射	Key mapping cleared
+系统语言已更新	System language updated
+键盘映射已开启	Key mapping enabled
+键盘映射已关闭	Key mapping disabled
+已开启自动全屏	Auto full screen on
+已关闭自动全屏	Auto full screen off
+已设为跟随应用	Set to follow app
+已打开平板排版	Tablet layout on
+已关闭平板排版	Tablet layout off
+面板已设为横屏	Panel set to landscape
+面板已设为竖屏	Panel set to portrait
+已切回嵌入模式	Switched back to embedded mode
+安卓的横竖屏是	Android orientation follows the 
+虚拟机未联网	VM offline
+当前面板方向	Current panel orientation
+窗口承载方式	Window hosting
+启用键盘映射	Enable key mapping
+按键映射…	Key mapping…
+已强制横屏	Forced landscape
+已强制竖屏	Forced portrait
+这是运行时	This is the 
+正在准备…	Preparing…
+关闭失败	Close failed
+无效编号	Invalid number
+自动全屏	Auto full screen
+屏幕方向	Screen orientation
+平板排版	Tablet layout
+竖屏面板	Portrait panel
+横屏面板	Landscape panel
+系统语言	System language
+繁體中文	Traditional Chinese
+已关闭	Closed
+日本語	Japanese
+现在	current
+拖入 APK 文件，或点击选择	Drop an APK file, or click to browse
+添加应用	Add app
+拖入 APK 即可安装	Drop an APK to install
+ → 容量直接回车 → 	 → press Enter for the size → 
+（	 (
+）	)
+：	: 
+；	; 
+、	, 
+已尝试	Attempts
+关闭应用	Close app
+运行时引擎	runtime engine
+한국어	Korean

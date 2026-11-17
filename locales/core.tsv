@@ -380,3 +380,101 @@ ZIP 中央目录偏移异常	bad ZIP central directory offset
 预热完成（${Math.round(ms / 1000)}s）	prewarm done (${Math.round(ms / 1000)}s)
 首次启动：正在展开系统镜像 ${path.basename(j.dest)}（约 1 分钟，只需一次）	First start: expanding the system image ${path.basename(j.dest)} (~1 minute, one time only)
 首次安装 ARM 应用：正在下载兼容镜像（约 1.5GB，只需一次）…	First ARM app: downloading the compatible image (~1.5 GB, one time only)…
+
+
+
+
+
+
+
+# --- untranslated strings added for upstream v0.5.3 (English) ---
+Android ${sysimg.api}（${(sysimg.size / 1073741824).toFixed(2)} GB${sysimg.compressed ? '，包内压缩版，首次启动自动展开' : ''}）	Android ${sysimg.api} (${(sysimg.size / 1073741824).toFixed(2)} GB${sysimg.compressed ? ', compressed in the package, expands on first boot' : ''})
+多窗口：前台 ${pkg}，保留后台 ${roles.background.length - tombstone.length} 个，墓碑化 ${tombstone.length} 个	Multi-window: foreground ${pkg}, keeping ${roles.background.length - tombstone.length} in the background, tombstoning ${tombstone.length}
+系统镜像不可用：${info.reason}${info.size && info.size < MIN_SIZE.iso ? '，可再次点击继续断点续传' : ''}	System image unavailable: ${info.reason}${info.size && info.size < MIN_SIZE.iso ? ', click again to resume the download' : ''}
+Android ${PLAY_SYSIMG.api}（${playImage.compressed ? '包内压缩版，首次启动自动展开' : 'ARM 兼容镜像'}）	Android ${PLAY_SYSIMG.api} (${playImage.compressed ? 'compressed in the package, expands on first boot' : 'ARM-compatible image'})
+跳过快照保存：磁盘剩余 ${(freeMB / 1024).toFixed(1)}GB < 需要 ${(needMB / 1024).toFixed(1)}GB	Skipping snapshot save: ${(freeMB / 1024).toFixed(1)}GB free < ${(needMB / 1024).toFixed(1)}GB needed
+中文输入法：${r.ok ? (r.installed ? '已安装并启用' : '已就绪') : (r.reason || '未就绪')}	Chinese IME: ${r.ok ? (r.installed ? 'installed and enabled' : 'ready') : (r.reason || 'not ready')}
+方向自愈：init=${init[1]}x${init[2]} cur=${cur[1]}x${cur[2]} 已躺倒，重新收敛	Orientation self-heal: init=${init[1]}x${init[2]} cur=${cur[1]}x${cur[2]} is lying down, converging again
+请先填 FydeOS 的地址（例如 127.0.0.1:5555，或 VMware NAT 里那台虚拟机的 IP:5555），	Please enter the FydeOS address first (for example 127.0.0.1:5555, or the VM IP:5555 in VMware NAT),
+显示状态收敛：ignore-orientation=${ignoreOk} density=${densityOk} → 补齐	Display state convergence: ignore-orientation=${ignoreOk} density=${densityOk} → filling in
+MuMu 模拟器启动中… ${st} ${Math.round((Date.now() - t0) / 1000)}s	MuMu emulator starting… ${st} ${Math.round((Date.now() - t0) / 1000)}s
+FydeOS 可以装在本机，也可以跑在 VMware / VirtualBox 里由 ApkStart 连过去。	FydeOS can be installed on this PC, or run in VMware / VirtualBox with ApkStart connecting to it.
+${label}下载不完整（${(size / 1048576).toFixed(1)} MB），已清理，请重试	${label}download incomplete (${(size / 1048576).toFixed(1)} MB), cleaned up, please try again
+零第三方依赖：apkstart 自己下载并管理 Android 14 镜像，ARM 应用走镜像自带的翻译层。	No third-party dependencies: apkstart downloads and manages the Android 14 image itself, and ARM apps use the translation layer built into the image.
+density=${densityWanted} 缺失但有应用在前台：跳过，等下次启动时设置（避免画面缩水）	density=${densityWanted} missing but an app is in the foreground: skipping, will set it on next launch (avoids shrinking the picture)
+MuMu 的镜像由模拟器自己管理，apkstart 不下载、不清理，卸载应用请用 MuMu 自带界面。	MuMu manages its own images; apkstart neither downloads nor cleans them. Uninstall apps from the MuMu interface.
+${backend.label}已启动，但 adb 连不上（${this.emuSerial}）	${backend.label} started but adb cannot connect (${this.emuSerial})
+没有找到 MuMu 模拟器。请先安装网易 MuMu 模拟器 12，或在设置里指定它的安装目录。	MuMu emulator not found. Install NetEase MuMu Player 12 first, or set its install directory in Settings.
+FydeOS 弹出了「允许调试」授权框。请切到 FydeOS 的安卓界面点「允许」后重试。	FydeOS is asking to allow debugging. Switch to the FydeOS Android window, click Allow, then try again.
+找不到 adb。请在 Linux 子系统里执行：sudo apt install adb	adb not found. Run this in the Linux subsystem: sudo apt install adb
+2) 安卓设置 → 系统 → 开发者选项 → 已打开「ADB 调试」；3) 地址填对了。	2) Android Settings → System → Developer options → ADB debugging is enabled; 3) the address is correct.
+系统语言仍为 ${s || '(空)'}，作废旧快照，下次开机冷启动切到 ${want}	System language is still ${s || '(empty)'}, invalidating the old snapshot, next boot cold-starts into ${want}
+把它变成 ApkStart 的运行时。自带 ARM 兼容层，冷启动约 10~20 秒。	Turns it into the ApkStart runtime. Ships an ARM compatibility layer, cold boot takes about 10-20 seconds.
+没能连上 FydeOS 安卓子系统。请确认已开启「ADB 调试」，并允许授权框。	Could not connect to the FydeOS Android subsystem. Make sure ADB debugging is on and accept the authorization prompt.
+用 FydeOS 自带的安卓环境跑应用，没有 Google 模拟器那层虚拟机。	Run apps in the Android environment built into FydeOS, without the Google emulator VM layer.
+网络已恢复（${net.ip || ''}），正在保存可用状态，下次直接就好。	Network restored (${net.ip || ''}), saving the working state so the next start is instant.
+没有连上 FydeOS 的安卓子系统。请确认：1) FydeOS 正在运行；	Could not connect to the FydeOS Android subsystem. Check that: 1) FydeOS is running;
+仍然没有网络，正在重置安卓数据并重新开机（应用清单会保留，点开时自动重装）…	Still no network; resetting Android data and booting again (the app list is kept and apps reinstall when opened)…
+不下载任何安卓镜像：直接驱动你电脑上已经装好的 MuMu 模拟器 12，	Downloads no Android image: it drives the MuMu Player 12 already installed on your PC,
+找不到 adb。请先完成运行时部署（设置 → 运行时 → 一键完成）。	adb not found. Finish the runtime setup first (Settings → Runtime → Complete setup).
+网络已恢复（${network.ip || ''}），已存好可用快照。	Network restored (${network.ip || ''}), saved a working snapshot.
+WASD 控制左侧虚拟摇杆区域，J 射击，K 换弹，Space 跳跃	WASD drives the left virtual stick, J fires, K reloads, Space jumps
+WASD 移动，J 攻击，K 技能，L 大招，Space 确认/对话	WASD moves, J attacks, K casts, L uses the ultimate, Space confirms/talks
+FydeOS 在 ${this.hostOverride} 上可达	FydeOS is reachable at ${this.hostOverride}
+正在修复虚拟机网络：先尝试重新连接 Wi-Fi（不影响已装应用）…	Repairing the VM network: trying to reconnect Wi-Fi first (installed apps are untouched)…
+FydeOS 弹出了「允许调试」授权框，请在安卓界面点「允许」…	FydeOS is asking to allow debugging; click Allow in the Android window…
+若持续无网，可在「设置 → 修复网络」重连（不会删除已装应用）。	If it stays offline, reconnect in Settings → Repair network (installed apps are not deleted).
+网络已恢复（${net1.ip || ''}），已存好可用快照。	Network restored (${net1.ip || ''}), saved a working snapshot.
+数据分区由 MuMu 管理，改大小请在 MuMu 设置里操作。	MuMu manages the data partition; change its size in MuMu settings.
+⚠ 安卓虚拟机暂时没连上网（Wi-Fi 未关联或没拿到地址）。	⚠ The Android VM has no network yet (Wi-Fi not associated or no address).
+重新连接没成功，正在冷启动一次虚拟机（不加载快照，数据保留）…	Reconnect failed; cold booting the VM once (no snapshot loaded, data kept)…
+自带运行时（Android Emulator + QEMU）	Built-in runtime (Android Emulator + QEMU)
+首次启动约 25 秒，之后靠 quickboot 快照秒进。	About 25 seconds on first boot; afterwards quickboot snapshots make it instant.
+并确认 FydeOS 的安卓设置里已打开「ADB 调试」。	and confirm ADB debugging is on in FydeOS Android settings.
+多窗口：${roles.count} 个应用并存，无需回收	Multi-window: ${roles.count} apps side by side, nothing to reclaim
+需要在 FydeOS 的安卓设置里打开「ADB 调试」。	Enable ADB debugging in FydeOS Android settings.
+正在连接 FydeOS 安卓子系统：${target}…	Connecting to the FydeOS Android subsystem: ${target}…
+MuMu 模拟器启动超时（120 秒内没有进入安卓桌面）	MuMu emulator start timed out (did not reach the Android home screen in 120 seconds)
+FydeOS 的安卓子系统由系统管理，这里只断开连接	The FydeOS Android subsystem is managed by the system; this only disconnects
+没有找到 MuMu 模拟器（可在设置里指定安装目录）	MuMu emulator not found (set its install directory in Settings)
+需要联网的应用打开后可能一直黑屏：稍后重开应用即可；	Apps that need network may stay black after opening: reopen the app in a moment;
+自动重连 Wi-Fi 失败：${e.message}	Automatic Wi-Fi reconnect failed: ${e.message}
+方向键移动，Enter 确认，Space 取消/返回	Arrow keys move, Enter confirms, Space cancels/goes back
+虚拟机网络已恢复（${net.ip || ''}）	VM network restored (${net.ip || ''})
+MuMu 模拟器 12（复用已安装的网易模拟器）	MuMu Player 12 (reuse the installed NetEase emulator)
+检测到本机 5555 端口（可能是 ARC）	Detected port 5555 on this machine (possibly ARC)
+中文环境初始化跳过：${e.message}	Chinese environment setup skipped: ${e.message}
+虚拟机连不上 Wi-Fi，正在尝试重新连接…	The VM cannot reach Wi-Fi; trying to reconnect…
+系统语言校正跳过：${e.message}	System language correction skipped: ${e.message}
+没有找到 MuMuManager.exe	MuMuManager.exe not found
+${backend.label}未能启动	${backend.label} failed to start
+检测到 ${p.label} 正在运行	Detected ${p.label} running
+MuMu 目录里找不到 adb.exe	adb.exe not found in the MuMu directory
+缺 Android Emulator	Android Emulator missing
+未检测到虚拟机或 FydeOS 地址	No VM or FydeOS address detected
+未知组件 ${component}	Unknown component ${component}
+上一次的模拟器已经退出，重新开机…	The previous emulator has exited; booting again…
+数据由 FydeOS 系统管理	Data is managed by the FydeOS system
+正在启动 MuMu 模拟器…	Starting the MuMu emulator…
+MuMu 模拟器正在开机…	The MuMu emulator is booting…
+该后端不支持调整数据分区	This backend does not support resizing the data partition
+FydeOS 安卓子系统	FydeOS Android subsystem
+输入法 APK 缺失	IME APK missing
+该后端不支持自动部署	This backend does not support automatic setup
+该后端不支持重置数据	This backend does not support resetting data
+MuMu 实例磁盘	MuMu instance disk
+FPS / 射击类	FPS / shooter
+RPG / 动作类	RPG / action
+连接后设备未就绪	Device not ready after connecting
+通用 / 休闲类	General / casual
+QEMU 安装包	QEMU installer
+输入法包未注册	IME package not registered
+运行时未初始化	Runtime not initialized
+运行时探测失败	Runtime probe failed
+adb 安装包	adb installer
+未命名后端	Unnamed backend
+缺 adb	adb missing
+缺系统镜像	System image missing
+运行时整包	Runtime full package
+需要授权	Authorization needed
+未实现	Not implemented

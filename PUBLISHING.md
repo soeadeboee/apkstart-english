@@ -5,7 +5,7 @@ Everything below is for the repo owner; users only need the README.
 ## Suggested repository settings
 
 - **Name:** `apkstart-english`
-- **Description:** `English UI patch + portable build for ApkStart v0.4.3 (Windows APK runner)`
+- **Description:** `English UI patch + portable build for ApkStart v0.5.3 (Windows APK runner)`
 - **Topics:** `apkstart`, `android`, `apk`, `windows`, `english`, `translation`, `portable`, `emulator`
 - **License:** MIT
 - **Website:** leave empty, or point at the upstream project
@@ -25,9 +25,9 @@ locales/  scripts/  patch/  docs/  .github/
 
 ## Release
 
-1. Tag: `v0.4.3-en.1`
-2. Title: `ApkStart v0.4.3 — English UI`
-3. Attach the release asset: `dist/ApkStart-v0.4.3-win64-portable-en.zip`
+1. Tag: `v0.5.3-en.1`
+2. Title: `ApkStart v0.5.3 — English UI`
+3. Attach the release asset: `dist/ApkStart-v0.5.3-win64-portable-en.zip`
 4. Paste the release notes from `CHANGELOG.md`.
 
 ## Pushing with git
@@ -35,7 +35,7 @@ locales/  scripts/  patch/  docs/  .github/
 ```powershell
 git init
 git add .
-git commit -m "feat: English UI for ApkStart v0.4.3"
+git commit -m "feat: English UI for ApkStart v0.5.3"
 git branch -M main
 git remote add origin https://github.com/<user>/apkstart-english.git
 git push -u origin main

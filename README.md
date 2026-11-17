@@ -3,7 +3,7 @@
 [![verify](https://github.com/soeadeboee/apkstart-english/actions/workflows/verify.yml/badge.svg)](https://github.com/soeadeboee/apkstart-english/actions/workflows/verify.yml)
 [![license: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
-**Unofficial English UI for [ApkStart](https://github.com/RoutineMiku/apkstart) v0.4.3** — a Windows launcher that installs Android APKs and runs each app in its own window.
+**Unofficial English UI for [ApkStart](https://github.com/RoutineMiku/apkstart) v0.5.3** — a Windows launcher that installs Android APKs and runs each app in its own window.
 
 ApkStart is excellent, but every label, dialog, notification and log line is hard-coded Chinese. This repo turns all of it into English, and does it in a way you can re-apply after every update.
 
@@ -17,10 +17,10 @@ ApkStart is excellent, but every label, dialog, notification and log line is har
 
 | | |
 |---|---|
-| Strings translated | **1,024** (UI, tray, notifications, dialogs, installer, diagnostics, logs) |
-| Replacements | **2,315** across **35 files** |
+| Strings translated | **1,273** (UI, tray, notifications, dialogs, installer, diagnostics, logs) |
+| Replacements | **6,242** across **46 files** |
 | Chinese left outside code comments | **0** |
-| Version pin | v0.4.3 only |
+| Version pin | v0.5.3 only |
 | Bundled Android images / QEMU / Google components | none |
 
 Two ways to use it:
@@ -30,13 +30,13 @@ Two ways to use it:
 
 ## Option 1 — portable English build (easiest)
 
-1. Download `ApkStart-v0.4.3-win64-portable-en.zip` from [Releases](../../releases).
+1. Download `ApkStart-v0.5.3-win64-portable-en.zip` from [Releases](../../releases).
 2. Extract it anywhere (e.g. `D:\ApkStart`).
 3. Run `ApkStart.exe`.
 
 The first app launch still downloads the Android runtime, exactly like the original build. Nothing else is bundled.
 
-## Option 2 — patch an existing ApkStart v0.4.3
+## Option 2 — patch an existing ApkStart v0.5.3
 
 1. Quit ApkStart (tray icon → right click → **Quit**).
 2. Download this repo (green **Code** button → **Download ZIP**) and extract it.
@@ -54,8 +54,8 @@ powershell -ExecutionPolicy Bypass -File .\install-en.ps1 -AppDir "C:\Users\me\A
 
 Before writing anything it:
 
-- checks `package.json` says `0.4.3`;
-- compares every target file with the SHA-256 of the stock v0.4.3 file;
+- checks `package.json` says `0.5.3`;
+- compares every target file with the SHA-256 of the stock v0.5.3 file;
 - backs everything up to `%LOCALAPPDATA%\apkstart-english\backup\...`.
 
 If a file was modified, it stops and lists it instead of overwriting silently (`-Force` overrides).
@@ -73,11 +73,12 @@ The newest backup for that install is restored and hash-verified.
 ## What is translated
 
 - Main window: sidebar, app cards, drop zone, status strip, tooltips
-- Settings: every tab (Runtime, App windows, Performance, Sources, System integration, Software update, About)
+- Settings: every group (Runtime & environment, Automatic, App windows, Mouse buttons, Key mapping, Performance & resources, Download & update sources, Runtime, Android system settings, Desktop & apps, File sharing, System integration, Software update, About)
 - Tray menu, in-app toasts, confirm dialogs, Windows notifications
 - Install / launch / uninstall flows, error mapping and repair suggestions
 - Diagnostics: environment check, failure reasons, hints, diagnostic report text
-- Core modules: runtime deployment, emulator start/stop, networking repair, cleanup, updater, file sharing, shortcuts
+- Runtime backends: built-in QEMU/Android-x86, MuMu, FydeOS and attach-to-existing, including their setup hints
+- Core modules: runtime deployment, emulator start/stop, networking repair, cleanup, updater, file sharing, shortcuts, splashes and the first-run setup guide
 - Locale details: `<html lang="en">`, `toLocaleDateString('en-US')`, name sorting with the `en` locale, English VC++ download page
 
 **Not translated on purpose:** code comments (developers only), the Android system UI inside the VM (that is Android, not ApkStart), and the author's WeChat/Douyin QR images.
@@ -140,7 +141,7 @@ The full update checklist lives in [CONTRIBUTING.md](CONTRIBUTING.md#2-updating-
 
 ### Getting the translation upstream
 
-ApkStart requires Chinese UI text in its sources, so a 35-file English patch
+ApkStart requires Chinese UI text in its sources, so a 46-file English patch
 cannot be merged directly. The route that respects upstream's rules is a
 **build-time locale catalog** (Chinese sources unchanged, opt-in English build).
 If you want to push for that, open an issue upstream first with a screenshot and
@@ -166,7 +167,7 @@ docs\                 screenshots
 
 ## Credits and license
 
-- **ApkStart** © ApkStart contributors, MIT — <https://github.com/RoutineMiku/apkstart>. This repo contains modified copies of its UI files from tag `v0.4.3`.
+- **ApkStart** © ApkStart contributors, MIT — <https://github.com/RoutineMiku/apkstart>. This repo contains modified copies of its UI files from tag `v0.5.3`.
 - The English translation is released under the same MIT license (see [LICENSE](LICENSE)).
 - ApkStart itself downloads Android system images, emulator binaries and Google components from their vendors. **None of those are distributed here**, and the release zip contains only the original ApkStart program plus translated text files.
 

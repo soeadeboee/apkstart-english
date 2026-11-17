@@ -1,12 +1,12 @@
 'use strict';
 /**
- * 极简 ZIP 读取器（仅依赖 Node 内置 zlib）
+ * 极简 ZIP 读取器 (仅依赖 Node 内置 zlib)
  * 只解析中央目录，按需解压单个条目，避免Large APK 全量解压撑爆内存。
  *
- * 注意：本文件只做「读」，不做「写」。两处「LargeSmall」相关的不变量：
- *  - 单个 Buffer 有上限（Node 约 2GB），所以 GB 级条目一律走 ZipFile + pipeTo；
+ * 注意: 本文件只做「读」，不做「写」。两处「LargeSmall」相关的不变量: 
+ *  - 单个 Buffer 有上限 (Node 约 2GB)，所以 GB 级条目一律走 ZipFile + pipeTo; 
  *  - ZIP 的传统 EOCD 用 16/32 位存条目数与偏移，超过就进位成 0xffff/0xffffffff，
- *    真正的值在 Zip64 EOCD（0x06064b50）与 Zip64 扩展字段（id=0x0001）里。
+ *    真正的值在 Zip64 EOCD (0x06064b50)与 Zip64 扩展字段 (id=0x0001)里。
  *    两条路径都必须识别，否则Large镜像包会被「静默截断条目」或直接越界。
  */
 const zlib = require('zlib');
@@ -19,15 +19,15 @@ const ZIP64_EOCD_SIG = 0x06064b50;
 const ZIP64_LOC_SIG = 0x07064b50;
 const MAX32 = 0xffffffff;
 const MAX16 = 0xffff;
-// read() 单条目上限：超过就要求调用方走 pipeTo（流式），避免整块进内存
+// read() 单条目上限: 超过就要求调用方走 pipeTo (流式)，避免整块进内存
 const MAX_READ = 256 * 1024 * 1024;
 
-/** 把 BigInt 偏移安全地转成 Number（ZIP 不可能Large过 2^53 字节） */
+/** 把 BigInt 偏移安全地转成 Number (ZIP 不可能Large过 2^53 字节) */
 function toNum(v) { return typeof v === 'bigint' ? Number(v) : v; }
 
 /**
- * 解析 Zip64 扩展字段（0x0001），补全中央目录里被置成 0xffffffff 的字段。
- * 字段顺序固定：未压缩LargeSmall、压缩LargeSmall、本地头偏移、起始磁盘号；只出现「被置位」的那些。
+ * 解析 Zip64 扩展字段 (0x0001)，补全中央目录里被置成 0xffffffff 的字段。
+ * 字段顺序固定: 未压缩LargeSmall, 压缩LargeSmall, 本地头偏移, 起始磁盘号; 只出现「被置位」的那些。
  * @param {Buffer} extra 中央目录项的扩展字段
  * @param {{uncompSize:number, compSize:number, localOffset:number}} fields
  */
@@ -62,7 +62,7 @@ function applyZip64Extra(extra, fields) {
  * 从 EOCD 位置解出条目数 / 中央目录LargeSmall / 中央目录偏移，Automatic跟进 Zip64。
  * @param {Buffer} buf 包含 EOCD 的缓冲区
  * @param {number} eocd EOCD 在 buf 内的下标
- * @param {number} base buf[0] 对应的文件绝对偏移（ZipFile 的尾部窗口用）
+ * @param {number} base buf[0] 对应的文件绝对偏移 (ZipFile 的尾部窗口用)
  * @returns {{total:number, cdSize:number, cdOffset:number, eocdAbs:number}}
  */
 function readEndOfCentralDirectory(buf, eocd, base) {
@@ -165,7 +165,7 @@ class ZipArchive {
 
   /**
    * 流式解压单个条目到可写流。
-   * system.img 这类 GB 级条目无法整块 inflate 进内存（会撞上 Node 的 2GB 单 Buffer 上限），
+   * system.img 这类 GB 级条目无法整块 inflate 进内存 (会撞上 Node 的 2GB 单 Buffer 上限)，
    * 必须边解压边落盘。
    */
   pipeTo(name, dest) {
@@ -215,7 +215,7 @@ class ZipArchive {
 }
 
 /**
- * 文件版 ZIP 读取器：只把尾部中央目录读进内存，条目按需从 fd 流式读。
+ * 文件版 ZIP 读取器: 只把尾部中央目录读进内存，条目按需从 fd 流式读。
  * 用于 emulator / System images这类 GB 级安装包——旧版 fs.readFileSync 整包读会
  * 在低内存机器上直接 OOM，表现为「下载完了却装不上」。
  */
@@ -239,7 +239,7 @@ class ZipFile {
     if (n > 0) {
       let got = 0;
       while (got < n) {
-        // readSync 可能短读（尤其Large块），必须循环到读满
+        // readSync 可能短读 (尤其Large块)，必须循环到读满
         const r = fs.readSync(this.fd, b, got, n - got, pos + got);
         if (r <= 0) break;
         got += r;
@@ -267,7 +267,7 @@ class ZipFile {
     let cd = tail;
     let cdBase = tailBase;
     if (cdOffset < tailBase || cdOffset + cdSize > eocdAbs) {
-      // 中央目录不在尾部缓冲里（超Large注释 / 多分卷），按声明LargeSmall精确读一段
+      // 中央目录不在尾部缓冲里 (超Large注释 / 多分卷)，按声明LargeSmall精确读一段
       const len = Math.min(cdSize, 256 * 1024 * 1024);
       if (len <= 0) throw new Error('bad ZIP central directory offset');
       cd = this._readAt(cdOffset, len);
@@ -320,8 +320,8 @@ class ZipFile {
 
   read(name) {
     const { e, start } = this._range(name);
-    // read() 会把整个条目解到内存：给一个明确上限，避免未来某个调用点顺手
-    // 拿来读 GB 级镜像（那正是 issue #21 里「Large包必炸」的形态）。
+    // read() 会把整个条目解到内存: 给一个明确上限，避免未来某个调用点顺手
+    // 拿来读 GB 级镜像 (那正是 issue #21 里「Large包必炸」的形态)。
     if (e.compSize > MAX_READ) {
       throw new Error(`entry too large (${(e.compSize / 1048576).toFixed(0)}MB), use pipeTo instead: ${name}`);
     }

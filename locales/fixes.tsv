@@ -1,16 +1,9 @@
-# Version-specific fixes for ApkStart v0.4.3.
+# Version-specific fixes for ApkStart v0.5.3.
 # Format: <search text>\t<replacement text>
 # Only lines that the raw string catalog cannot express live here:
 # mixed Chinese/English fragments, plural forms, locale attributes.
 # Escapes: \n = newline, \t = tab, \\ = backslash. Prefix a line with # to comment it out.
-/** 列出当前可见的顶层窗口（用于验证「只有软件界面 / 只有安卓App windows」） */	/** 列出当前可见的顶层窗口（用于验证「只有软件界面 / 只有Android app窗口」） */
-检查Update failed	Check for updates失败
-      + `已尝试：${this.attempts.map((a) => `${a.plan} → ${a.diagnosis}`).join('；')}\\n`	      + `Attempts: ${this.attempts.map((a) => `${a.plan} → ${a.diagnosis}`).join('; ')}\\n`
-this.log(`跳过快照保存：磁盘剩余 ${(freeMB / 1024).toFixed(1)}GB < 需要 ${(needMB / 1024).toFixed(1)}GB`);	this.log(`skipping snapshot save: ${(freeMB / 1024).toFixed(1)}GB free < ${(needMB / 1024).toFixed(1)}GB needed`);
-System images不可用：	System image unavailable: 
-message: `将释放约 	message: `Frees about 
-el.textContent = `发现：${found.map((f) => f.name).join('、')}`;	el.textContent = `Found: ${found.map((f) => f.name).join(', ')}`;
-tips.push(`New version available <b>${esc(lastUpdate.tag || '')}</b>，可在「Settings → Software update」一键更新`);	tips.push(`New version <b>${esc(lastUpdate.tag || '')}</b> available — update from Settings → Software update`);
+检查Update failed	Check for updates failed
 $('statusStats').textContent = n ? `${n} apps` : 'No apps yet';	$('statusStats').textContent = n ? `${n} app${n === 1 ? '' : 's'}` : 'No apps yet';
 chip.textContent = errs ? `${errs} issues to fix` : `${issues.length} notices`;	chip.textContent = errs ? `${errs} issue${errs === 1 ? '' : 's'} to fix` : `${issues.length} notice${issues.length === 1 ? '' : 's'}`;
 ${warns ? `<span class="ec-count warn">${warns} warnings</span>` : ''}	${warns ? `<span class="ec-count warn">${warns} warning${warns === 1 ? '' : 's'}</span>` : ''}
@@ -18,3 +11,6 @@ toLocaleDateString('zh-CN')	toLocaleDateString('en-US')
 learn.microsoft.com/zh-CN/cpp	learn.microsoft.com/en-us/cpp
 a.label.localeCompare(b.label, 'zh')	a.label.localeCompare(b.label, 'en')
 <html lang="zh-CN">	<html lang="en">
+missing.push('Engine')	missing.push('engine')
+missing.push('System images')	missing.push('system images')
+note: 'emulator not installed' };	note: 'Emulator not installed.' };
