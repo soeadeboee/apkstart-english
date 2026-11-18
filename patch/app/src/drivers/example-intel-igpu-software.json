@@ -1,0 +1,24 @@
+{
+  "format": "apkstart-driver/1",
+  "id": "example-intel-igpu-software",
+  "name": "Intel integrated GPU · software rendering fallback (example)",
+  "version": "1.0.0",
+  "author": "ApkStart",
+  "description": "Old Intel integrated GPUs (before HD / UHD 6xx) hit GLES initialization failures or garbled output on some driver versions. Pinning the render backend to software always gets a picture.",
+  "enabled": false,
+  "priority": 0,
+  "match": {
+    "platform": ["win32"],
+    "gpuVendor": ["intel"]
+  },
+  "effect": {
+    "gpuMode": "software",
+    "configIni": {
+      "hw.gpu.mode": "software",
+      "hw.gpu.enabled": "yes"
+    },
+    "notes": [
+      "The picture shows up but games stutter; these machines are better for light apps"
+    ]
+  }
+}

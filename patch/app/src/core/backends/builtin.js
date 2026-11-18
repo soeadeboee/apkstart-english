@@ -15,6 +15,8 @@
 const fs = require('fs');
 const path = require('path');
 const { Backend, CAPS } = require('./base');
+const { freeDiskMB } = require('../doctor');
+const { diskRequiredMB, diskVerdict, hostProfile, memoryLimits, memVerdict, diskLimits } = require('../resources');
 
 class BuiltinBackend extends Backend {
   static get id() { return 'builtin'; }
@@ -121,6 +123,57 @@ class BuiltinBackend extends Backend {
   usage() { return this.rt ? this.rt.usage() : { total: 0, items: [] }; }
 
   dataInfo() { return this.rt ? this.rt.emulator.dataInfo() : { ok: false }; }
+
+  /**
+   * Settings页展示用: 宿主上限 + 当前分配。
+   * 自带Runtime的内存/CPU 是写进 qemu 命令行的，改完下次开安卓生效; 
+   * 数据分区可以就地扩容 (resizeData)，不丢Installed apps。
+   */
+  resources() {
+    const info = this.dataInfo() || {};
+    const host = hostProfile();
+    const eng = (this.rt && this.rt.settings && this.rt.settings.engine) || {};
+    const freeMB = info.avdDir ? freeDiskMB(info.avdDir) : 0;
+    const memMB = Number(eng.memoryMB) || 0;
+    return {
+      backend: 'builtin',
+      host,
+      limits: { ...memoryLimits(host.totalMB), ...diskLimits(freeMB) },
+      wanted: { memoryGB: memMB ? Math.round((memMB / 1024) * 2) / 2 : 0, cores: Number(eng.cores) || 0 },
+      current: {
+        memoryGB: memMB ? Math.round((memMB / 1024) * 2) / 2 : 0,
+        cores: Number(eng.cores) || 0,
+        dataGB: Number(info.configuredGB) || 0,
+        imageGB: Number(info.imageGB) || 0,
+      },
+      freeMB,
+      pending: false,
+      verdict: memVerdict(memMB, host.totalMB),
+      note: 'Memory/CPU for the built-in runtime apply the next time Android starts; after raising the data partition click Expand now —'
+        + 'If it can expand in place, installed apps are kept; when Android is using a quick-boot differencing disk, you are asked to reset and rebuild at the new size.',
+    };
+  }
+
+  /**
+   * Large包预检: 除了物理磁盘，还要看 /data 分区本身够不够。
+   * 50GB 级游戏装不下的最常见原因不是下载失败，而是 userdata 镜像还是
+   * 默认的 6/8GB —— 装到 dexopt 阶段才报 INSTALL_INSUFFICIENT_STORAGE。
+   */
+  checkDiskFor(bytes) {
+    const info = this.dataInfo() || {};
+    const need = diskRequiredMB(bytes);
+    const phys = diskVerdict(info.avdDir ? freeDiskMB(info.avdDir) : 0, need);
+    if (!phys.ok) return phys;
+    const capGB = Number(info.configuredGB) || 0;
+    if (capGB && capGB * 1024 < need) {
+      return {
+        ok: false,
+        message: `Android data partition is too small: ${capGB} GB now, this game wants at least ${Math.ceil(need / 1024)} GB.`
+          + 'In Settings → Engine, raise Data partition size and restart Android (it expands in place; installed apps are kept).',
+      };
+    }
+    return { ok: true, requiredMB: need };
+  }
 
   async resizeData(mb) { return this.rt ? this.rt.emulator.resizeDataPartition(mb) : { ok: false }; }
 

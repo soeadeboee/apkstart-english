@@ -14,3 +14,14 @@ a.label.localeCompare(b.label, 'zh')	a.label.localeCompare(b.label, 'en')
 missing.push('Engine')	missing.push('engine')
 missing.push('System images')	missing.push('system images')
 note: 'emulator not installed' };	note: 'Emulator not installed.' };
+
+# --- untranslated strings added for upstream v0.5.8 (English) ---
+${vram}${gpu.driverVersion ? ` · 驱动 ${gpu.driverVersion}` : ''}${gpu.driverDate ? ` (${gpu.driverDate})` : ''}	${vram}${gpu.driverVersion ? ` · Driver ${gpu.driverVersion}` : ''}${gpu.driverDate ? ` (${gpu.driverDate})` : ''}
+${where}format 必须是 "${DRIVER_FORMAT}" (当前 ${JSON.stringify(raw.format)})	${where}format must be \\"${DRIVER_FORMAT}\\" (currently ${JSON.stringify(raw.format)})
+${where}match 不能是空对象; 如果要匹配所有机器请写 {"any": true}	${where}match cannot be an empty object; to match every machine write {\\"any\\": true}
+<code>docs/drivers.md</code>。</span>	<code>docs/drivers.md</code>.</span>
+Found ${bad} item(s) that must be fixed first	Found ${bad} item${bad === 1 ? '' : 's'} that must be fixed first
+${warn} item(s) worth improving	${warn} item${warn === 1 ? '' : 's'} worth improving
+${drivers.length} driver(s), ${onCount} active on this PC.	${drivers.length} driver${drivers.length === 1 ? '' : 's'}, ${onCount} active on this PC.
+${drv.errors.length} driver file(s) failed to load	${drv.errors.length} driver file${drv.errors.length === 1 ? '' : 's'} failed to load
+ ${errors.length} file(s) failed to load (see below).	 ${errors.length} file${errors.length === 1 ? '' : 's'} failed to load (see below).

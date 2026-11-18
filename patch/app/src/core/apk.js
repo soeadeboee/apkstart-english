@@ -7,6 +7,7 @@ const fs = require('fs');
 const { ZipFile } = require('./zip');
 const { parseAxml, attr, attrValue, children } = require('./axml');
 const { ResTable } = require('./arsc');
+const { validPackageName } = require('./pkgname');
 
 const LAUNCHER_ACTIONS = ['android.intent.action.MAIN'];
 const LAUNCHER_CATS = ['android.intent.category.LAUNCHER'];
@@ -61,7 +62,7 @@ const ORI_PORTRAIT = new Set([1, 5, 7, 13]);
 const ORI_LANDSCAPE = new Set([2, 4, 6, 12]);
 
 /**
- * 判断一个App「天然」是竖屏还是横屏。
+ * 判断一个App「天然」是Portrait还是Landscape。
  *
  * 为什么需要它: 模拟器的物理面板 (hw.lcd)方向一旦和App自己的
  * screenOrientation 不一致，Android 只会给App一个信箱式 (letterbox)的
@@ -180,6 +181,11 @@ function parseApkZip(zip, filePath, stat) {
   // attrValue 默认只认 android 命名空间，传 null 表示不限定命名空间。
   const packageName = attrValue(manifest, 'package', null);
   if (!packageName) throw new Error('no package name in the manifest');
+  // package 会一路流到路径拼接和 adb shell，必须是纯合法的 Android 包名。
+  // 恶意/损坏的清单里塞进 "../", 盘符或 shell 元字符时在这里就拦下 (issue #2 P0-1)。
+  if (!validPackageName(packageName)) {
+    throw new Error(`Invalid package name in the manifest: ${JSON.stringify(String(packageName).slice(0, 80))}`);
+  }
 
   const versionName = attrValue(manifest, 'versionName') || '1.0';
   const versionCodeRaw = attrValue(manifest, 'versionCode');
@@ -226,7 +232,7 @@ function parseApkZip(zip, filePath, stat) {
     }
   }
 
-  // ---- Screen orientation (决定模拟器物理面板该用横屏还是竖屏，见 detectOrientation)----
+  // ---- Screen orientation (决定模拟器物理面板该用Landscape还是Portrait，见 detectOrientation)----
   const orientation = detectOrientation(acts, launcher);
 
   // ---- 图标 ----

@@ -135,3 +135,18 @@ app up (提前接画面)	app up (attaching the screen early)
 正在切换到横屏…	Switching to landscape…
 正在切换到竖屏…	Switching to portrait…
 关闭当前应用	Close current app
+
+# --- untranslated strings added for upstream v0.5.8 (English) ---
+体检自动配置：${JSON.stringify(patch.engine)} driver=${driverFile || '(未写入)'}	Checkup auto-config: ${JSON.stringify(patch.engine)} driver=${driverFile || '(not written)'}
+已导入驱动：${out.driver.name} v${out.driver.version}	Driver imported: ${out.driver.name} v${out.driver.version}
+运行时未就绪，暂时读不到资源分配	The runtime is not ready yet; resource allocation is unavailable
+将回退软件模拟（能跑但很慢）。	Falling back to software emulation (runs, but very slow).
+选择驱动文件（.json）	Choose a driver file (.json)
+正在完成上次未完成的更新…	Finishing the update that did not complete last time…
+导出本机驱动模板	Export this PC driver template
+驱动 JSON	Driver JSON
+缺少驱动 id	Missing driver id
+目标容量不合法	Invalid target capacity
+(未写入)	(not written)
+横屏	Landscape
+竖屏	Portrait

@@ -12,7 +12,7 @@ const { spawn, execFile } = require('child_process');
 const store = require('./store');
 const doctor = require('./doctor');
 const { download, downloadAny, downloadAnyParallel, downloadMulti, head, discardPartial } = require('./download');
-const { ZipArchive, ZipFile } = require('./zip');
+const { ZipArchive, ZipFile, resolveZipEntry } = require('./zip');
 const { Sources } = require('./sources');
 const { cmpVer } = require('./version');
 
@@ -672,11 +672,17 @@ class Provisioner {
 
     try {
       for (const name of zip.names()) {
-        if (name.endsWith('/')) {
-          fs.mkdirSync(path.join(destDir, name), { recursive: true });
+        // zip-slip 守卫 (issue #2 P0-4): Runtime包来自网络，条目名不可信。
+        // 目录条目和文件条目都必须是 destDir 内的合法相对路径。
+        const target = resolveZipEntry(destDir, name);
+        if (!target) {
+          if (opts.onUnsafeEntry) opts.onUnsafeEntry(name);
           continue;
         }
-        const target = path.join(destDir, name);
+        if (name.endsWith('/')) {
+          fs.mkdirSync(target, { recursive: true });
+          continue;
+        }
         fs.mkdirSync(path.dirname(target), { recursive: true });
         const e = zip.entries.get(name);
         if (e.uncompSize > STREAM_THRESHOLD) {
@@ -700,11 +706,31 @@ class Provisioner {
   async _fetchText(url, limit = 2 * 1024 * 1024) {
     const { openStream } = require('./download');
     const res = await openStream(url);
-    return new Promise((resolve, reject) => {
+    // issue #2 P1-1: 超限时 destroy() 既不发 'end', 错误又没被兜住时，
+    // 这个 Promise 永远不 settle，部署向导就永久卡在「正在解析索引」。
+    // 用一次性 settle 门闩 + 硬超时，任何路径都只结算一次。
+    return new Promise((resolve) => {
       let d = '';
-      res.on('data', (c) => { d += c; if (d.length > limit) res.destroy(); });
-      res.on('end', () => resolve(d));
-      res.on('error', () => resolve(d));
+      let done = false;
+      const finish = () => {
+        if (done) return;
+        done = true;
+        clearTimeout(timer);
+        resolve(d);
+      };
+      const timer = setTimeout(() => { try { res.destroy(); } catch (_) {} finish(); }, 30000);
+      res.on('data', (c) => {
+        if (done) return;
+        d += c;
+        if (d.length > limit) {
+          d = '';                       // 超出上限的内容不可用，别把半截索引当完整
+          try { res.destroy(); } catch (_) {}
+          finish();
+        }
+      });
+      res.on('end', finish);
+      res.on('close', finish);
+      res.on('error', finish);
     });
   }
 

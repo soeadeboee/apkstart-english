@@ -11,6 +11,7 @@ const fs = require('fs');
 const path = require('path');
 const { hookOptions } = require('./pointer');
 const store = require('./store');
+const { physicalRect } = require('./geometry');
 
 const TITLEBAR_H = 38;
 /**
@@ -30,8 +31,8 @@ class AppWindow {
   constructor({ agent, setOrientation, mouseHook = false, pointerConfig = null, windowTargets = null }) {
     this.agent = agent;
     this.setOrientation = setOrientation || null;
-    // 画面窗口的候choose句柄来源: 自带底座为 null (由窗口代理自己找)，
-    // 第三方底座 (MuMu 等)传入一个返回 ["0x…"] 的函数，每次 embed 现取。
+    // 画面窗口的候choose句柄来源: current只有一个底座，恒为 null，
+    // 由窗口代理按进程作用域自己找 (这些窗口都是我们拉起的 emulator 创建的)。
     this.windowTargets = typeof windowTargets === 'function' ? windowTargets : null;
     // 全局鼠标钩子只在「App windows前台 + 至少一项映射开启」时安装。
     // pointerConfig 传函数: Settings页改了开关，下一次 focus 就生效，不用重启。
@@ -46,7 +47,7 @@ class AppWindow {
 
   get isOpen() { return !!(this.win && !this.win.isDestroyed()); }
 
-  /** 竖屏 / 横屏下窗口内容的目标尺寸 (Automatic缩放到屏幕内) */
+  /** Portrait / Landscape下窗口内容的目标尺寸 (Automatic缩放到屏幕内) */
   static sizeFor(area, portrait, landscape) {
     const p = portrait || { w: 540, h: 960 };
     // 留足边距: 标题栏 38 + 上下各 24，左右各 40
@@ -67,27 +68,30 @@ class AppWindow {
   _area() {
     const d = screen.getDisplayNearestPoint(screen.getCursorScreenPoint());
     const a = d.workArea || d.bounds;
-    return { x: a.x, y: a.y, w: a.width, h: a.height };
+    // workArea 是 DIP (逻辑像素)。窗口代理进程是 per-monitor DPI-aware 的，
+    // SetWindowPos 收的是物理像素，所以独立窗口模式把这里的值交给 agent.layout
+    // 之前必须乘 sf 换算。sf 与 area 取自同一块屏幕，多显示器也不会用错缩放比。
+    return { x: a.x, y: a.y, w: a.width, h: a.height, sf: d.scaleFactor || 1 };
   }
 
   /**
    * 模拟器原生窗口自己按设备面板锁宽高比，给错比例会被夹回去。
    * 这里算出当前窗口应有的 w/h 比 (含标题栏高度)，用来一次给对的尺寸。
-   * 独立窗口模式下壳窗口是隐藏的, bounds 可能是竖屏默认值，
-   * 所以要按面板方向校正 (横屏时宽 > 高，比值 > 1)。
+   * 独立窗口模式下壳窗口是隐藏的, bounds 可能是Portrait默认值，
+   * 所以要按面板方向校正 (Landscape时宽 > 高，比值 > 1)。
    */
   _panelRatio() {
     const b = this.win ? this.win.getBounds() : this._area();
     if (b && b.width > 0 && b.height > 0) {
       // Landscape panel下，壳窗口的 bounds 可能还是竖的 (detached 模式 hide 了)，
       // 直接读会得到 0.56 (9:16)，但实际面板是 16:9。
-      // 此时用 portrait 的 h/w 作为宽 (横屏 = Portrait panel旋转 90°)
+      // 此时用 portrait 的 h/w 作为宽 (Landscape = Portrait panel旋转 90°)
       if (this.state.landscape && b.height > b.width) {
         return b.height / b.width;
       }
       return b.width / b.height;
     }
-    return 0.5625; // 竖屏 9:16 兜底
+    return 0.5625; // Portrait 9:16 兜底
   }
 
   _scale() {
@@ -97,6 +101,17 @@ class AppWindow {
     } catch (_) {
       return 1;
     }
+  }
+
+  /**
+   * 把一块 DIP (逻辑像素)矩形换算成物理像素，供窗口代理的 SetWindowPos 使用。
+   * Electron 的 screen/BrowserWindow 坐标一律是 DIP; 而 agent.ps1 顶层声明了
+   * per-monitor v2 DPI 感知，Win32 的 SetWindowPos 收到的是物理像素。二者混用
+   * 在 125%/150% 缩放下就是「窗口只显示一半 / 偏到角落 / 点击错位」的根因
+   *  (issue #99)。_rect() 早已乘过 sf，这里补上独立窗口模式缺的这一环。
+   */
+  _physical(rect, sf) {
+    return physicalRect(rect, sf || this._scale());
   }
 
   /**
@@ -328,12 +343,12 @@ class AppWindow {
     }
     await sleep(300);
     // 按屏幕可用区居中和 sizing。
-    // 注意: 模拟器原生窗口自己按设备面板比例锁宽高比 (竖屏 9:16)，
+    // 注意: 模拟器原生窗口自己按设备面板比例锁宽高比 (Portrait 9:16)，
     // 给一个不匹配的 w/h，它会把宽夹回高度对应的值，结果就是「设了 1280 宽
     // 却只有 400 宽」。所以这里主动按面板比例算尺寸，一次给对。
     //
     // 全屏 (「启动时Auto full screen」)时铺满整个可用区; Landscape panel下宽高比本来就贴合
-    // 屏幕，铺满不会留黑边 —— 这也是横屏比竖屏更值得用全屏的原因。
+    // 屏幕，铺满不会留黑边 —— 这也是Landscape比Portrait更值得用全屏的原因。
     const area = this._area();
     const ratio = this._panelRatio();
     let w;
@@ -357,7 +372,10 @@ class AppWindow {
       x = Math.round(area.x + (area.w - w) / 2);
       y = Math.round(area.y + 60);
     }
-    const lay = await this.agent.layout({ x, y, w, h })
+    // area/x/y/w/h 都是 Electron 的 DIP 逻辑像素，而窗口代理的 SetWindowPos 收
+    // 物理像素。150% 缩放下不换算，窗口就只有 2/3 Large并偏左上角——即 issue #99
+    // 的「显示一半」。_rect() (嵌入模式)早已乘过 sf，这里补齐独立模式的缺口。
+    const lay = await this.agent.layout(this._physical({ x, y, w, h }, area.sf))
       .catch((e) => ({ ok: false, error: e.message }));
     this._detachedDebug += ` layout=${JSON.stringify(lay)}`;
     this.lastEmbedError = this._detachedDebug;
@@ -372,7 +390,7 @@ class AppWindow {
       if (!this.isOpen) return false;
       const hwnd = this._hwnd();
       if (!hwnd) return false;
-      // 第三方底座 (MuMu 等)由外部提供候choose句柄; 拿不到就等一下再试
+      // 外部若提供了候choose句柄 (历史接口，当前恒为 null); 拿不到就等一下再试
       // —— 句柄是每次开机重新分配的，缓存一份旧的会把窗口嵌错地方。
       let targets = null;
       if (typeof this.windowTargets === 'function') {
@@ -444,14 +462,14 @@ class AppWindow {
   }
 
   /**
-   * 横竖屏切换 (标题栏旋转按钮)= 真正把「物理面板」换成横屏或竖屏。
+   * 横Portrait切换 (标题栏旋转按钮)= 真正把「物理面板」换成Landscape或Portrait。
    *
    * 为什么必须这么做 (踩过的坑): 
    *   - 改 wm size: 只改 Android 逻辑分辨率，模拟器的物理 LCD 仍是竖的，
    *     Qt 把画面贴在左上角 -> 画面躺倒 90°, 只占一条, 四周黑边, 点击坐标错位; 
    *   - 改 wm density: framebuffer 尺寸不变，画面不会铺满，Maximize后右侧一Large片空; 
-   *   - adb emu rotate: 只转画面内容，系统里还是竖屏。
-   * 唯一能得到「正立 + 铺满」横屏的办法，就是把 hw.lcd.width/height 换成
+   *   - adb emu rotate: 只转画面内容，系统里还是Portrait。
+   * 唯一能得到「正立 + 铺满」Landscape的办法，就是把 hw.lcd.width/height 换成
    * 1280x720 并重启模拟器。重启约 30~60 秒，所以这里只做一次, 并给出明确提示。
    *
    * @param {(next:boolean)=>Promise<boolean>} [onRestart] 由上层注入的重启实现
@@ -483,7 +501,7 @@ class AppWindow {
     return next;
   }
 
-  /** 需要时切到指定方向 (全屏=横屏，窗口=竖屏) */
+  /** 需要时切到指定方向 (全屏=Landscape，窗口=Portrait) */
   async setLandscape(want) {
     if (!this.isOpen) return this.state.landscape;
     if (!!this.state.landscape === !!want) return this.state.landscape;
@@ -515,7 +533,7 @@ class AppWindow {
           }
         } catch (_) { /* 拿不到就还原时用默认 */ }
         this._detachedFullscreen = true;
-        await this.agent.layout({ x: area.x, y: area.y, w: area.w, h: area.h })
+        await this.agent.layout(this._physical({ x: area.x, y: area.y, w: area.w, h: area.h }, area.sf))
           .catch(() => {});
       }
       return;
@@ -536,11 +554,11 @@ class AppWindow {
     let w = maxW;
     let h = Math.round(w / ratio);
     if (h > maxH) { h = maxH; w = Math.round(h * ratio); }
-    await this.agent.layout({
+    await this.agent.layout(this._physical({
       x: Math.round(area.x + (area.w - w) / 2),
       y: Math.round(area.y + 60),
       w, h,
-    }).catch(() => {});
+    }, area.sf)).catch(() => {});
   }
 
   minimize() {

@@ -1,0 +1,24 @@
+{
+  "format": "apkstart-driver/1",
+  "id": "example-no-hypervisor-tcg",
+  "name": "No hardware acceleration · software emulation from the start (example)",
+  "version": "1.0.0",
+  "author": "ApkStart",
+  "description": "When Hypervisor Platform is off and kernel drivers cannot be installed, the emulator fails outright on hardware acceleration. This patch makes ApkStart use software emulation from the start (-accel off), saving two rounds of waiting, and switches the render backend to software to avoid GL initialization failures.",
+  "enabled": false,
+  "priority": 10,
+  "match": {
+    "platform": ["win32"],
+    "accel": ["none"]
+  },
+  "effect": {
+    "forceTcg": true,
+    "gpuMode": "software",
+    "configIni": {
+      "hw.gpu.mode": "software"
+    },
+    "notes": [
+      "Software emulation is 5-10x slower than hardware acceleration; when virtualization can be enabled, tick Virtual machine platform in Windows Features instead"
+    ]
+  }
+}

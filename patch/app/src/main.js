@@ -46,7 +46,7 @@ const { PRESETS: KEYMAP_PRESETS } = require('./core/keymap');
 const { AppWindow, TITLEBAR_H } = require('./core/appwin');
 const { NotifyBridge } = require('./core/notify');
 const { AndroidSettings } = require('./core/android');
-const { Updater } = require('./core/updater');
+const { Updater, findUninstaller } = require('./core/updater');
 const leftovers = require('./core/leftovers');
 
 // Windows 下窗口被遮挡时 capturePage 会拿到旧帧，Automatic化截图需要禁用遮挡计算
@@ -298,7 +298,7 @@ function applyAutoStart() {
   } catch (_) { /* 组策略禁止时忽略 */ }
 }
 
-// ---------------- Display mode: 全屏自适应 / 竖屏窗口可调 ----------------
+// ---------------- Display mode: 全屏自适应 / Portrait窗口可调 ----------------
 
 function displaySettings() { return store.getSettings().display || {}; }
 
@@ -406,11 +406,11 @@ function refreshPointerMapping() {
 /**
  * 旋转 = 换物理面板尺寸并重启模拟器。
  *
- * 这是唯一能得到「正立 + 铺满」横屏的方式 (三种错路都踩过): 
+ * 这是唯一能得到「正立 + 铺满」Landscape的方式 (三种错路都踩过): 
  *   - wm size: 只改逻辑分辨率，物理 LCD 仍是竖的 -> 画面躺倒 90°, 只占左上角一条; 
  *   - wm density: framebuffer 尺寸不变 -> 画面不铺满，Maximize后右侧一Large片空白; 
- *   - adb emu rotate: 只转画面内容，系统里还是竖屏。
- * 只有把 hw.lcd.width/height 换成横屏并重启，Qt 才会按Landscape panel开窗口, 画面正立铺满。
+ *   - adb emu rotate: 只转画面内容，系统里还是Portrait。
+ * 只有把 hw.lcd.width/height 换成Landscape并重启，Qt 才会按Landscape panel开窗口, 画面正立铺满。
  */
 async function restartForOrientation(landscape, { reloadApp = true } = {}) {
   if (!appWin || !appWin.isOpen) return false;
@@ -454,15 +454,6 @@ async function restartForOrientation(landscape, { reloadApp = true } = {}) {
  */
 async function attachAppWindow() {
   if (!appWin || !appWin.isOpen) return false;
-  // 有些底座自己没有可嵌的画面窗口 (典型: FydeOS —— 画面在它自己的桌面里，
-  // 或者在那台虚拟机的窗口里，不是某个Android app的 HWND)。
-  // 这种情况不要走嵌入/独立窗口那一套，否则会兜一圈 SetParent 失败, 
-  // logs里刷「attach failed」，用户还以为坏了。直接认作「画面已由底座自己显示」。
-  const be = runtime && runtime.backend;
-  if (be && be.embedCapable === false) {
-    appLog(`${be.label} manages its own screen window, skipping takeover`);
-    return true;
-  }
   const embedMode = displaySettings().windowEmbed !== false;
   if (!embedMode) {
     // 独立窗口不需要标题栏里那块区域了，直接让模拟器窗口自己露出来
@@ -524,7 +515,7 @@ async function openAppWindow(pkg, tip) {
     pkg,
     label,
     iconPath: rec && rec.icoPath,
-    // 横屏时窗口按横比例开，否则竖窗口里塞横画面会留出Large片黑边
+    // Landscape时窗口按横比例开，否则竖窗口里塞横画面会留出Large片黑边
     portrait: land ? { w: p0.h, h: p0.w } : p0,
     // 全屏有两种来路: 显式choose了「全屏」模式，或者勾了「启动时Auto full screen」。
     // 后者以前是个死开关 (只在默认Settings里声明，没有任何代码读它)，这里补上。
@@ -560,8 +551,8 @@ async function toggleDisplayMode() {
     else appWin.win.unmaximize();
     appWin.scheduleFit(6);
     // 注意: 这里**不再**顺手把面板方向也切了。
-    // 全屏和横屏是两件事: 面板方向current由「App自己声明的方向」决定
-    //  (见 wantLandscapeFor)。以前 F11 会连带重启Runtime切横屏，结果竖屏App
+    // 全屏和Landscape是两件事: 面板方向current由「App自己声明的方向」决定
+    //  (见 wantLandscapeFor)。以前 F11 会连带重启Runtime切Landscape，结果PortraitApp
     // 被塞进Landscape panel → 两侧黑边 → 用户以为「全屏没生效」。
   }
   return next.display.mode;
@@ -1051,7 +1042,7 @@ async function launchOne(pkg) {
           })
           .catch(() => { earlyAttachOk = false; });
         // App刚起来时 Activity 还在重建，会按自己声明的方向 (portrait)再转一次，
-        // 把刚锁好的方向覆盖掉 —— 这就是「平板/横屏模式下画面总是 90 度躺着」。
+        // 把刚锁好的方向覆盖掉 —— 这就是「平板/Landscape模式下画面总是 90 度躺着」。
         // 等它稳定后补一次方向自愈 (读 init/cur，只有真躺倒才写)。
         setTimeout(() => {
           runtime._healOrientation?.().catch(() => {});
@@ -1060,8 +1051,8 @@ async function launchOne(pkg) {
         }, 1800);
       },
       // 启动前先把面板方向校正到Settings要求的那个。
-      // 横屏只能靠物理面板 (hw.lcd.width/height 互换)+ 重启实现，而这一项是在
-      // 开机时写进 config.ini 的。如果用户改了「横屏」Settings, 但虚拟机还以Portrait panel
+      // Landscape只能靠物理面板 (hw.lcd.width/height 互换)+ 重启实现，而这一项是在
+      // 开机时写进 config.ini 的。如果用户改了「Landscape」Settings, 但虚拟机还以Portrait panel
       // 跑着 (预热的场景很常见)，光靠 wm size / wm user-rotation 只会让画面躺倒。
       // 所以这里发现不一致就先重启一次，reloadApp=false 让下面照常启动App。
       beforeStart: async (rt) => {
@@ -1073,8 +1064,7 @@ async function launchOne(pkg) {
         const cur = runtime.emulator && typeof runtime.emulator.panelLandscape === 'function'
           ? runtime.emulator.panelLandscape()
           : null;
-        const isBuiltin = !runtime.backend || runtime.backend.id === 'builtin';
-        if (cur !== null && cur !== wantLand && isBuiltin) {
+        if (cur !== null && cur !== wantLand) {
           mark(`orientation mismatch (panel=${cur ? 'landscape' : 'portrait'}, want=${wantLand}), restarting to correct`);
           appWin.setState({ tip: wantLand ? 'Switching to landscape…' : 'Switching to portrait…' });
           // restartForOrientation 重启Runtime后返回新的 rt (旧 client 已失效)。
@@ -1093,25 +1083,6 @@ async function launchOne(pkg) {
       },
     });
     mark('app started');
-
-    // 1.5) 第三方底座的Ready门禁: 等画面窗口真正出current桌面上再嵌。
-    //      自带的 emulator 窗口是自己创建的，嵌完由代理负责显示; 
-    //      而 MuMu 这类窗口不是我们创建的 —— 在它还隐藏时 SetParent，
-    //      Windows 会隐式清掉 WS_VISIBLE，之后它永远不会自己再显示 (宿主里全黑)。
-    const backend = runtime.backend;
-    // 不能嵌窗口的底座 (FydeOS)没有「等画面窗口出现」这回事，直接跳过这个门禁
-    if (backend && backend.id !== 'builtin' && backend.embedCapable !== false
-      && typeof backend.windowReady === 'function') {
-      const ready = await backend.windowReady({
-        isEmbedded: () => !!(appWin && appWin.lastEmbedOk),
-      }).catch((e) => ({ ok: false, reason: e.message }));
-      mark(`windowReady=${ready && ready.ok}${ready && ready.reason ? `(${ready.reason})` : ''}`);
-      if (!ready || !ready.ok) {
-        // 拿不到窗口也别把App windows晾着: 给用户一句能看懂的话
-        appWin.setState({ tip: `Waiting for the ${backend.label} screen window…` });
-        await new Promise((r) => setTimeout(r, 1200));
-      }
-    }
 
     // 2) App真的活下来了，才把画面接到用户眼前 (否则用户会看到闪一下的桌面/崩溃页)
     // 但如果 onAppUp 已经把画面接上了 (提前接管)，这里只做一次「OK」，不重复接 ——
@@ -1387,12 +1358,35 @@ function registerIpc() {
     shell.openPath(store.APK_DIR);
   });
 
+  /**
+   * 内存 / CPU / 数据分区这几项会直接决定虚拟机怎么开, 能装多Large的游戏，
+   * 保存前统一收敛一次: 手改 settings.json, 旧版本残留的离谱值都在这里被拉回来，
+   * 免得开机时 qemu 因为 -memory 32 直接Quit，或者分区填到比磁盘还Large。
+   */
+  const sanitizeResourcePatch = (patch) => {
+    if (!patch || !patch.engine) return patch;
+    const res = require('./core/resources');
+    const host = res.hostProfile();
+    const eng = { ...patch.engine };
+    if ('memoryMB' in eng) {
+      const c = res.clampMemoryMB(eng.memoryMB, host.totalMB);
+      eng.memoryMB = c.mb;
+      if (c.mb > 0) eng.autoMemory = false;
+    }
+    if ('cores' in eng) eng.cores = res.clampCores(eng.cores, host.cores).cores;
+    if ('dataPartitionGB' in eng) {
+      eng.dataPartitionGB = Math.max(0, Math.min(256, Number(eng.dataPartitionGB) || 0));
+    }
+    return { ...patch, engine: eng };
+  };
+
   ipcMain.handle('settings:get', () => store.getSettings());
-  ipcMain.handle('settings:set', (_e, patch) => {
+  ipcMain.handle('settings:set', (_e, rawPatch) => {
+    const patch = sanitizeResourcePatch(rawPatch);
     const next = store.saveSettings(patch);
     if (patch && patch.autoStart !== undefined) applyAutoStart();
     if (patch && patch.display && appWin && appWin.isOpen) {
-      // 竖屏基准尺寸变了: 只影响后续Open的窗口LargeSmall，不打断正在跑的App
+      // Portrait基准尺寸变了: 只影响后续Open的窗口LargeSmall，不打断正在跑的App
       appWin.portrait = portraitSize();
     }
     // Open「开始菜单快捷方式」时立刻补齐，不用等下次安装
@@ -1418,34 +1412,7 @@ function registerIpc() {
         runtime?.provisioner?.invalidateEnvCache?.();
       } catch (_) { /* ignore */ }
     }
-    // 换了底座: 旧后端的连接 / 端口假设全部作废，正在跑的App windows也要收起。
-    // 不处置的话，新底座会用上一个后端的 serial 去 adb，表现成「点开App没反应」。
-    if (patch && patch.engine && ('mode' in patch.engine || 'mumuPath' in patch.engine || 'mumuIndex' in patch.engine)) {
-      try {
-        if (appWin && appWin.isOpen) appWin.close({ keepApp: false });
-        runtime?.resetBackend?.();
-        deviceSize.value = null;
-        send('runtime:log', `Switched runtime backend: ${runtime.backend.label}`);
-      } catch (_) { /* ignore */ }
-    }
     return next;
-  });
-
-  /** 底座清单 + 本机Probe结果 (Settings页「Engine mode」用) */
-  ipcMain.handle('backend:list', async () => {
-    const backends = require('./core/backends');
-    const out = [];
-    for (const d of backends.describe()) {
-      let probe = { ok: false, found: false };
-      try {
-        const Cls = backends.byId(d.id);
-        const inst = new Cls(APP_ROOT, { runtime, store, log: (l) => appLog(`  backend ${l}`) });
-        // eslint-disable-next-line no-await-in-loop
-        probe = await inst.probe();
-      } catch (e) { probe = { ok: false, found: false, detail: e.message }; }
-      out.push({ ...d, found: !!probe.found, path: probe.path || '', detail: probe.detail || '' });
-    }
-    return { current: runtime.backendId, list: out };
   });
 
   /**
@@ -1481,7 +1448,7 @@ function registerIpc() {
       const full = next.display.mode === 'fullscreen';
       if (full && !appWin.win.isMaximized()) appWin.win.maximize();
       if (!full && appWin.win.isMaximized()) appWin.win.unmaximize();
-      // 全屏 = 平板横屏排版 (见 toggleDisplayMode 的说明)
+      // 全屏 = 平板Landscape排版 (见 toggleDisplayMode 的说明)
       appWin.setLandscape(full).catch(() => {});
       appWin.scheduleFit();
     }
@@ -1499,6 +1466,170 @@ function registerIpc() {
   ipcMain.handle('settings:refreshPointer', async () => { refreshPointerMapping(); return true; });
   // 兼容旧界面: 语义已改为「按Settings重新同步」
   ipcMain.handle('settings:unhook', async () => { refreshPointerMapping(); return true; });
+
+  // ---------------- 本机体检 / Automatic配置 ----------------
+  // Probe能Automatic做的 (内存, 核心, 画质, 渲染后端)就Automatic做; 
+  // 必须管理员权限的 (开 Windows 功能, 装 AEHD)给按钮; 只能进 BIOS 的说清楚怎么改。
+
+  ipcMain.handle('preflight:run', async () => {
+    const preflight = require('./core/preflight');
+    let accel = { ok: false, kind: 'none' };
+    try { accel = await runtime.provisioner.emulatorAccel(); } catch (_) { /* Runtime还没部署 */ }
+    const hw = await preflight.collect({ accel });
+    const edition = store.STORE_BUILD ? 'store' : 'installer';
+    const report = preflight.evaluate({ hw, settings: store.getSettings(), edition });
+    return { ok: true, hw, report, edition };
+  });
+
+  /**
+   * App体检推荐: 写Settings + 把这台机器的补丁落成一份驱动。
+   * 只写 preflight 明确列出的几个安全项 (内存 / 核心 / 画质 / 渲染后端 / 是否锁Software emulation)。
+   */
+  ipcMain.handle('preflight:apply', async () => {
+    const preflight = require('./core/preflight');
+    const drv = require('./core/drivers');
+    let accel = { ok: false, kind: 'none' };
+    try { accel = await runtime.provisioner.emulatorAccel(); } catch (_) { /* ignore */ }
+    const hw = await preflight.collect({ accel });
+    const edition = store.STORE_BUILD ? 'store' : 'installer';
+    const report = preflight.evaluate({ hw, settings: store.getSettings(), edition });
+    const patch = sanitizeResourcePatch(report.patch);
+    const next = store.saveSettings(patch);
+
+    // 把这台机器的参数固化成驱动: 以后每次开机都按它来，不用重复体检。
+    // 校验一遍再落盘 —— 体检生成的内容同样不能绕过白名单。
+    let driverFile = '';
+    let driverError = '';
+    try {
+      const v = drv.validateDriver(report.driver);
+      if (!v.ok) throw new Error(v.errors.join('; '));
+      const dir = drv.userDir(store);
+      fs.mkdirSync(dir, { recursive: true });
+      driverFile = path.join(dir, `${v.driver.id}.json`);
+      fs.writeFileSync(driverFile, `${JSON.stringify(report.driver, null, 2)}\n`, 'utf8');
+      const prev = (next.drivers && next.drivers.state) || {};
+      store.saveSettings({ drivers: { state: { ...prev, [v.driver.id]: true } } });
+    } catch (e) {
+      driverError = e.message;
+    }
+
+    appLog(`Checkup auto-config: ${JSON.stringify(patch.engine)} driver=${driverFile || '(not written)'}`);
+    return {
+      ok: true,
+      settings: store.getSettings(),
+      driverFile,
+      driverError,
+      summary: report.summary,
+      recommended: report.recommended,
+    };
+  });
+
+  // ---------------- 驱动 (兼容补丁) ----------------
+  // 一个驱动就是一份 JSON: 声明「匹配哪些机器」+「命中后改哪些启动参数」。
+  // 这里只做「读目录 / 校验 / 匹配 / 导入 / 导出模板 / 开关」，run no code at all。
+
+  /** 组装当前机器画像 + 全部驱动 + 匹配结果 (给Settings页用) */
+  async function driverOverview() {
+    const drv = require('./core/drivers');
+    const doctor = require('./core/doctor');
+    const os = require('os');
+    const s = store.getSettings();
+    const disabled = (s.drivers && s.drivers.disabled) || [];
+    const state = (s.drivers && s.drivers.state) || {};
+    let accel = { ok: false, kind: 'none' };
+    try { accel = await runtime.provisioner.emulatorAccel(); } catch (_) { /* 没装Runtime */ }
+    let emulatorVersion = '';
+    try { emulatorVersion = (await runtime.provisioner.emulatorVersion()).version || ''; } catch (_) { /* ignore */ }
+    let osBuild = 0;
+    try {
+      const m = /(\d+)\s*$/.exec(os.release() || '');
+      osBuild = m ? Number(m[1]) : 0;
+    } catch (_) { /* ignore */ }
+    const host = drv.hostContext({
+      info: { ...doctor.hostInfo(), cpuVendor: (os.cpus() || [])[0]?.model || '' },
+      gpuVendor: doctor.detectGpuVendor(),
+      osBuild,
+      accel: accel && accel.ok ? (accel.kind || 'whpx') : 'none',
+      emulatorVersion,
+    });
+    const dirs = { user: drv.userDir(store), bundled: drv.bundledDir(APP_ROOT) };
+    const loaded = drv.loadAll([dirs.bundled, dirs.user]);
+    const resolved = drv.resolve({ drivers: loaded.drivers, host, state, disabled });
+    const hit = new Map(resolved.applied.map((d) => [d.id, d]));
+    return {
+      host,
+      dirs,
+      errors: loaded.errors,
+      effect: resolved.effect,
+      drivers: loaded.drivers.map((d) => {
+        const forced = typeof state[d.id] === 'boolean' ? state[d.id] : null;
+        return {
+          id: d.id,
+          name: d.name,
+          version: d.version,
+          author: d.author,
+          description: d.description,
+          priority: d.priority,
+          builtin: d.dir === dirs.bundled,
+          file: d.file,
+          enabled: forced !== null ? forced : d.enabled !== false,
+          matched: hit.has(d.id),
+          hits: (hit.get(d.id) || {}).hits || [],
+        };
+      }),
+    };
+  }
+
+  ipcMain.handle('drivers:list', () => driverOverview());
+
+  ipcMain.handle('drivers:openFolder', async () => {
+    const dir = require('./core/drivers').userDir(store);
+    fs.mkdirSync(dir, { recursive: true });
+    await shell.openPath(dir);
+    return { ok: true, dir };
+  });
+
+  ipcMain.handle('drivers:import', async () => {
+    const drv = require('./core/drivers');
+    const r = await dialog.showOpenDialog(mainWindow, {
+      title: 'Choose a driver file (.json)',
+      filters: [{ name: 'Driver JSON', extensions: ['json'] }],
+      properties: ['openFile'],
+    });
+    if (r.canceled || !r.filePaths.length) return { ok: false, canceled: true };
+    const out = drv.importDriver(r.filePaths[0], drv.userDir(store));
+    if (out.ok) {
+      // 导入即启用: use户特意导入的补丁，默认应该立刻生效
+      const s = store.getSettings();
+      store.saveSettings({ drivers: { state: { ...(s.drivers.state || {}), [out.driver.id]: true } } });
+      send('runtime:log', `Driver imported: ${out.driver.name} v${out.driver.version}`);
+    }
+    return { ...out, overview: await driverOverview() };
+  });
+
+  ipcMain.handle('drivers:exportTemplate', async () => {
+    const drv = require('./core/drivers');
+    const overview = await driverOverview();
+    const tpl = drv.templateFromHost(overview.host);
+    const r = await dialog.showSaveDialog(mainWindow, {
+      title: 'Export this PC driver template',
+      defaultPath: path.join(drv.userDir(store), `${tpl.id}.json`),
+      filters: [{ name: 'Driver JSON', extensions: ['json'] }],
+    });
+    if (r.canceled || !r.filePath) return { ok: false, canceled: true };
+    fs.mkdirSync(path.dirname(r.filePath), { recursive: true });
+    fs.writeFileSync(r.filePath, `${JSON.stringify(tpl, null, 2)}\n`, 'utf8');
+    return { ok: true, file: r.filePath, template: tpl };
+  });
+
+  ipcMain.handle('drivers:setEnabled', async (_e, { id, enabled } = {}) => {
+    const did = String(id || '');
+    if (!did) return { ok: false, error: 'Missing driver id' };
+    const s = store.getSettings();
+    const prev = (s.drivers && s.drivers.state) || {};
+    store.saveSettings({ drivers: { state: { ...prev, [did]: !!enabled } } });
+    return { ok: true, overview: await driverOverview() };
+  });
 
   ipcMain.handle('runtime:status', async () => runtime.status());
   ipcMain.handle('runtime:probe', async () => runtime.probe());
@@ -1664,16 +1795,54 @@ function registerIpc() {
     return { response };
   });
 
+  /**
+   * 资源分配总览: 宿主上限, 当前分配, 数据盘余量。
+   * 由Runtime自己的 resources() 回答，界面只认这个结构。
+   */
+  ipcMain.handle('engine:resources', async () => {
+    try {
+      const backend = runtime.backend;
+      if (backend && typeof backend.resources === 'function') return await backend.resources();
+      return { backend: backend ? backend.id : '', ok: false, note: 'The runtime is not ready yet; resource allocation is unavailable' };
+    } catch (e) {
+      return { ok: false, error: e.message };
+    }
+  });
+
+  /**
+   * 就地扩容做不到时 (quickboot 差量盘)走这条: 按目标容量重建 /data。
+   * 会清空Installed apps与存档 —— 调用方必须已经让用户明确OK过。
+   */
+  ipcMain.handle('runtime:resetAndResize', async (_e, gb) => {
+    const res = require('./core/resources');
+    const doctor = require('./core/doctor');
+    const freeMB = doctor.freeDiskMB(runtime.provisioner.paths().root);
+    const want = res.clampDataGB(gb, freeMB).gb;
+    if (!want) return { ok: false, error: 'Invalid target capacity' };
+    store.saveSettings({ engine: { dataPartitionGB: want } });
+    await runtime.stop().catch(() => {});
+    const r = await runtime.resetAndroidData().catch((e) => ({ ok: false, error: e.message }));
+    appLog(`reset+resize -> ${want}GB: ${JSON.stringify(r)}`);
+    return { ok: !!(r && r.ok), wantGB: want, ...r };
+  });
+
   // 数据分区 (/data)容量: App, 游戏与它们的更新包都装在这里。
   // 「游戏更新提示空间不足」几乎都是这一项太Small，扩容是就地做的，不丢数据。
   ipcMain.handle('runtime:dataInfo', () => {
     const doctor = require('./core/doctor');
-    const info = runtime.emulator.dataInfo();
-    return { ...info, freeDiskMB: doctor.freeDiskMB(runtime.provisioner.paths().root) };
+    const b = runtime.backend;
+    const info = (b && typeof b.dataInfo === 'function') ? (b.dataInfo() || {}) : {};
+    const freeDiskMB = Number(info.freeMB) || Number(info.freeDiskMB)
+      || doctor.freeDiskMB(runtime.provisioner.paths().root);
+    return { ...info, freeDiskMB };
   });
 
   ipcMain.handle('runtime:setDataSize', async (_e, gb) => {
-    const want = Math.max(0, Math.min(64, Number(gb) || 0));
+    const res = require('./core/resources');
+    const doctor = require('./core/doctor');
+    const freeMB = doctor.freeDiskMB(runtime.provisioner.paths().root);
+    const clamped = res.clampDataGB(gb, freeMB);
+    const want = clamped.gb;
     store.saveSettings({ engine: { dataPartitionGB: want } });
     if (!want) {
       const info = runtime.emulator.dataInfo();
@@ -2091,10 +2260,14 @@ function registerIpc() {
     try {
       try { await assoc.unregisterAssociation(); } catch (_) { /* Cancel关联失败不影响Uninstall */ }
       const exeDir = path.dirname(process.execPath);
-      const uninstaller = path.join(exeDir, 'uninstaller.exe');
-      if (!fs.existsSync(uninstaller)) {
+      // 和 updater.flavor 用同一套识别规则: electron-builder 生成的是
+      // "Uninstall ApkStart.exe"，旧代码只找 "uninstaller.exe"，
+      // 导致安装版点「One-click uninstall」被误判成便携版, 只弹提示不真Uninstall (issue #51)。
+      const unName = findUninstaller(exeDir);
+      if (!unName) {
         return { ok: true, portable: true, dataDir: store.DATA_DIR, exeDir };
       }
+      const uninstaller = path.join(exeDir, unName);
       const { spawn } = require('child_process');
       // Uninstall前先收掉常驻的模拟器: qemu 会锁住 resources\runtime 里的 exe/dll，
       // NSIS 删不掉就会留下半个安装目录。这里只针对「真的在Uninstall」，不影响日常Quit。
@@ -2388,7 +2561,7 @@ if (!gotLock) {
       isDev: IS_DEV,
       desktopDir: app.getPath('desktop'),
       // Windows 搜索索引的是开始菜单里的 .lnk，只放桌面会「搜不到App」; 
-      // Linux (FydeOS)那边对应的是 freedesktop 的App菜单目录。
+      // Linux 那边对应的是 freedesktop 的App菜单目录。
       startMenuDir: process.platform === 'win32'
         ? path.join(app.getPath('appData'), 'Microsoft', 'Windows', 'Start Menu', 'Programs')
         : path.join(process.env.HOME || app.getPath('home'), '.local', 'share', 'applications'),
@@ -2401,7 +2574,7 @@ if (!gotLock) {
     const keymapEngine = new KeymapEngine({
       execInput: (cmd) => runtime.client().shell(cmd, { timeout: 4000 }),
       getSize: () => {
-        // 用当前面板尺寸 (横屏 1280x720 / 竖屏 720x1280)
+        // 用当前面板尺寸 (Landscape 1280x720 / Portrait 720x1280)
         const land = !!(store.getSettings().display || {}).landscape;
         return land ? { width: 1280, height: 720 } : { width: 720, height: 1280 };
       },
@@ -2441,15 +2614,8 @@ if (!gotLock) {
       },
       // 传 getter: Settings页改了键位，下一次窗口 focus / Refresh就生效，不用重启
       pointerConfig: () => pointer.pointerOptions(store.getSettings()),
-      // 底座决定「画面窗口从哪来」: 自带底座返回 null (窗口代理自己按进程作用域找)，
-      // MuMu 这类第三方底座每次都现取句柄 (句柄会在设备进程重启后失效)。
-      windowTargets: () => {
-        try {
-          const b = runtime.backend;
-          if (!b || b.id === 'builtin') return null;
-          return b.windowTargets();
-        } catch (_) { return null; }
-      },
+      // 画面窗口由窗口代理按进程作用域自己找 (自带 emulator 的窗口就是我们拉起来的)
+      windowTargets: () => null,
     });
     appWin.onCloseApp((pkg) => {
       // 关窗口 = 停这个App; 最后一个窗口关掉时容器停放 (降优先级, 停轮询)，
@@ -2464,17 +2630,10 @@ if (!gotLock) {
     // 「哪些窗口才算我们的」= Runtime目录 + 随包的 engine 目录。
     // 窗口代理只允许碰这些进程创建的窗口 —— 别的 Qt App (微信 4.x 就是 Qt6，
     // 窗口类名和模拟器一模一样)一个都不许动，见 agent.ps1 的 SetScope。
-    // 第三方底座 (MuMu 等): 把它的安装目录也加进来，这样开机阶段那个设备窗口
-    // 会被一起压住 (只压 Qt 弹窗体/Chrome 工具条这类安全类名，见 HideStrayWindows); 
-    // 它的画面窗口嵌进宿主后不受影响。
     const agentScope = () => {
       const dirs = [];
       try { dirs.push(runtime.provisioner.root); } catch (_) { /* ignore */ }
       try { dirs.push(path.join(APP_ROOT, 'engine')); } catch (_) { /* ignore */ }
-      try {
-        const b = runtime.backend;
-        if (b && b.id !== 'builtin' && b.root) dirs.push(b.root);
-      } catch (_) { /* ignore */ }
       return dirs.filter(Boolean);
     };
     // 范围存在代理进程的内存里，代理一重建就没了 —— 所以每次开机压制前都重发一次。
@@ -2523,7 +2682,7 @@ if (!gotLock) {
     applyAutoStart();
 
     // 老版本安装的App没有 orientation 字段 (那时还没这个功能)。
-    // 不补的话「跟随App」对它们只能退回「Current panel orientation」，红果这类竖屏App
+    // 不补的话「跟随App」对它们只能退回「Current panel orientation」，红果这类PortraitApp
     // 在Landscape panel下依旧是两侧黑边。这里用随包的离线 APK 清单解析补一次，
     // 只读中央目录 + AndroidManifest，几百毫秒且只跑一次。
     try {
@@ -2626,7 +2785,22 @@ if (!gotLock) {
     // 商店 (MSIX)版跳过: 安装目录是只读的 WindowsApps，自更新既写不进去也不
     // 合规，更新统一由 Microsoft Store 负责。
     if (app.isPackaged && !store.STORE_BUILD) {
-      setTimeout(() => {
+      // issue #98: 先检查「上次已下载解压, 但替换/重启没落地的更新」。
+      // 命中就直接用本地载荷重放替换+重启，绝不再下一遍包——这是更新死循环的根治。
+      // 放在查新版本之前，避免 resumable 与新一轮 check 抢进度条。
+      let resuming = false;
+      try {
+        const job = updater.findResumableJob();
+        if (job) {
+          resuming = true;
+          appLog(`resuming pending update ${job.version} from cached payload`);
+          send('update:progress', { stage: 'apply', percent: 100, message: 'Finishing the update that did not complete last time…' });
+          updater.apply(job);
+          setTimeout(() => { quitting = true; app.quit(); }, 900);
+        }
+      } catch (e) { appLog(`resume check failed: ${e.message}`); }
+      // 命中续做就不再并行发起新一轮查新版本; 但不能用 return 跳出整个启动回调。
+      if (!resuming) setTimeout(() => {
         updater.check().then((info) => {
           updateInfo = info;
           send('update:state', info);

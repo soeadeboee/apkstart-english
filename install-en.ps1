@@ -1,13 +1,13 @@
 #requires -Version 5.1
 <#
 .SYNOPSIS
-    Applies (or restores) the English language patch for ApkStart v0.5.3.
+    Applies (or restores) the English language patch for ApkStart v0.5.8.
 
 .DESCRIPTION
     ApkStart has no language setting: every label is hard-coded Chinese inside
     <install>\resources\app. This script swaps those files for the translated
     ones from patch\app, after checking that the installed files are the stock
-    v0.5.3 sources.
+    v0.5.8 sources.
 
     A backup of every file it touches is written to
     %LOCALAPPDATA%\apkstart-english\backup so -Restore can put the Chinese
@@ -22,7 +22,7 @@
     Restore the original Chinese files from the newest backup instead.
 
 .PARAMETER Force
-    Patch even when the installed files do not match the expected v0.5.3
+    Patch even when the installed files do not match the expected v0.5.8
     hashes (for example after a manual edit), or when the version differs.
     A backup is still taken first.
 
@@ -221,7 +221,7 @@ foreach ($rel in $manifest.files.PSObject.Properties.Name) {
 Write-Ok "stock files: $($needsPatch.Count)   already English: $($already.Count)   unexpected: $($unexpected.Count)"
 
 if ($unexpected.Count -gt 0) {
-    Write-Warn2 'These files do not match stock v0.5.3 or the English patch:'
+    Write-Warn2 'These files do not match stock v0.5.8 or the English patch:'
     $unexpected | Select-Object -First 10 | ForEach-Object { Write-Warn2 "  $_" }
     if ($unexpected.Count -gt 10) { Write-Warn2 "  ... and $($unexpected.Count - 10) more" }
     if (-not $Force) {

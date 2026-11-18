@@ -11,6 +11,7 @@
  */
 const zlib = require('zlib');
 const fs = require('fs');
+const path = require('path');
 
 const EOCD_SIG = 0x06054b50;
 const CEN_SIG = 0x02014b50;
@@ -354,4 +355,23 @@ class ZipFile {
   }
 }
 
-module.exports = { ZipArchive, ZipFile };
+/**
+ * 把 ZIP 条目名安全解析到 destDir 下，挡住 zip-slip (issue #2 P0-4)。
+ * 恶意包里的 "../evil", 绝对路径, 盘符, "C:\...", UNC 都必须在写盘前拒绝。
+ * 返回 null 表示该条目不可信，调用方应跳过。
+ */
+function resolveZipEntry(destDir, name) {
+  if (typeof name !== 'string' || !name) return null;
+  // 统一正斜杠后判断: 反斜杠在 Windows 上同样是路径分隔符
+  const normalized = name.replace(/\\/g, '/');
+  if (normalized.startsWith('/') || /^[A-Za-z]:/.test(normalized) || normalized.includes('\0')) return null;
+  const segments = normalized.split('/');
+  if (segments.some((s) => s === '..')) return null;
+  const root = path.resolve(destDir);
+  const target = path.resolve(root, ...segments.filter((s) => s && s !== '.'));
+  // path.resolve 可能因为盘符/挂载点把目标甩到根目录外，最后再核一次前缀边界
+  if (target !== root && !target.startsWith(root + path.sep)) return null;
+  return target;
+}
+
+module.exports = { ZipArchive, ZipFile, resolveZipEntry };

@@ -678,3 +678,88 @@ English（镜像原生）	English (native to image)
 关闭应用	Close app
 运行时引擎	runtime engine
 한국어	Korean
+
+# --- untranslated strings added for upstream v0.5.8 (English) ---
+先查一遍这台机器：CPU 虚拟化有没有开、Windows 的虚拟机监控程序平台在不在、<NL>            显卡是什么、显存多大、内存和系统版本够不够。能自动改的（内存 / 核心 / 画质 / 渲染后端）直接写进设置，<NL>            并把结果固化成一份驱动；必须管理员权限的给按钮；只能在 BIOS 里改的会告诉你怎么改。	Checks this machine first: is CPU virtualization on, is the Windows Hypervisor Platform installed,<NL>            what GPU it has and how much VRAM, and are memory and the OS version enough. Anything that can be changed automatically (memory / cores / quality / render backend) is written straight into settings,<NL>            and the result is saved as a driver; things that need administrator rights get a button; things that can only be changed in the BIOS are explained.
+ApkStart 只跑自己的运行时：adb / emulator / 系统镜像都由它自己下载和管理，<NL>            不探测、不接管、不依赖你电脑上装的任何模拟器（MuMu / 雷电 / 蓝叠 / WSA 都不会被使用）。<NL>            这样换机器、别人装没装模拟器、模拟器怎么升级，都不影响这里。	ApkStart only runs its own runtime: adb / emulator / system images are all downloaded and managed by it.<NL>            It does not detect, take over or depend on any emulator installed on your PC (MuMu / LDPlayer / BlueStacks / WSA are never used).<NL>            So switching machines, whether others have an emulator installed, or how emulators update, makes no difference here.
+有些机器要改启动参数才跑得起来（老显卡 GLES 版本低、没开硬件加速、某版驱动一开硬件渲染就崩）。<NL>            驱动就是一份 JSON：声明「匹配哪些机器」+「命中后改哪些启动参数」。你可以自己写、导入、分享。<NL>            驱动只改白名单里的启动项，	Some machines only run after launch options are changed (old GPUs with low GLES versions, hardware acceleration off, a driver version that crashes hardware rendering).<NL>            A driver is a JSON file: it declares which machines it matches and which launch options to change when it matches. You can write, import and share your own.<NL>            Drivers only change whitelisted launch options, 
+内存 ${Math.round((r.recommended.memoryMB || 0) / 1024)} GB / ${r.recommended.cores} 核 / ${r.recommended.renderSize}	Memory ${Math.round((r.recommended.memoryMB || 0) / 1024)} GB / ${r.recommended.cores} cores / ${r.recommended.renderSize}
+内存最多可分 ${gb(lim.maxMB)}，核心最多 ${Math.max(1, (host.cores || 1) - 1)} 个（各留 1/4 内存与 1 核给 Windows）。	Up to ${gb(lim.maxMB)} of memory and ${Math.max(1, (host.cores || 1) - 1)} cores (1/4 of memory and 1 core are reserved for Windows).
+本机：${host.platform || ''}/${host.arch || ''} · ${host.gpuVendor || '未知'} 显卡 · ${accel}	This PC: ${host.platform || ''}/${host.arch || ''} · ${host.gpuVendor || 'Unknown'} GPU · ${accel}
+ · emulator ${host.emulatorVersion || '未知'}；驱动 ${drivers.length} 个，本机已生效 ${onCount} 个。	 · emulator ${host.emulatorVersion || 'Unknown'}; ${drivers.length} driver(s), ${onCount} active on this PC.
+数据分区上限 ${lim.maxGB || 0} GB${free ? `（所在磁盘剩余 ${(free / 1024).toFixed(1)} GB）` : ''}。	Data partition limit ${lim.maxGB || 0} GB${free ? ` (${(free / 1024).toFixed(1)} GB free on that disk)` : ''}.
+${rec.cores || 2} 核 / ${rec.renderSize || 'auto'} · 渲染 ${rec.gpuMode || 'auto'}	${rec.cores || 2} cores / ${rec.renderSize || 'auto'} · render ${rec.gpuMode || 'auto'}
+${report.summary}。推荐配置：${Math.round((rec.memoryMB || 0) / 1024)} GB 内存 / 	${report.summary}. Recommended: ${Math.round((rec.memoryMB || 0) / 1024)} GB memory / 
+ 目标 ${info.configuredGB} GB 还没生效：安卓正在用快速启动差量盘，需要「重置安卓数据」后按新容量重建（会清空已装应用）。	 Target ${info.configuredGB} GB is not active yet: Android is using a quick-boot differencing disk, so you must reset Android data to rebuild it at the new size (installed apps are wiped).
+当前数据分区：${img}${auto ? '（自动）' : ''} · 所在磁盘剩余 ${free}。${pending}	Current data partition: ${img}${auto ? ' (auto)' : ''} · ${free} free on that disk.${pending}
+安卓正在使用快速启动差量盘，就地扩容改不到它。要拿到 ${gb} GB 空间，必须按新容量重建 /data。	Android is using a quick-boot differencing disk, which cannot be resized in place. To get ${gb} GB you must rebuild /data at the new size.
+由 ApkStart 自己分配（emulator-5554，端口冲突时自动顺延），无需填写。	Assigned by ApkStart itself (emulator-5554, moved up automatically on a port conflict); nothing to fill in.
+本机 ${gb(host.totalMB)} 内存 / ${host.cores} 核；	This PC: ${gb(host.totalMB)} memory / ${host.cores} cores;
+游戏提示「存储空间不足」就把这里调大后点「立即扩容」；能就地扩容时不丢已装应用。	If a game says there is not enough storage, raise this and click Expand now; when it can expand in place, installed apps are kept.
+下次打开应用会按 ${gb} GB 重建 /data（首次进入会多等几十秒）	The next app launch rebuilds /data at ${gb} GB (the first launch takes tens of seconds longer)
+现在约 ${r.fsGB || r.imageGB || gb} GB 可用	About ${r.fsGB || r.imageGB || gb} GB usable now
+ApkStart 自带运行时（QEMU + Android 14，独立运行）	ApkStart built-in runtime (QEMU + Android 14, standalone)
+还没有任何驱动。可以点「导出本机模板」做一个，或导入别人做好的 JSON。	No drivers yet. Click Export this PC template to make one, or import a JSON someone else made.
+重建会清空已安装的应用与存档（模拟器本身和镜像不受影响）。确定继续吗？	Rebuilding wipes installed apps and saves (the emulator itself and the image are untouched). Continue?
+ ${errors.length} 个文件加载失败（见下）。	 ${errors.length} file(s) failed to load (see below).
+（商店版：系统功能只能在「Windows 功能」里手动开）	 (Store version: system features can only be turned on manually in Windows Features)
+ · 命中：${d.hits.join(' / ')}	 · matched: ${d.hits.join(' / ')}
+改完 effect 后放到驱动目录，点「刷新」即可生效	After editing effect, put the file in the driver folder and click Refresh to apply it
+正在检查虚拟化、显卡、内存…（第一次约 2~3 秒）	Checking virtualization, GPU, memory… (about 2-3 seconds the first time)
+快速启动差量盘（实际容量以运行时 /data 为准）	Quick-boot differencing disk (actual capacity is the runtime /data)
+重启电脑后硬件加速才会生效，回来点「开始体检」确认	Hardware acceleration takes effect after a reboot; come back and click Run checkup to confirm
+「导出本机模板」会把匹配条件按这台机器填好，改 	Export this PC template fills in the match conditions for this machine; change 
+实际文件系统 ${info.fsGB} GB	Actual filesystem ${info.fsGB} GB
+读不到驱动列表（运行时可能还没部署）	Cannot read the driver list (the runtime may not be deployed yet)
+；已生成驱动，下次开机会自动套用	; a driver was generated and applies automatically the next time Android starts
+ 里的<NL>            	 in<NL>            
+可以稍后重试，或手动按提示操作	You can retry later, or follow the prompts manually
+64 GB（50GB 级游戏）	64 GB (games around 50 GB)
+ 就能用。字段说明见仓库里的 	 and it works. Field docs are in 
+可以点「开始体检」确认结果	Click Run checkup to confirm the result
+体检没有返回结果，请重试	The checkup returned nothing; try again
+需要重置安卓数据才能扩容	Reset Android data to expand it
+暂时读不到资源分配信息	Resource allocation is unavailable right now
+本机体检 · 自动配置	This PC checkup · auto-config
+；匹配不上就不生效。	; if nothing matches, they do nothing.
+已按这台机器配置好	Configured for this machine
+驱动 · 兼容补丁	Drivers · compatibility patches
+没有修改系统设置	System settings were not changed
+硬件加速已经可用	Hardware acceleration is already available
+已提交，需要重启	Submitted; a reboot is required
+请按提示手动操作	Follow the prompts to do it manually
+ · 本机不匹配	 · does not match this PC
+驱动已导入并启用	Driver imported and enabled
+打不开驱动目录	Cannot open the driver folder
+已按新容量重建	Rebuilt at the new size
+不执行任何代码	run no code at all
+正在读取驱动…	Reading drivers…
+操作没有完成	The operation did not finish
+没能自动完成	could not be done automatically
+驱动没写成功	The driver was not written
+应用推荐配置	Apply recommended settings
+打开驱动目录	Open driver folder
+导出本机模板	Export this PC template
+正在处理…	Working…
+无硬件加速	No hardware acceleration
+请稍后再试	Try again later
+模板已导出	Template exported
+清空并重建	Wipe and rebuild
+导入驱动…	Import driver…
+体检中…	Checking…
+体检失败	Checkup failed
+内置示例	Built-in examples
+应用失败	Apply failed
+重建中…	Rebuilding…
+重建失败	Rebuild failed
+开始体检	Run checkup
+AMD 核显 · 改用 swangle 渲染（示例）	AMD integrated GPU · switch to swangle rendering (example)
+部分 AMD 核显 + 老驱动下，-gpu host 能通过 emulator 自检，但 guest 起来十几秒后进程直接崩溃（日志里只有 AEHD is operational）。把渲染后端固定成 swangle 可以绕过，代价是帧率略低。	On some AMD integrated GPUs with old drivers, -gpu host passes the emulator self-check, but the process crashes outright a dozen seconds after the guest boots (the log only shows AEHD is operational). Pinning the render backend to swangle works around it, at the cost of a slightly lower frame rate.
+如果画面正常但游戏很卡，可以在设置里把「画质」调成 540×960	If the picture is fine but games stutter, set Quality to 540×960 in Settings
+确认可用后，把 enabled 改成 true 或删掉这一行，就能自动生效	Once it works, set enabled to true or delete that line and it applies automatically
+Intel 核显 · 软件渲染兜底（示例）	Intel integrated GPU · software rendering fallback (example)
+老款 Intel 核显（HD / UHD 6xx 之前）在部分驱动版本上会出现 GLES 初始化失败或花屏。把渲染后端固定为 software，画面一定能出来。	Old Intel integrated GPUs (before HD / UHD 6xx) hit GLES initialization failures or garbled output on some driver versions. Pinning the render backend to software always gets a picture.
+画面能出来但游戏会卡：这类机器更适合玩轻量应用	The picture shows up but games stutter; these machines are better for light apps
+没有硬件加速 · 直接走软件模拟（示例）	No hardware acceleration · software emulation from the start (example)
+机器没开「虚拟机监控程序平台」、也不允许装内核驱动时，emulator 走硬件加速会直接失败。这个补丁让 ApkStart 一开始就用软件模拟（-accel off），省掉两轮白等；同时把渲染后端换成 software，避免 GL 初始化失败。	When Hypervisor Platform is off and kernel drivers cannot be installed, the emulator fails outright on hardware acceleration. This patch makes ApkStart use software emulation from the start (-accel off), saving two rounds of waiting, and switches the render backend to software to avoid GL initialization failures.
+软件模拟比硬件加速慢 5~10 倍，能开虚拟化时建议还是去「Windows 功能」里勾上虚拟机平台	Software emulation is 5-10x slower than hardware acceleration; when virtualization can be enabled, tick Virtual machine platform in Windows Features instead

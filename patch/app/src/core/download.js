@@ -12,6 +12,21 @@ const { URL } = require('url');
 
 const UA = 'ApkStart/0.2 (Windows; +https://github.com/apkstart)';
 
+/**
+ * 校验服务器返回的 Content-Range 是否与本次请求一致。
+ * 断点续传/分块下载最怕「服务器不认 Range, 从头发整包」或「返回了别的文件的分块」——
+ * 直接写进目标文件会拼出看似完整, 实则损坏的包。这里逐项比对起止位, 总LargeSmall和
+ * Content-Length，有任何不符就拒绝，交给上层换源/重来。
+ */
+function validRange(res, start, end, total) {
+  const m = /^bytes (\d+)-(\d+)\/(\d+)$/.exec(String(res.headers['content-range'] || ''));
+  if (!m) return false;
+  const [a, b, size] = m.slice(1).map(Number);
+  const length = res.headers['content-length'];
+  return Number.isSafeInteger(size) && a === start && b === end && size === total &&
+    (length == null || Number(length) === end - start + 1);
+}
+
 function openStream(url, { method = 'GET', headers = {}, redirects = 0 } = {}) {
   return new Promise((resolve, reject) => {
     if (redirects > 6) return reject(new Error('too many redirects'));
@@ -100,14 +115,29 @@ async function download(url, dest, opt = {}) {
 
     if (res.statusCode === 416) {
       res.resume();
-      // 已下载完整
-      break;
+      // 416 有两种可能: 文件真的下完了，或本地残片与目标对不上 (服务器认为这个
+      // Range 不合法)。以前无条件当成功，会把坏残片留成"已下载"。这里只要带过
+      // Range 且还能重试，就清掉残片重新完整拉一遍; 重试用尽仍未成功则报错。
+      if (existing > 0 && attempt <= retries + 1) {
+        discardPartial(dest);
+        continue;
+      }
+      throw new Error('Cannot verify the resumed file; the server returned HTTP 416');
     }
     if (res.statusCode !== 200 && res.statusCode !== 206) {
       res.resume();
       if (attempt <= retries) { await new Promise((r) => setTimeout(r, 1500)); continue; }
       discardPartial(dest);   // 重试耗尽: 别把坏文件留给下次续传
       throw new Error(`download failed HTTP ${res.statusCode}: ${url}`);
+    }
+
+    if (res.statusCode === 206) {
+      const m = /^bytes (\d+)-(\d+)\/(\d+)$/.exec(String(res.headers['content-range'] || ''));
+      if (!m || !validRange(res, existing, Number(m[2]), Number(m[3])) || Number(m[2]) !== Number(m[3]) - 1) {
+        res.resume();
+        discardPartial(dest);
+        throw new Error('The server returned a mismatched resume range');
+      }
     }
 
     const total = res.statusCode === 206
@@ -281,6 +311,10 @@ async function downloadParallel(url, dest, opt = {}) {
       res.resume();
       throw new Error(`chunk request rejected HTTP ${res.statusCode}`);
     }
+    if (!validRange(res, c.pos, c.end, total)) {
+      res.resume();
+      throw new Error('The server returned a mismatched chunk range');
+    }
     await new Promise((resolve, reject) => {
       // 必须自己兜住「promise 永远不 settle」: res.destroy(err) 在某些情况下只发
       // close 不发 error，没有这个 guard 的话一整块会挂死，整个下载停在那里不动。
@@ -297,6 +331,12 @@ async function downloadParallel(url, dest, opt = {}) {
         idle = setTimeout(() => { res.destroy(); finish(new Error('connection stalled (no data for too long)')); }, idleMs);
       };
       res.on('data', (buf) => {
+        // 服务器可能返回超出请求分块范围的数据，多出来的字节会写穿到别的分块，
+        // 拼出一个静默损坏的包。宁可判失败换源，不能让它落盘。
+        if (buf.length > c.end - c.pos + 1) {
+          res.destroy();
+          return finish(new Error('The chunk response exceeds the requested range'));
+        }
         try {
           fs.writeSync(fd, buf, 0, buf.length, c.pos);
         } catch (e) {
@@ -495,6 +535,10 @@ async function downloadMulti(urls, dest, opt = {}) {
       res.resume();
       throw new Error(`chunk rejected HTTP ${res.statusCode}`);
     }
+    if (!validRange(res, c.pos, c.end, total)) {
+      res.resume();
+      throw new Error('The server returned a mismatched chunk range');
+    }
     const startPos = c.pos;
     const startedAt = Date.now();
     // 同一条连接 destroy 之后仍可能再收到已缓冲的包，会重复触发换源, 把源跳过头，
@@ -518,6 +562,11 @@ async function downloadMulti(urls, dest, opt = {}) {
         idle = setTimeout(() => { res.destroy(); finish(new Error('connection stalled (no-data timeout)')); }, idleMs);
       };
       res.on('data', (buf) => {
+        // 同上: 拒绝超出请求范围的字节，避免静默写坏分块
+        if (buf.length > c.end - c.pos + 1) {
+          res.destroy();
+          return finish(new Error('The chunk response exceeds the requested range'));
+        }
         try {
           fs.writeSync(fd, buf, 0, buf.length, c.pos);
         } catch (e) {
@@ -613,5 +662,5 @@ async function downloadAnyParallel(urls, dest, opt = {}) {
 
 module.exports = {
   download, downloadAny, downloadParallel, downloadAnyParallel, downloadMulti,
-  head, sha256File, openStream, discardPartial,
+  head, sha256File, openStream, discardPartial, validRange,
 };

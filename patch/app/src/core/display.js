@@ -2,7 +2,7 @@
 /**
  * 显示适配的纯计算部分 (可单测，不依赖 Electron / adb)。
  *  - 全屏: Android 分辨率对齐显示器工作区，内容Automatic铺满; 
- *  - 窗口: 保持竖屏预设，用户拖动窗口时由 Qt Automatic缩放，尺寸记在App元数据里。
+ *  - 窗口: 保持Portrait预设，用户拖动窗口时由 Qt Automatic缩放，尺寸记在App元数据里。
  */
 function densityFor(w, h, manual) {
   if (manual > 0) return Math.max(120, Math.min(640, Math.round(manual)));
@@ -46,10 +46,10 @@ function fullscreenBounds(portrait, area) {
 }
 
 /**
- * Android 侧分辨率: 两种模式都保持竖屏预设。
+ * Android 侧分辨率: 两种模式都保持Portrait预设。
  * 原因: 模拟器窗口的宽高比在开机时就被 LCD 尺寸锁死了 (实测改成 1920x1080 后
  * 窗口仍然只接受 9:16，画面被塞进去会留黑边或变形)。所以「全屏」= 把窗口
- * Maximize铺满屏幕，「窗口」= 竖屏可自由拉伸，两者共用同一份 Android 分辨率，
+ * Maximize铺满屏幕，「窗口」= Portrait可自由拉伸，两者共用同一份 Android 分辨率，
  * 切换时不需要重启Runtime，也不会让App重新布局。
  */
 function sizeFor(mode, portrait, area) {

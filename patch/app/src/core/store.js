@@ -6,6 +6,7 @@
 const fs = require('fs');
 const path = require('path');
 const os = require('os');
+const { safeFilePart } = require('./pkgname');
 
 /**
  * 是不是 Microsoft Store (MSIX / APPX)打包版？
@@ -36,11 +37,15 @@ const SETTINGS_FILE = path.join(DATA_DIR, 'settings.json');
 const DEFAULT_SETTINGS = {
   adbPath: '',
   device: '127.0.0.1:5555',
+  /**
+   * 驱动 (兼容补丁)扩展: use户自己写的 JSON 补丁放在数据目录的 drivers/ 下。
+   * 这里只记「被用户关掉的 id」——默认全开，坏了能一键关，不用删文件。
+   */
+  drivers: { state: {}, disabled: [] },
   engine: {
-    mode: 'builtin',         // builtin (自带Runtime，默认) | mumu (复用已装的 MuMu emulator) | fydeos (FydeOS 自带安卓子系统) | attach (连接已有Runtime，高级)
-    mumuPath: '',            // MuMu 安装目录 (留空 = Automatic按注册表 / 常见路径查找)
-    mumuIndex: 0,            // MuMu 多开实例索引，默认 0 号
-    fydeosHost: '',          // FydeOS Android subsystem address (留空 = 依次试 arc:5555 / 100.115.92.2:5555 / 127.0.0.1:5555)
+    // 只有一个Runtime: 自带Runtime (builtin)。字段保留是为了兼容老 settings.json 的合并，
+    // 读Settings时会被强制写回 'builtin' (见 getSettings 的迁移)。
+    mode: 'builtin',
     qemuPath: '',
     systemImage: '',
     memoryMB: 0,             // 0 = 由 doctor 按机器内存Automatic决定
@@ -153,12 +158,12 @@ const DEFAULT_SETTINGS = {
   // disabled = 用户勾了「不再Automatic弹出」。
   welcome: { lastDate: '', disabled: false },
   display: {
-    mode: 'window',          // window (竖屏窗口，可自由拉伸) | fullscreen (Automatic适配屏幕)
-    portrait: '900x1600',    // 窗口模式的竖屏分辨率，可在Settings里调LargeSmall
+    mode: 'window',          // window (Portrait窗口，可自由拉伸) | fullscreen (Automatic适配屏幕)
+    portrait: '900x1600',    // 窗口模式的Portrait分辨率，可在Settings里调LargeSmall
     density: 0,              // 0 = 按分辨率Automatic推导
     rememberBounds: true,    // 记住每个App的窗口位置/LargeSmall
     autoFullscreenOnLaunch: false,
-    // 横屏 = 把 AVD 物理面板换成 1280x720 并重启 (唯一能得到正立+铺满的方式)。
+    // Landscape = 把 AVD 物理面板换成 1280x720 并重启 (唯一能得到正立+铺满的方式)。
     // 持久化在这里，重启 ApkStart 后仍按这个方向开机。
     landscape: false,
     // Screen orientation策略: 
@@ -243,6 +248,17 @@ const store = {
 
   getSettings() {
     const s = deepMerge(DEFAULT_SETTINGS, readJson(SETTINGS_FILE, {}));
+    /**
+     * 0.5.6 起没有第三方底座了: 老配置里的 mode=mumu / fydeos / attach，
+     * 或者手改出来的任何其它值，一律当 builtin 处理，并把残留的第三方字段删掉。
+     *
+     * 只在读的时候改内存里的对象，不立刻回写磁盘: Settings文件是用户的，等他下次
+     * 保存Settings时自然落盘; 这样「Open一次 ApkStart 就改了他的 settings.json」不会发生。
+     */
+    s.engine.mode = 'builtin';
+    for (const k of ['mumuPath', 'mumuIndex', 'mumuRenderProfile', 'mumuMemoryGB', 'mumuCores', 'fydeosHost']) {
+      delete s.engine[k];
+    }
     // 旧版本默认无头运行: App进程能起来但屏幕上没有窗口，等效于「打不开」。
     // 无条件迁移到带窗口模式，且不再允许通过旧配置把它关掉。
     s.engine.headless = false;
@@ -292,11 +308,14 @@ const store = {
   },
 
   iconPath(pkg) {
-    return path.join(ICON_DIR, `${pkg}.png`);
+    // 第二层防御: pkg 来自外部解析的 APK / apps.json，必须锁在数据目录内。
+    // 即使有旧版本写入的坏记录，也不能让它拼出 ICON_DIR 之外的路径 (issue #2 P0-1)。
+    return path.join(ICON_DIR, `${safeFilePart(pkg)}.png`);
   },
 
   apkPath(pkg, version = 'cur') {
-    return path.join(APK_DIR, `${pkg}-${version}.apk`);
+    const v = /^[A-Za-z0-9_-]+$/.test(String(version)) ? version : 'cur';
+    return path.join(APK_DIR, `${safeFilePart(pkg)}-${v}.apk`);
   },
 
   ensureDirs,

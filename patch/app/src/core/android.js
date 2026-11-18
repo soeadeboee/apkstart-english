@@ -18,6 +18,28 @@ const ACTIONS = {
   dev: 'android.settings.APPLICATION_DEVELOPMENT_SETTINGS',
 };
 
+/**
+ * 媒体流 (STREAM_MUSIC = 3)的音量命令。Android 11 起系统去掉了 `media` 工具
+ *  (报 media: inaccessible or not found)，同样的功能在 `cmd media_session volume` 里; 
+ * 旧镜像上没有它时再退回 `media volume`。
+ */
+function volumeCmd(args) {
+  return `(cmd media_session volume --stream 3 ${args} || media volume --stream 3 ${args})`;
+}
+
+/** 解析 `volume --get` 的输出，例如 `volume is 5 in range [0..15]` */
+function parseVolume(out) {
+  const m = /volume is (\d+) in range \[(\d+)\.\.(\d+)\]/.exec(String(out || ''));
+  if (!m) return null;
+  return { index: Number(m[1]), min: Number(m[2]), max: Number(m[3]) };
+}
+
+/** 档位换算成界面用的百分比 */
+function volumePercent(v) {
+  if (!v || v.max <= v.min) return 0;
+  return Math.round(((v.index - v.min) / (v.max - v.min)) * 100);
+}
+
 class AndroidSettings {
   constructor(runtime) { this.runtime = runtime; }
 
@@ -42,7 +64,7 @@ class AndroidSettings {
       'echo "density=$(wm density | tail -n1 | tr -dc \'0-9\')"',
       'echo "animw=$(settings get global window_animation_scale)"',
       'echo "sdk=$(getprop ro.build.version.sdk)"',
-      'echo "vol=$(dumpsys audio | grep -m1 -A3 STREAM_MUSIC | grep -o \'streamVolume:[0-9]*\' | head -1 | cut -d: -f2)"',
+      `echo "vol=$(${volumeCmd('--get')} 2>/dev/null | grep -m1 'volume is')"`,
     ]);
     const get = (k) => {
       const m = new RegExp(`${k}=([^\\r\\n]*)`).exec(String(out));
@@ -54,7 +76,7 @@ class AndroidSettings {
       airplane: get('air') === '1',
       fontScale: Number(get('font')) || 1,
       density: Number(get('density')) || 0,
-      volume: Number(get('vol')) || 0,
+      volume: volumePercent(parseVolume(get('vol'))),
       animationsOff: anim === '0.0' || anim === '0',
       sdk: Number(get('sdk')) || 0,
     };
@@ -76,10 +98,16 @@ class AndroidSettings {
     return { ok: true };
   }
 
+  /**
+   * 音量: 界面给的是 0~100 的百分比，系统要的是媒体流的档位 (常见 0~15，各镜像不同)，
+   * 所以先读出档位范围再换算。
+   */
   async setVolume(percent) {
-    const v = Math.max(0, Math.min(100, Math.round(Number(percent) || 0)));
-    await this._sh([`media volume --stream 3 --set ${v}`]);
-    return { ok: true, volume: v };
+    const p = Math.max(0, Math.min(100, Math.round(Number(percent) || 0)));
+    const range = parseVolume(await this._sh([`${volumeCmd('--get')} 2>/dev/null`])) || { min: 0, max: 15 };
+    const index = Math.round(range.min + ((range.max - range.min) * p) / 100);
+    await this._sh([volumeCmd(`--set ${index}`)]);
+    return { ok: true, volume: volumePercent({ ...range, index }) };
   }
 
   /** CloseSystem animations = 明显的「变快」体感，且几乎不损失功能 */
@@ -156,4 +184,4 @@ class AndroidSettings {
   }
 }
 
-module.exports = { AndroidSettings, ACTIONS };
+module.exports = { AndroidSettings, ACTIONS, volumeCmd, parseVolume, volumePercent };

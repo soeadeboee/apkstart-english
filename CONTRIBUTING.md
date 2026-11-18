@@ -65,7 +65,7 @@ a new upstream release appears, so this checklist does not get forgotten.
 ## 3. Upstream contributions
 
 The upstream project requires Chinese UI text and Chinese comments
-(`CONTRIBUTING.md` upstream), so a 35-file English patch cannot be merged as is.
+(`CONTRIBUTING.md` upstream), so a 52-file English patch cannot be merged as is.
 
 The compatible route is a **build-time locale catalog**:
 

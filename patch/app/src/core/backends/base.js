@@ -11,9 +11,10 @@
  *   2. 有一块能拿到 HWND 的安卓画面窗口 (用 SetParent 嵌进我们自己的窗口); 
  *   3. 能把这台设备启动 / 停掉。
  *
- * 只要满足这三条，底座可以是自家 QEMU，也可以是用户电脑上已经装好的模拟器
- *  (MuMu / 雷电 / 蓝叠…)，甚至是 WSA 这类系统级Runtime。
- * 本文件定义这层接口; 具体实现放在同目录下，一个文件一个底座。
+ * 0.5.6 起只保留一个实现: builtin (自带 emulator + System images)。
+ * 这层接口留着，是为了让 engine.js 里「安卓从哪来」这件事仍然只有一处入口，
+ * 也方便以后真要替换Runtime的时候不用再动Engine主流程; 
+ * 但**不再支持任何第三方模拟器 / 系统级Runtime** (MuMu / 雷电 / 蓝叠 / WSA 都不接)。
  *
  * 约定 (所有实现都必须遵守): 
  *  - 所有方法都可能被并发调用，实现要幂等; 重复 ensure() 不能起两台。
@@ -31,7 +32,7 @@ const CAPS = {
   resizeData: 'resizeData',
   /** 能彻底Reset Android data (/data) */
   resetData: 'resetData',
-  /** 能改物理面板方向 (真横屏，靠重启实现) */
+  /** 能改物理面板方向 (真Landscape，靠重启实现) */
   rotatePanel: 'rotatePanel',
   /** 能调进程优先级 (把虚拟机让给前台App) */
   priority: 'priority',
@@ -119,10 +120,8 @@ class Backend {
 
   /**
    * 画面窗口是否已经Ready (可以停止隐藏/开始嵌入)。
-   * 默认: 拿得到候choose窗口就算Ready。
-   * 第三方底座 (例如 MuMu)需要额外OK「窗口真的出current桌面上」，
-   * 因为 Windows 在 SetParent 时会隐式清掉 WS_VISIBLE，
-   * 把还没显示过的窗口塞进宿主里，宿主那边会是全黑且它自己也不会再显示。
+   * 默认: 拿得到候choose窗口就算Ready。自带 emulator 的窗口是我们自己拉起来的，
+   * 默认实现就够用; 保留这个钩子是为了将来换Runtime时有地方等画面。
    *
    * @param {object} o { isEmbedded?: () => boolean }
    * @returns {Promise<{ok:boolean, reason?:string}>}

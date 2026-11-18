@@ -16,6 +16,7 @@ const path = require('path');
 const net = require('net');
 const crypto = require('crypto');
 const { execFileSync } = require('child_process');
+const { memoryLimits } = require('./resources');
 
 const ASCII = /^[\x20-\x7e]*$/;
 const isAsciiPath = (p) => ASCII.test(String(p || ''));
@@ -129,8 +130,8 @@ function gpuCandidates(emulatorVersion) {
  * 为什么必须改面板尺寸而不是Runtime wm size: 模拟器的 LCD 是「物理面板」，
  * Qt 按面板尺寸开窗口并把画面贴在左上角。Runtime改 wm size 只会改 Android 的
  * 逻辑分辨率，物理面板仍是竖的 —— 结果就是画面躺倒 90°, 只占左上角一条, 
- * 四周Large片黑边, 点击坐标错位。只有把 hw.lcd.width/height 真的换成横屏并重启，
- * 才能得到「正立 + 铺满」的横屏。
+ * 四周Large片黑边, 点击坐标错位。只有把 hw.lcd.width/height 真的换成Landscape并重启，
+ * 才能得到「正立 + 铺满」的Landscape。
  */
 function lcdFor({ accelOk = true, crisp = true, landscape = false } = {}) {
   const base = accelOk && crisp ? { w: 720, h: 1280, dpi: 320 } : { w: 540, h: 960, dpi: 240 };
@@ -195,10 +196,19 @@ function chooseProfile({
   if (host.freeMB && host.freeMB < memoryMB + 1024) {
     memoryMB = Math.max(2048, Math.floor((host.freeMB * 0.5) / 256) * 256);
   }
-  if (overrides.memoryMB) memoryMB = clamp(Number(overrides.memoryMB) || memoryMB, 1536, 8192);
+  if (overrides.memoryMB) {
+    // 上限跟着宿主走: 早先写死 8192，结果 32GB 机器上也最多只能分 8GB，
+    // Large型游戏 (尤其带高清资源包的)进场景就频繁回收贴图，表现是卡顿/黑屏。
+    const lim = memoryLimits(host.totalMB);
+    memoryMB = clamp(Number(overrides.memoryMB) || memoryMB, 1536, lim.maxMB);
+  }
 
   let cores = clamp(Math.floor(host.cores / 2), 2, 4);
-  if (overrides.cores) cores = clamp(Number(overrides.cores) || cores, 1, 8);
+  if (overrides.cores) {
+    // 同样跟着宿主: 至少留 1 核给 Windows，单核机器仍然给 1 核
+    const maxCores = Math.max(1, (host.cores || 1) - 1);
+    cores = clamp(Number(overrides.cores) || cores, 1, maxCores);
+  }
   // 用户没手动指定核数时才由轻量模式收敛，手动值永远优先
   const lite = settings ? liteProfile({ host, engine: settings.engine || {} }) : null;
   if (lite && !overrides.cores) cores = Math.min(cores, lite.cores);
@@ -208,21 +218,27 @@ function chooseProfile({
   //  (表现就是App内更新时提示「Not enough disk space」)。默认按磁盘余量给 6/8GB，
   // 用户也可以直接在Settings里指定 (改Large后下次开机就地扩容，不丢数据)。
   const wantGB = Number((settings && settings.engine && settings.engine.dataPartitionGB) || 0);
-  const autoDataMB = disk && disk < 12288 ? 4096 : 6144;
-  const dataMB = wantGB > 0 ? clamp(Math.round(wantGB * 1024), 2048, 65536) : autoDataMB;
+  // Automatic值也跟磁盘余量走: 50GB 级游戏解包后接近 90GB，余量Large的机器给 16GB 起步，
+  // 免得装完第一个Large游戏就开始报「空间不足」。
+  const autoDataMB = disk && disk < 12288 ? 4096 : (disk && disk > 262144 ? 16384 : 6144);
+  // 用户指定时按「所在磁盘的 80%」封顶: 填 128GB 但盘里只有 20GB，只会装到一半失败
+  const dataMaxMB = disk ? Math.max(2048, Math.floor((disk * 0.8) / 1024) * 1024) : 262144;
+  const dataMB = wantGB > 0
+    ? clamp(Math.round(wantGB * 1024), 2048, Math.min(262144, dataMaxMB))
+    : autoDataMB;
 
   const gpus = gpuCandidates(emulatorVersion);
   const gpu = overrides.gpuMode && gpus.includes(overrides.gpuMode) ? overrides.gpuMode : gpus[0];
 
   // 渲染分辨率: auto 时按加速状态choose (Software emulation降到 540x960 保流畅)
-  // 横屏优先: 横屏是由「物理面板尺寸」决定的，必须写进 AVD 并重启才生效，
+  // Landscape优先: Landscape是由「物理面板尺寸」决定的，必须写进 AVD 并重启才生效，
   // 所以这里先按 settings.display.landscape 定方向，再叠加 renderSize。
   const wantLandscape = !!(settings && settings.display && settings.display.landscape);
   const wantLcd = String((settings && settings.engine && settings.engine.renderSize) || 'auto');
   const lcd = /^\d{3,4}x\d{3,4}$/.test(wantLcd)
     ? (() => {
       const [w0, h0] = wantLcd.split('x').map(Number);
-      // 用户显式分辨率若与当前方向不一致，按方向校正 (横屏取长边作宽)
+      // 用户显式分辨率若与当前方向不一致，按方向校正 (Landscape取长边作宽)
       const long = Math.max(w0, h0);
       const short = Math.min(w0, h0);
       const w = wantLandscape ? long : short;
@@ -272,8 +288,11 @@ function overridesFromSettings(engine = {}) {
  * 之前Settings页直接调 chooseProfile() (不带版本和加速状态)，会在 37.x 机器上
  * 错误地显示已弃用的 swiftshader_indirect / Software emulation，和实跑参数对不上。
  */
-function autoProfile({ settings = {}, accel, emulatorVersion = '', diskMB = 0, port = 5554, adbPort = 5044 } = {}) {
+function autoProfile({ settings = {}, accel, emulatorVersion = '', diskMB = 0, port = 5554, adbPort = 5044, host = null } = {}) {
   return chooseProfile({
+    // host 可注入: 单测/诊断想复现「4 核Small机器」时不用真的换机器。
+    // 不传就按本机实际情况算 (正常Runtime都是这条路径)。
+    host: host || hostInfo(),
     accel, emulatorVersion, diskMB, port, adbPort, settings,
     overrides: overridesFromSettings(settings && settings.engine),
   });

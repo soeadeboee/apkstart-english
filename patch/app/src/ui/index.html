@@ -374,6 +374,11 @@
               <option value="12">12 GB</option>
               <option value="16">16 GB</option>
               <option value="24">24 GB</option>
+              <option value="32">32 GB</option>
+              <option value="48">48 GB</option>
+              <option value="64">64 GB (games around 50 GB)</option>
+              <option value="96">96 GB</option>
+              <option value="128">128 GB</option>
             </select>
           </div>
         </div>
@@ -503,34 +508,60 @@
         </details>
       </div>
 
+      <div class="group" id="preflightGroup">
+        <div class="group-title">This PC checkup · auto-config</div>
+        <div class="field">
+          <span class="sub">Checks this machine first: is CPU virtualization on, is the Windows Hypervisor Platform installed,
+            what GPU it has and how much VRAM, and are memory and the OS version enough. Anything that can be changed automatically (memory / cores / quality / render backend) is written straight into settings,
+            and the result is saved as a driver; things that need administrator rights get a button; things that can only be changed in the BIOS are explained.</span>
+        </div>
+        <div class="field">
+          <div class="row">
+            <button class="btn primary sm" id="btnPreflight">Run checkup</button>
+            <button class="btn ghost sm" id="btnPreflightApply" hidden>Apply recommended settings</button>
+          </div>
+        </div>
+        <div id="preflightList" class="drv-list"></div>
+        <div class="field">
+          <span class="sub" id="preflightSummary"></span>
+        </div>
+      </div>
+
+      <div class="group" id="driverGroup">
+        <div class="group-title">Drivers · compatibility patches</div>
+        <div class="field">
+          <span class="sub">Some machines only run after launch options are changed (old GPUs with low GLES versions, hardware acceleration off, a driver version that crashes hardware rendering).
+            A driver is a JSON file: it declares which machines it matches and which launch options to change when it matches. You can write, import and share your own.
+            Drivers only change whitelisted launch options, <b>run no code at all</b>; if nothing matches, they do nothing.</span>
+        </div>
+        <div class="field">
+          <span class="sub" id="drvSummary">Reading drivers…</span>
+        </div>
+        <div id="drvList" class="drv-list"></div>
+        <div class="field">
+          <div class="row">
+            <button class="btn ghost sm" id="btnDrvReload">Refresh</button>
+            <button class="btn ghost sm" id="btnDrvImport">Import driver…</button>
+            <button class="btn ghost sm" id="btnDrvFolder">Open driver folder</button>
+            <button class="btn ghost sm" id="btnDrvExport">Export this PC template</button>
+          </div>
+          <span class="sub">Export this PC template fills in the match conditions for this machine; change <code>effect</code> in
+            <code>gpuMode</code> / <code>forceTcg</code> and it works. Field docs are in <code>docs/drivers.md</code>.</span>
+        </div>
+      </div>
+
       <details class="advanced-group">
         <summary>Advanced settings (usually no changes needed)</summary>
       <div class="group">
         <div class="group-title">Runtime</div>
         <div class="field">
-          <label>Engine mode</label>
-          <select id="setEngineMode">
-            <option value="builtin">Built-in runtime (recommended, QEMU + Android-x86, no third-party dependencies)</option>
-            <option value="mumu">MuMu Player 12 (reuse the NetEase emulator already installed)</option>
-            <option value="fydeos">FydeOS Android subsystem (FydeOS installed on this PC, or running in VMware / VirtualBox)</option>
-            <option value="attach">Connect to an existing runtime (advanced: reuse WSA / another emulator’s adb port)</option>
-          </select>
-          <span class="sub">The built-in runtime downloads the Android image itself; choosing a third-party emulator downloads nothing,
-            it just drives the one already installed on your PC, so your apps and its own apps share one environment.
-            The FydeOS backend drives the Android environment built into FydeOS (you must first enable ADB debugging in its Android settings);
-            when FydeOS runs inside a VM, enter that VM address below. It does not embed a window; FydeOS shows the screen itself.</span>
-        </div>
-        <div class="field" id="fydeosHostField" hidden>
-          <label>FydeOS Android subsystem address</label>
-          <input id="setFydeosHost" type="text" placeholder="127.0.0.1:5555, or the VM LAN IP:5555" />
-          <span class="sub">Required when FydeOS runs in VMware / VirtualBox. The easiest setup is to forward ports for the VM
-            (host 5555 → guest 5555) and then enter <b>127.0.0.1:5555</b>. Leave it empty
-            when FydeOS is installed on this PC (arc:5555 and similar are detected automatically).</span>
-        </div>
-        <div class="field" id="mumuPathField" hidden>
-          <label>MuMu install directory (leave empty to detect)</label>
-          <input id="setMumuPath" type="text" placeholder="for example D:\MuMu Player 12" />
-          <span class="sub">MuMuManager.exe is found automatically through the registry and common paths; set it here if it lives on an unusual drive.</span>
+          <label>Runtime</label>
+          <div class="row">
+            <input id="setEngineLabel" type="text" readonly value="ApkStart built-in runtime (QEMU + Android 14, standalone)" />
+          </div>
+          <span class="sub">ApkStart only runs its own runtime: adb / emulator / system images are all downloaded and managed by it.
+            It does not detect, take over or depend on any emulator installed on your PC (MuMu / LDPlayer / BlueStacks / WSA are never used).
+            So switching machines, whether others have an emulator installed, or how emulators update, makes no difference here.</span>
         </div>
         <div class="field">
           <label>adb path</label>
@@ -538,10 +569,7 @@
         </div>
         <div class="field">
           <label>Device address</label>
-          <div class="row">
-            <input id="setDevice" type="text" placeholder="127.0.0.1:58526" />
-            <button class="btn ghost sm" id="btnProbe">Probe</button>
-          </div>
+          <span class="sub" id="deviceAddrNote">Assigned by ApkStart itself (emulator-5554, moved up automatically on a port conflict); nothing to fill in.</span>
         </div>
         <div class="field">
           <label>System image (ISO)</label>
@@ -556,6 +584,9 @@
             <label>CPU cores (0 = auto)</label>
             <input id="setCores" type="number" min="0" max="16" />
           </div>
+        </div>
+        <div class="field">
+          <span class="sub" id="builtinResNote"></span>
         </div>
         <div class="field">
           <label>Idle reclaim (minutes, 0 = never)</label>

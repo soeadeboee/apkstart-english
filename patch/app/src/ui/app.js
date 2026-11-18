@@ -782,29 +782,223 @@ function bindAndroid() {
   $('btnAndroidApps').addEventListener('click', () => open('apps'));
 }
 
-/** 按当前底座的 id 决定哪些字段要露出来 (自带 = 镜像/内存那些，第三方 = 它自己的路径) */
+/** Settings页字段同步: 只剩自带Runtime，所有资源项都露出来，不再按底座切换 */
 function syncBackendFields() {
-  const mode = $('setEngineMode') ? $('setEngineMode').value : 'builtin';
-  const builtin = mode === 'builtin' || mode === 'attach';
-  const show = (id, on) => { const el = $(id); if (el && el.closest('.field')) el.closest('.field').hidden = !on; };
-  show('setMumuPath', mode === 'mumu');
-  show('setFydeosHost', mode === 'fydeos');
-  show('setSystemImage', builtin);
-  show('setMemory', builtin);
-  show('setCores', builtin);
-  show('setCompat', builtin);
-  show('compatInstallField', builtin && !$('compatInstallField').hidden);
-  show('setIdle', true);
-  show('setDevice', mode === 'attach');
+  const perf = $('perfGroup');
+  if (perf) perf.hidden = false;
+  refreshResources();
+}
+
+/** 本机资源上限 + 当前分配 (Settings页里那几行灰字) */
+async function refreshResources() {
+  const bNote = $('builtinResNote');
+  if (!bNote) return;
+  const gb = (mb) => (Number(mb) > 0 ? `${Math.round(Number(mb) / 1024)} GB` : 'Unknown');
+  const r = await api.resources().catch(() => null);
+  if (!r || r.ok === false) {
+    bNote.textContent = (r && (r.note || r.error)) || 'Resource allocation is unavailable right now';
+    return;
+  }
+  const host = r.host || {};
+  const lim = r.limits || {};
+  const free = Number(r.freeMB) || Number((r.current && r.current.freeMB) || 0);
+  bNote.textContent = `This PC: ${gb(host.totalMB)} memory / ${host.cores} cores;`
+    + `Up to ${gb(lim.maxMB)} of memory and ${Math.max(1, (host.cores || 1) - 1)} cores (1/4 of memory and 1 core are reserved for Windows).`
+    + `Data partition limit ${lim.maxGB || 0} GB${free ? ` (${(free / 1024).toFixed(1)} GB free on that disk)` : ''}.`
+    + (r.verdict && r.verdict.note ? ` ${r.verdict.note}` : '');
+}
+
+/** 本机体检: 渲染报告 (每条带等级点和可执行动作) */
+function renderPreflight(res) {
+  const list = $('preflightList');
+  const sum = $('preflightSummary');
+  const applyBtn = $('btnPreflightApply');
+  if (!list) return;
+  list.textContent = '';
+  if (!res || !res.report) {
+    if (sum) sum.textContent = (res && res.error) || 'The checkup returned nothing; try again';
+    return;
+  }
+  const { report, edition } = res;
+  for (const it of report.items) {
+    const item = document.createElement('div');
+    item.className = 'pf-item';
+    const head = document.createElement('div');
+    head.className = 'pf-head';
+    const dot = document.createElement('span');
+    dot.className = `pf-dot ${it.level}`;
+    const title = document.createElement('span');
+    title.className = 'pf-title';
+    title.textContent = it.title;
+    head.append(dot, title);
+    item.append(head);
+    if (it.detail) {
+      const d = document.createElement('div');
+      d.className = 'pf-detail';
+      d.textContent = it.detail;
+      item.append(d);
+    }
+    if (it.action && it.action.kind === 'elevate') {
+      const wrap = document.createElement('div');
+      wrap.className = 'pf-action';
+      const btn = document.createElement('button');
+      btn.className = 'btn ghost sm';
+      btn.textContent = it.action.label;
+      btn.addEventListener('click', async () => {
+        btn.disabled = true;
+        const old = btn.textContent;
+        btn.textContent = 'Working…';
+        let r = null;
+        if (it.action.id === 'accel') r = await api.enableAccel().catch(() => null);
+        else r = await api.enableVirtualization().catch(() => null);
+        btn.disabled = false;
+        btn.textContent = old;
+        if (!r) { toast({ type: 'error', title: 'The operation did not finish', body: 'You can retry later, or follow the prompts manually' }); return; }
+        if (r.cancelled) toast({ type: 'warn', title: 'cancelled', body: 'System settings were not changed' });
+        else if (r.ok || r.already) {
+          const reboot = r.restartNeeded === true;
+          toast({
+            type: 'ok',
+            title: r.already ? 'Hardware acceleration is already available' : (reboot ? 'Submitted; a reboot is required' : 'Applied'),
+            body: r.already ? '' : (reboot ? 'Hardware acceleration takes effect after a reboot; come back and click Run checkup to confirm' : 'Click Run checkup to confirm the result'),
+          });
+          if (r.already || !reboot) setTimeout(() => runPreflight().catch(() => {}), 1200);
+        } else {
+          toast({ type: 'error', title: 'could not be done automatically', body: (r.error || r.note || 'Follow the prompts to do it manually') });
+        }
+      });
+      wrap.append(btn);
+      item.append(wrap);
+    } else if (it.action && it.action.kind === 'manual') {
+      const wrap = document.createElement('div');
+      wrap.className = 'pf-action pf-detail';
+      wrap.textContent = `⚠ ${it.action.label}`;
+      item.append(wrap);
+    }
+    list.append(item);
+  }
+  const rec = report.recommended || {};
+  if (sum) {
+    sum.textContent = `${report.summary}. Recommended: ${Math.round((rec.memoryMB || 0) / 1024)} GB memory / `
+      + `${rec.cores || 2} cores / ${rec.renderSize || 'auto'} · render ${rec.gpuMode || 'auto'}`
+      + (edition === 'store' ? ' (Store version: system features can only be turned on manually in Windows Features)' : '');
+  }
+  if (applyBtn) applyBtn.hidden = false;
+}
+
+async function runPreflight() {
+  const btn = $('btnPreflight');
+  const sum = $('preflightSummary');
+  if (!btn) return null;
+  const old = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = 'Checking…';
+  if (sum) sum.textContent = 'Checking virtualization, GPU, memory… (about 2-3 seconds the first time)';
+  let r = null;
+  try {
+    r = await api.preflightRun();
+  } catch (e) {
+    r = { error: e.message || 'Checkup failed' };
+  }
+  btn.disabled = false;
+  btn.textContent = old;
+  renderPreflight(r);
+  return r;
+}
+
+/** 驱动 (兼容补丁): 渲染清单 + 命中状态 */
+function renderDrivers(r) {
+  const list = $('drvList');
+  const sum = $('drvSummary');
+  if (!list) return;
+  const host = (r && r.host) || {};
+  const drivers = (r && r.drivers) || [];
+  const errors = (r && r.errors) || [];
+  const onCount = drivers.filter((d) => d.enabled && d.matched).length;
+  if (sum) {
+    const accel = host.accel === 'none' ? 'No hardware acceleration' : (host.accel || 'Unknown');
+    sum.textContent = `This PC: ${host.platform || ''}/${host.arch || ''} · ${host.gpuVendor || 'Unknown'} GPU · ${accel}`
+      + ` · emulator ${host.emulatorVersion || 'Unknown'}; ${drivers.length} driver${drivers.length === 1 ? '' : 's'}, ${onCount} active on this PC.`
+      + (errors.length ? ` ${errors.length} file${errors.length === 1 ? '' : 's'} failed to load (see below).` : '');
+  }
+  list.textContent = '';
+  for (const d of drivers) {
+    const item = document.createElement('div');
+    item.className = d.enabled ? 'drv-item on' : 'drv-item';
+
+    const head = document.createElement('div');
+    head.className = 'drv-head';
+    const cb = document.createElement('input');
+    cb.type = 'checkbox';
+    cb.checked = !!d.enabled;
+    cb.addEventListener('change', async () => {
+      const res = await api.driversSetEnabled(d.id, cb.checked).catch(() => null);
+      if (res && res.ok && res.overview) renderDrivers(res.overview);
+      else { cb.checked = !cb.checked; toast({ type: 'error', title: 'Save failed', body: (res && res.error) || 'Try again later' }); }
+    });
+    const name = document.createElement('span');
+    name.className = 'drv-name';
+    name.textContent = d.name;
+    head.append(cb, name);
+
+    if (d.matched && d.enabled) {
+      const b = document.createElement('span');
+      b.className = 'drv-badge hit';
+      b.textContent = 'Applied';
+      head.append(b);
+    }
+    if (d.builtin) {
+      const b = document.createElement('span');
+      b.className = 'drv-badge';
+      b.textContent = 'Built-in examples';
+      head.append(b);
+    }
+    item.append(head);
+
+    const meta = document.createElement('div');
+    meta.className = 'drv-meta';
+    meta.textContent = `v${d.version || '?'}`
+      + (d.author ? ` · ${d.author}` : '')
+      + ` · priority ${d.priority}`
+      + (d.hits && d.hits.length ? ` · matched: ${d.hits.join(' / ')}` : ' · does not match this PC');
+    item.append(meta);
+
+    if (d.description) {
+      const desc = document.createElement('div');
+      desc.className = 'drv-meta';
+      desc.textContent = d.description;
+      item.append(desc);
+    }
+    list.append(item);
+  }
+  for (const e of errors) {
+    const err = document.createElement('div');
+    err.className = 'drv-err';
+    err.textContent = `${String(e.file || '').split(/[\\/]/).pop()}: ${(e.errors || []).join('; ')}`;
+    list.append(err);
+  }
+  if (!drivers.length && !errors.length) {
+    const empty = document.createElement('div');
+    empty.className = 'drv-meta';
+    empty.textContent = 'No drivers yet. Click Export this PC template to make one, or import a JSON someone else made.';
+    list.append(empty);
+  }
+}
+
+async function refreshDrivers() {
+  if (!$('drvList')) return;
+  const r = await api.driversList().catch(() => null);
+  if (!r) {
+    if ($('drvSummary')) $('drvSummary').textContent = 'Cannot read the driver list (the runtime may not be deployed yet)';
+    return;
+  }
+  renderDrivers(r);
 }
 
 function fillSettings(s) {
-  $('setEngineMode').value = s.engine.mode;
-  if ($('setMumuPath')) $('setMumuPath').value = s.engine.mumuPath || '';
-  if ($('setFydeosHost')) $('setFydeosHost').value = s.engine.fydeosHost || '';
   syncBackendFields();
+  refreshDrivers().catch(() => {});
   $('setAdbPath').value = s.adbPath || '';
-  $('setDevice').value = s.device || '';
   $('setSystemImage').value = s.runtime.isoPath || '';
   $('setMemory').value = s.engine.memoryMB;
   $('setCores').value = s.engine.cores;
@@ -858,10 +1052,17 @@ async function refreshDataInfo() {
   const info = await api.dataInfo().catch(() => null);
   if (!info) { el.textContent = 'Could not read data partition info'; return; }
   const auto = Number(($('setDataGB') || {}).value || 0) === 0;
-  const img = info.imageGB ? `${info.imageGB} GB` : 'not created yet';
+  // 有 quickboot 差量盘时底座镜像的LargeSmall不等于 guest 看到的容量 (实测 8GB 镜像, guest 5.7GB)，
+  // 与其显示一个会误导人的数字，不如明确说「以Runtime为准」。
+  const img = info.overlay
+    ? 'Quick-boot differencing disk (actual capacity is the runtime /data)'
+    : (info.fsGB ? `Actual filesystem ${info.fsGB} GB` : (info.imageGB ? `${info.imageGB} GB` : 'not created yet'));
   const free = info.freeDiskMB ? `${(info.freeDiskMB / 1024).toFixed(1)} GB` : 'Unknown';
-  el.textContent = `Current data partition image: ${img}${auto ? ' (auto)' : ''} · ${free} free on that disk.`
-    + ' If a game says “not enough storage”, enlarge this and click “Expand now” — expansion is done in place, installed apps and saves are kept.';
+  const pending = Number(info.pendingGB) > 0
+    ? ` Target ${info.configuredGB} GB is not active yet: Android is using a quick-boot differencing disk, so you must reset Android data to rebuild it at the new size (installed apps are wiped).`
+    : '';
+  el.textContent = `Current data partition: ${img}${auto ? ' (auto)' : ''} · ${free} free on that disk.${pending}`
+    + 'If a game says there is not enough storage, raise this and click Expand now; when it can expand in place, installed apps are kept.';
 }
 
 async function openSettings() {
@@ -1036,22 +1237,59 @@ function bindSettings() {
     state.settings = await api.setSettings(patch);
   };
 
-  $('setEngineMode').addEventListener('change', async (e) => {
-    await save({ engine: { mode: e.target.value } });
-    syncBackendFields();
-    refreshStatus();
-  });
-  if ($('setMumuPath')) {
-    $('setMumuPath').addEventListener('change', (e) => save({ engine: { mumuPath: e.target.value.trim() } }));
+  if ($('btnPreflight')) $('btnPreflight').addEventListener('click', () => runPreflight());
+  if ($('btnPreflightApply')) {
+    $('btnPreflightApply').addEventListener('click', async () => {
+      const btn = $('btnPreflightApply');
+      btn.disabled = true;
+      const r = await api.preflightApply().catch(() => null);
+      btn.disabled = false;
+      if (!r || !r.ok) {
+        toast({ type: 'error', title: 'Apply failed', body: (r && r.error) || 'Try again later' });
+        return;
+      }
+      state.settings = r.settings;
+      toast({
+        type: 'ok',
+        title: 'Configured for this machine',
+        body: `Memory ${Math.round((r.recommended.memoryMB || 0) / 1024)} GB / ${r.recommended.cores} cores / ${r.recommended.renderSize}`
+          + (r.driverFile ? '; a driver was generated and applies automatically the next time Android starts' : ''),
+      });
+      if (r.driverError) toast({ type: 'warn', title: 'The driver was not written', body: r.driverError });
+      fillSettings(r.settings);
+      refreshStatus();
+    });
   }
-  if ($('setFydeosHost')) {
-    $('setFydeosHost').addEventListener('change', (e) => save({ engine: { fydeosHost: e.target.value.trim() } }));
+  if ($('btnDrvReload')) $('btnDrvReload').addEventListener('click', () => refreshDrivers());
+  if ($('btnDrvFolder')) {
+    $('btnDrvFolder').addEventListener('click', async () => {
+      const r = await api.driversOpenFolder().catch(() => null);
+      if (!r || !r.ok) toast({ type: 'error', title: 'Cannot open the driver folder' });
+    });
   }
+  if ($('btnDrvImport')) {
+    $('btnDrvImport').addEventListener('click', async () => {
+      const r = await api.driversImport().catch(() => null);
+      if (!r || r.canceled) return;
+      if (!r.ok) {
+        toast({ type: 'error', title: 'Import failed', body: (r.errors || []).slice(0, 3).join('; ') });
+        return;
+      }
+      toast({ type: 'ok', title: 'Driver imported and enabled', body: `${r.driver.name} v${r.driver.version}` });
+      if (r.overview) renderDrivers(r.overview);
+    });
+  }
+  if ($('btnDrvExport')) {
+    $('btnDrvExport').addEventListener('click', async () => {
+      const r = await api.driversExportTemplate().catch(() => null);
+      if (!r || r.canceled) return;
+      if (!r.ok) { toast({ type: 'error', title: 'Export failed' }); return; }
+      toast({ type: 'ok', title: 'Template exported', body: 'After editing effect, put the file in the driver folder and click Refresh to apply it' });
+      refreshDrivers();
+    });
+  }
+
   $('setAdbPath').addEventListener('change', (e) => save({ adbPath: e.target.value.trim() }));
-  $('setDevice').addEventListener('change', async (e) => {
-    await save({ device: e.target.value.trim() });
-    refreshStatus();
-  });
   $('setSystemImage').addEventListener('change', (e) => save({ runtime: { isoPath: e.target.value.trim() } }));
   // 内存 / 核心: 填了具体值就关掉「Automatic」，填 0 又回到Automatic。
   // 旧代码只写 memoryMB，而 overridesFromSettings 只在 autoMemory=false 时才认它，
@@ -1120,10 +1358,35 @@ function bindSettings() {
       const r = await api.setDataSize(gb).catch((e) => ({ ok: false, error: e.message }));
       $('btnGrowData').disabled = false;
       $('btnGrowData').textContent = old;
+      if (r && !r.ok && r.needsReset) {
+        // 快速启动的差量盘挡着: 就地扩容做不到，只能按新容量重建 /data。
+        // 这是明确的数据丢失操作，必须单独One more confirmation。
+        const again = await api.confirm({
+          title: 'Reset Android data to expand it',
+          message: `Android is using a quick-boot differencing disk, which cannot be resized in place. To get ${gb} GB you must rebuild /data at the new size.`,
+          detail: 'Rebuilding wipes installed apps and saves (the emulator itself and the image are untouched). Continue?',
+          okLabel: 'Wipe and rebuild',
+        });
+        if (again.response !== 1) { refreshDataInfo(); return; }
+        $('btnGrowData').disabled = true;
+        $('btnGrowData').textContent = 'Rebuilding…';
+        const rr = await api.resetAndResize(gb).catch((e) => ({ ok: false, error: e.message }));
+        $('btnGrowData').disabled = false;
+        $('btnGrowData').textContent = old;
+        toast({
+          type: rr && rr.ok ? 'ok' : 'error',
+          title: rr && rr.ok ? 'Rebuilt at the new size' : 'Rebuild failed',
+          body: rr && rr.ok
+            ? `The next app launch rebuilds /data at ${gb} GB (the first launch takes tens of seconds longer)`
+            : (rr && rr.error) || 'Unknown error',
+        });
+        refreshDataInfo();
+        return;
+      }
       toast({
         type: r && r.ok ? 'ok' : 'error',
         title: r && r.ok ? 'Data partition expanded' : 'Expansion failed',
-        body: r && r.ok ? `About ${r.imageGB || gb} GB available now` : (r && r.error) || 'Unknown error',
+        body: r && r.ok ? `About ${r.fsGB || r.imageGB || gb} GB usable now` : (r && r.error) || 'Unknown error',
       });
       refreshDataInfo();
     });
@@ -1572,20 +1835,6 @@ function bindSettings() {
       window.open(`file:///${String(dir).replace(/\\/g, '/')}`);
     });
   }
-
-  $('btnProbe').addEventListener('click', async () => {
-    const el = $('probeResult');
-    el.textContent = 'Probing…';
-    const found = await api.runtimeProbe();
-    if (!found.length) {
-      el.textContent = 'No running runtime found';
-      return;
-    }
-    el.textContent = `Found: ${found.map((f) => f.name).join(', ')}`;
-    await api.setSettings({ device: found[0].serial });
-    $('setDevice').value = found[0].serial;
-    refreshStatus();
-  });
 
   $('btnRuntimeStart').addEventListener('click', async () => {
     const el = $('probeResult');

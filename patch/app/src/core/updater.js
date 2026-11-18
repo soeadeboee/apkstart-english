@@ -18,7 +18,7 @@ const fs = require('fs');
 const path = require('path');
 const { spawn } = require('child_process');
 const { downloadAnyParallel, downloadMulti } = require('./download');
-const { ZipFile } = require('./zip');
+const { ZipFile, resolveZipEntry } = require('./zip');
 const { cmpVer } = require('./version');
 const { Sources } = require('./sources');
 
@@ -28,6 +28,33 @@ const REPO = 'apkstart';
 /** PowerShell 单引号字符串: 内部的 ' 要写成 '' */
 function psq(s) {
   return `'${String(s).replace(/'/g, "''")}'`;
+}
+
+/** 在目录第一层里按名字 (LargeSmall写不敏感)找文件，返回实际名字或 null */
+function findInDir(dir, name) {
+  try {
+    const lower = name.toLowerCase();
+    return fs.readdirSync(dir).find((n) => n.toLowerCase() === lower) || null;
+  } catch (_) {
+    return null;
+  }
+}
+
+/**
+ * 在程序目录里找 NSIS Uninstall器，找不到返回 null。
+ * electron-builder 的默认命名是 `Uninstall <productName>.exe` (updater.flavor 认这个)，
+ * 老版本/自定义打包也可能叫 `uninstaller.exe` (main.js 旧代码只认这个)。
+ * 两处必须用同一套规则，否则安装版点「One-click uninstall」会被误判成便携版 (issue #51)。
+ */
+function findUninstaller(installDir) {
+  try {
+    const names = fs.readdirSync(installDir);
+    return names.find((n) => /^Uninstall .*\.exe$/i.test(n))
+      || names.find((n) => /^uninstall(er)?\.exe$/i.test(n))
+      || null;
+  } catch (_) {
+    return null;
+  }
 }
 
 class Updater {
@@ -51,11 +78,7 @@ class Updater {
 
   /** 安装形态: 安装版 (有Uninstall器)还是便携包 */
   get flavor() {
-    try {
-      const un = fs.readdirSync(this.installDir).find((n) => /^Uninstall .*\.exe$/i.test(n));
-      if (un) return 'setup';
-    } catch (_) { /* ignore */ }
-    return 'portable';
+    return findUninstaller(this.installDir) ? 'setup' : 'portable';
   }
 
   get updateDir() {
@@ -170,9 +193,17 @@ class Updater {
 
     if (/\.zip$/i.test(file)) {
       const out = path.join(dir, 'payload');
+      // issue #98: 上一次已经下载+解压Finish，但替换/重启没成功时，
+      // 直接复用这份载荷，绝不再下一遍 100MB —— 这正是「更新死循环」的来源。
+      // Ready标记由本函数写, 替换脚本成功后清掉，所以只有完整解压过的载荷才会被复用。
+      if (this._payloadReady(out, it.version)) {
+        this.onProgress({ stage: 'ready', percent: 100, message: 'A downloaded update package already exists; reusing it' });
+        return { mode: 'zip', payload: out, version: it.version };
+      }
       fs.rmSync(out, { recursive: true, force: true });
       fs.mkdirSync(out, { recursive: true });
       await this._extract(file, out);
+      this._markPayloadReady(out, it.version);
       this.onProgress({ stage: 'ready', percent: 100, message: 'update package extracted' });
       return { mode: 'zip', payload: out, version: it.version };
     }
@@ -238,8 +269,9 @@ class Updater {
       let i = 0;
       for (const n of names) {
         i += 1;
-        const target = path.join(dest, n.replace(/\\/g, '/'));
-        if (!target.startsWith(path.resolve(dest))) continue;   // 防 zip-slip
+        // 防 zip-slip: 统一走 zip.js 的守卫 (挡 ../, 绝对路径, 盘符, 反斜杠绕过)
+        const target = resolveZipEntry(dest, n);
+        if (!target) continue;
         fs.mkdirSync(path.dirname(target), { recursive: true });
         await zf.pipeTo(n, fs.createWriteStream(target));
         if (i % 20 === 0) {
@@ -253,6 +285,48 @@ class Updater {
     } finally {
       try { zf.close(); } catch (_) { /* ignore */ }
     }
+  }
+
+  /** 载荷Ready标记文件: 解压完整落盘后才写，供跨进程复用判断 */
+  _readyFile(payload) { return path.join(payload, '.apkstart-ready'); }
+
+  _markPayloadReady(payload, version) {
+    try {
+      fs.writeFileSync(this._readyFile(payload), JSON.stringify({ version, at: Date.now() }), 'utf8');
+    } catch (_) { /* 标记写不了就下次重下，不影响正确性 */ }
+  }
+
+  _payloadReady(payload, version) {
+    try {
+      if (!fs.existsSync(this._readyFile(payload))) return false;
+      const m = JSON.parse(fs.readFileSync(this._readyFile(payload), 'utf8'));
+      // 版本不符 = 上次下的是别的版本，不能复用
+      if (m.version !== version) return false;
+      // 关键: 程序主 exe 必须在载荷里。没有它说明解压被中断/被杀软删过。
+      const exeName = path.basename(this.exePath || 'ApkStart.exe');
+      return !!findInDir(payload, exeName);
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /**
+   * 启动时调用: 找回「上次已下载解压, 但替换/重启失败」的更新并续做。
+   * 直接走本地载荷，不再重新下载 (issue #98 的死循环根治)。
+   * @returns {{mode:'zip', payload:string, version:string}|null}
+   */
+  findResumableJob() {
+    try {
+      if (!fs.existsSync(this.updateDir)) return null;
+      const versions = fs.readdirSync(this.updateDir)
+        .filter((n) => cmpVer(n, this.current) > 0)   // 只认比当前更新的版本，避免反复重启
+        .sort((a, b) => cmpVer(b, a));
+      for (const v of versions) {
+        const payload = path.join(this.updateDir, v, 'payload');
+        if (this._payloadReady(payload, v)) return { mode: 'zip', payload, version: v };
+      }
+    } catch (_) { /* ignore */ }
+    return null;
   }
 
   /**
@@ -272,26 +346,46 @@ class Updater {
       `$log = ${psq(logFile)}`,
       `function Note($m) { Add-Content -Path $log -Value ("[{0}] {1}" -f (Get-Date -Format 'HH:mm:ss'), $m) }`,
       `Note 'updater start'`,
+      `$applyOk = $true`,
       // 等本进程真正Quit (最多 90 秒)，否则 exe/dll 仍被占用
       `try { Wait-Process -Id ${waitPid} -Timeout 90 } catch { }`,
       `Start-Sleep -Milliseconds 700`,
     ];
 
     if (job.mode === 'zip') {
+      // issue #98: 旧脚本只测「目标 exe 是否存在」——它本来就存在，于是 copy
+      // 失败也被当成成功，接着删掉载荷, 重启旧版本 → 下次开机又检测到更新 → 死循环。
+      // 改成: 复制前先把目标 exe 改名成 .old，复制后OK新 exe 真的落盘且字节数
+      // 与载荷一致; 失败则回滚 .old，并**保留载荷**交给下次启动续做。
+      const exeName = path.basename(exe);
       lines.push(
         `$src = ${psq(job.payload)}`,
         `$dst = ${psq(dir)}`,
+        `$exeName = ${psq(exeName)}`,
+        `$target = Join-Path $dst $exeName`,
+        `$srcExe = Join-Path $src $exeName`,
+        `$expected = (Get-Item $srcExe).Length`,
+        `$backup = "$target.old"`,
+        `$hasBackup = $false`,
+        `if (Test-Path $target) {`,
+        `  try { Move-Item -LiteralPath $target -Destination $backup -Force; $hasBackup = $true } catch { Note "backup failed: $_" }`,
+        `}`,
         `$ok = $false`,
         `for ($i = 1; $i -le 12; $i++) {`,
         `  Copy-Item -Path (Join-Path $src '*') -Destination $dst -Recurse -Force`,
-        `  $probe = Join-Path $dst ${psq(path.basename(exe))}`,
-        `  if (Test-Path $probe) { $ok = $true; Note "copy pass $i ok"; break }`,
+        `  if ((Test-Path $target) -and ((Get-Item $target).Length -eq $expected)) { $ok = $true; Note "copy pass $i ok"; break }`,
         `  Note "copy pass $i failed, retry"; Start-Sleep -Milliseconds 600`,
         `}`,
-        `if (-not $ok) { Note 'copy failed' }`,
-        // 新版本里已经删掉的文件不会因为覆盖而消失，但保留它们无害; 
-        // 只清掉本次的解压目录，避免白占几百 MB。
-        `Remove-Item -Path $src -Recurse -Force`,
+        `if (-not $ok) {`,
+        `  Note 'copy FAILED - keeping payload for next launch'`,
+        `  $applyOk = $false`,
+        `  if ($hasBackup) { try { Move-Item -LiteralPath $backup -Destination $target -Force } catch {} }`,
+        `} else {`,
+        `  if ($hasBackup) { try { Remove-Item -LiteralPath $backup -Force } catch {} }`,
+        // 只有OK复制成功，才清掉载荷与Ready标记; 否则留给 findResumableJob 续做。
+        `  try { Remove-Item -LiteralPath (Join-Path $src '.apkstart-ready') -Force } catch {}`,
+        `  Remove-Item -Path $src -Recurse -Force`,
+        `}`,
       );
     } else {
       lines.push(
@@ -303,10 +397,26 @@ class Updater {
     }
 
     lines.push(
-      `if (Test-Path ${psq(exe)}) { Start-Process -FilePath ${psq(exe)}; Note 'relaunched' }`,
+      // issue #98: 只 Start-Process 一次, 失败就无声无息 → 用户看到「关了但没重启」。
+      // 加 -WorkingDirectory (便携版相对路径资源)，失败再退回 cmd /c start，并写logs。
+      `if (Test-Path ${psq(exe)}) {`,
+      `  try {`,
+      `    Start-Process -FilePath ${psq(exe)} -WorkingDirectory ${psq(dir)} -ErrorAction Stop`,
+      `    Note 'relaunched via Start-Process'`,
+      `  } catch {`,
+      `    Note ("Start-Process failed: " + $_.Exception.Message + "; fallback to cmd start")`,
+      `    try {`,
+      `      Start-Process -FilePath 'cmd.exe' -ArgumentList '/c','start','""',${psq(exe)} -WorkingDirectory ${psq(dir)} -WindowStyle Hidden`,
+      `      Note 'relaunched via cmd start'`,
+      `    } catch { Note ("cmd start failed: " + $_.Exception.Message) }`,
+      `  }`,
+      `} else { Note 'relaunch skipped: exe missing' }`,
       `Note 'updater done'`,
       `Start-Sleep -Milliseconds 400`,
-      `Remove-Item -Path ${psq(path.join(this.updateDir, job.version))} -Recurse -Force`,
+      // 复制失败时保留整个版本目录 (载荷 + Ready标记)，交给下次启动续做; 
+      // 否则会前脚说「保留载荷」后脚又把它删掉，续做永远拿不到文件。
+      `if ($applyOk) { Remove-Item -Path ${psq(path.join(this.updateDir, job.version))} -Recurse -Force }`,
+      `else { Note 'version dir kept for resume on next launch' }`,
       // 收尾的清理语句失败 (目录已被删/被杀软占用)不应该让调用方以为Update failed
       `exit 0`,
     );
@@ -335,4 +445,4 @@ class Updater {
   }
 }
 
-module.exports = { Updater, cmpVer, OWNER, REPO };
+module.exports = { Updater, cmpVer, OWNER, REPO, findUninstaller };

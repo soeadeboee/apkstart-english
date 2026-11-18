@@ -16,6 +16,7 @@ const path = require('path');
 const store = require('./store');
 const { Provisioner } = require('./provision');
 const doctor = require('./doctor');
+const drivers = require('./drivers');
 const userdata = require('./userdata');
 
 const AVD_NAME = 'apkstart';
@@ -56,6 +57,12 @@ class EmulatorEngine {
     this.attempts = [];
     this.lastDiagnosis = null;
     this.lastExitCode = null;
+    /**
+     * 本次开机生效的驱动 (兼容补丁)效果，以及命中的驱动清单。
+     * 由 start() 里的 _resolveDrivers() 填; buildArgs / env / ensureAvd 只读它。
+     */
+    this._driverEffect = null;
+    this._driversApplied = [];
     // 快照的 ram.bin ≈ 分配给虚拟机的内存 (2-4GB)。
     // cold boot本来就快的机器不该为它付出几个 GB 的磁盘，只在「真慢」时才保存。
     this.snapshotWorthSaving = null;
@@ -200,8 +207,8 @@ class EmulatorEngine {
   /**
    * 当前 AVD 面板是横的还是竖的。
    *
-   * 为什么要问这个: 横屏**只能靠物理面板**实现 —— `wm size` 只改逻辑分辨率，画面会
-   * 躺倒 90°; `adb emu rotate` 只转内容，系统里还是竖屏。真正生效的是
+   * 为什么要问这个: Landscape**只能靠物理面板**实现 —— `wm size` 只改逻辑分辨率，画面会
+   * 躺倒 90°; `adb emu rotate` 只转内容，系统里还是Portrait。真正生效的是
    * `hw.lcd.width/height` 互换 + 重启。而 config.ini 是每次开机时按当时的Settings写的，
    * 所以读它就知道**current跑着的这台**是什么方向。
    *
@@ -291,6 +298,90 @@ class EmulatorEngine {
       if (await probe(port)) return true;
     }
     return false;
+  }
+
+  /**
+   * 给界面/诊断用的驱动报告: 这次开机用了哪些, 跳过了哪些, 为什么。
+   * @returns {{ applied:Array, effect:object|null, errors:Array, host:object|null }}
+   */
+  driverReport() {
+    const pick = (d) => ({
+      id: d.id, name: d.name, version: d.version, author: d.author || '',
+      description: d.description || '', priority: d.priority, hits: d.hits || [],
+      dir: d.dir || '', file: d.file || '',
+    });
+    return {
+      applied: (this._driversApplied || []).map(pick),
+      effect: this._driverEffect ? {
+        gpuMode: this._driverEffect.gpuMode,
+        forceTcg: this._driverEffect.forceTcg,
+        notes: this._driverEffect.notes || [],
+        ini: this._driverEffect.ini || {},
+        env: this._driverEffect.env || {},
+        args: (this._driverEffect.args || []).map((a) => (a.value ? `${a.flag}=${a.value}` : a.flag)),
+      } : null,
+      errors: this._driverErrors || [],
+      host: this._driverHost || null,
+    };
+  }
+
+  /**
+   * 把驱动声明的 config.ini 覆盖项套到默认配置上。
+   * 已存在的键就地替换 (不产生重复行)，不存在的追加在后面。
+   * 只处理 drivers.js 白名单里的键，非法键在校验阶段就被拒了。
+   */
+  _iniWithDrivers(text) {
+    const over = (this._driverEffect && this._driverEffect.ini) || {};
+    const keys = Object.keys(over);
+    if (!keys.length) return text;
+    const seen = new Set();
+    const out = String(text).split('\n').map((line) => {
+      const m = /^([A-Za-z0-9_.]+)=/.exec(line);
+      if (!m || !(m[1] in over)) return line;
+      seen.add(m[1]);
+      return `${m[1]}=${over[m[1]]}`;
+    });
+    for (const k of keys) if (!seen.has(k)) out.push(`${k}=${over[k]}`);
+    return out.join('\n');
+  }
+
+  /**
+   * 读一遍驱动目录，挑出匹配这台机器的，存成本次开机的效果。
+   *
+   * 目录顺序即优先级: Built-in examples (只读，默认 enabled:false)在前，用户驱动在后，
+   * 同 id 时用户目录覆盖内置 —— 用户改了示例就能直接生效，不用改安装目录。
+   *
+   * @returns {{ applied:Array, skipped:Array, errors:Array } | null}
+   */
+  _resolveDrivers({ accel, emulatorVersion }) {
+    const s = this.settings || {};
+    const disabled = (s.drivers && s.drivers.disabled) || [];
+    const state = (s.drivers && s.drivers.state) || {};
+    let gpuName = '';
+    let osBuild = 0;
+    try {
+      const release = require('os').release() || '';
+      const m = /(\d+)\s*$/.exec(release);
+      osBuild = m ? Number(m[1]) : 0;
+    } catch (_) { /* 拿不到就当 0，匹配条件里带 osBuild 的驱动不会生效 */ }
+    const host = drivers.hostContext({
+      info: { ...doctor.hostInfo(), cpuVendor: (require('os').cpus() || [])[0]?.model || '' },
+      gpuVendor: doctor.detectGpuVendor(),
+      gpuName,
+      osBuild,
+      accel: accel && accel.ok ? (accel.kind || 'whpx') : 'none',
+      emulatorVersion,
+    });
+    const loaded = drivers.loadAll([
+      drivers.bundledDir(this.appRoot),
+      drivers.userDir(store),
+    ]);
+    const r = drivers.resolve({ drivers: loaded.drivers, host, disabled, state });
+    this._driverEffect = r.effect;
+    this._driversApplied = r.applied;
+    this._driverErrors = loaded.errors;
+    this._driverHost = host;
+    return { ...r, errors: loaded.errors, host };
   }
 
   /**
@@ -387,7 +478,7 @@ class EmulatorEngine {
       // wlan0 (netsim 虚拟网卡)，不是早期的 eth0。config.ini 里少了这一行，
       // 模拟器就不会给 wlan0 建链路——表现是 wlan0 一直 NO-CARRIER, 
       // `dumpsys connectivity` 显示 Active default network: none，App里就是
-      // 一直「网络错误，请Later再试」。命令行的 -netdelay/-netspeed/-dns-server
+      // 一直「网络错误，Try again later」。命令行的 -netdelay/-netspeed/-dns-server
       // 都只是 QEMU 用户态 NAT 的参数，跟 guest 内部的网卡有没有被拉起来无关。
       'hw.wifi=yes',
       'hw.lcd.width=' + screen.w,
@@ -403,12 +494,12 @@ class EmulatorEngine {
       'hw.camera.back=none',
       'hw.camera.front=none',
       'hw.gps=no',
-      // 方向/加速度传感器必须关: 一旦开启，Android 会按传感器Automatic旋转，把竖屏
+      // 方向/加速度传感器必须关: 一旦开启，Android 会按传感器Automatic旋转，把Portrait
       // 内容转成横的 (画面整体躺倒 90°, 文字竖着, 四周黑边)。排版切换current只靠
       // wm density (改 smallestWidth)，不需要也不允许传感器参与。
       'hw.sensors.orientation=no',
     ].join('\n') + '\n';
-    fs.writeFileSync(cfgPath, cfg);
+    fs.writeFileSync(cfgPath, this._iniWithDrivers(cfg));
 
     // /data 分区必须先「真的能用」，否则后面一切都是白等 (见 ensureDataPartition 注释)
     const data = this.ensureDataPartition(avdDir, dataMB);
@@ -523,6 +614,8 @@ class EmulatorEngine {
       ANDROID_ADB_SERVER_PORT: adbPort,
       ANDROID_EMULATOR_USE_SYSTEM_LIBS: '',
       ...(plan.accel === 'off' ? { ANDROID_I_WANT_MY_TCG: 'yes' } : {}),
+      // 驱动声明的环境变量: 只放行 ANDROID_/QEMU_/LIBGL_/MESA_/EMUGL_ 前缀 (见 drivers.js)
+      ...((this._driverEffect && this._driverEffect.env) || {}),
     };
   }
 
@@ -541,6 +634,12 @@ class EmulatorEngine {
     gpu = 'software', memoryMB = 2048, cores = 2,
     snapshot = true, wipe = false, lcd = null,
   } = {}) {
+    // 驱动可以固定渲染后端 / 强制Software emulation。放在最前面算进 gpu/accel，
+    // 这样后面所有逻辑 (-accel off, config.ini 的 hw.gpu.mode)都跟着它走。
+    const eff = this._driverEffect || null;
+    const drvGpu = eff ? drivers.gpuModeToArg(eff.gpuMode) : '';
+    if (drvGpu) gpu = drvGpu;
+    if (eff && eff.forceTcg) accel = 'off';
     const args = [
       '-avd', AVD_NAME,
       '-port', String(port),
@@ -583,7 +682,7 @@ class EmulatorEngine {
       args.push('-no-window');
     } else {
       // 注意: **不能再传 -no-skin**。它会覆盖上面的 -skin，让面板尺寸退回
-      // config.ini 里的旧值 —— 表现就是「Settings里切了横屏, 实际还是竖屏」，
+      // config.ini 里的旧值 —— 表现就是「Settings里切了Landscape, 实际还是Portrait」，
       // 以及「画面只占左上角一条」。面板尺寸必须由 -skin 决定。
       // 设备外壳本来就不会画 (ShowDeviceFrame=no + 下面这组 style 参数)。
       // 注意: 不能用 -qt-hide-window。它会让模拟器**根本不创建**那个 Qt 窗口，
@@ -618,6 +717,13 @@ class EmulatorEngine {
     }
     if (wipe) args.push('-wipe-data');
     if (accel === 'off') args.push('-accel', 'off');
+    // 驱动声明的其它参数: -gpu / -accel 已经由上面的 gpu/accel 统一处理，这里跳过，
+    // 避免同一个参数出现两次 (emulator 对重复参数的行为在不同版本上不一致)。
+    for (const a of ((eff && eff.args) || [])) {
+      if (a.flag === '-gpu' || a.flag === '-accel') continue;
+      if (a.value === '') args.push(a.flag);
+      else args.push(a.flag, a.value);
+    }
     return args;
   }
 
@@ -698,22 +804,68 @@ class EmulatorEngine {
     const img = path.join(dir, 'userdata-qemu.img');
     let bytes = 0;
     try { bytes = fs.statSync(img).size; } catch (_) { /* 还没建 */ }
+    let fsBytesNow = 0;
+    try { fsBytesNow = userdata.fsBytes(img); } catch (_) { /* 还没建或损坏 */ }
+    const configuredGB = Number(this.settings?.engine?.dataPartitionGB || 0);
+    const fsGB = fsBytesNow ? Number((fsBytesNow / 1073741824).toFixed(1)) : 0;
     return {
       avdDir: dir,
       imageBytes: bytes,
       imageGB: bytes ? Number((bytes / 1073741824).toFixed(1)) : 0,
-      configuredGB: Number(this.settings?.engine?.dataPartitionGB || 0),
+      // 文件系统实际LargeSmall (≠ 镜像文件LargeSmall): 扩了镜像但 resize2fs 没到位时这两个数会不一样
+      fsGB,
+      configuredGB,
+      // 用户设了目标, 但文件系统还没长到目标
+      pendingGB: configuredGB && fsGB ? Math.max(0, configuredGB - fsGB) : 0,
+      // quickboot 会给 userdata 建一层 qcow2 覆盖层，guest 看到的是它，不是底座镜像
+      overlay: this._hasDataOverlay(img),
     };
+  }
+
+  /** userdata 是否被 quickboot 的 qcow2 覆盖层接管 (有它就只能重置，不能就地扩容) */
+  _hasDataOverlay(img) {
+    try { return fs.existsSync(`${img}.qcow2`); } catch (_) { return false; }
   }
 
   /**
    * 立即把 /data 分区扩容到指定LargeSmall (必须保证模拟器已停止，否则镜像被占用)。
-   * 走的是 ensureDataPartition 的就地扩容路径: qemu-img resize + resize2fs，
-   * 不重建, 不丢Installed apps与存档。
+   *
+   * 两种路径，取舍是实测出来的: 
+   *  - 没有 quickboot 覆盖层: 就地扩 (qemu-img resize + resize2fs)，不丢Installed apps; 
+   *  - 有覆盖层: guest 真正挂载的是 `userdata-qemu.img.qcow2`，底座扩到 8GB, 
+   *    文件系统也长到 8GB，guest 里 `df /data` 依旧是 5.7GB (覆盖层还是旧LargeSmall)，
+   *    而覆盖层里的文件系统没有 root 权限改不了。这种时候必须如实返回「需要重置」，
+   *    不能再像以前那样返回成功 —— 用户会以为扩好了，装 50GB 游戏依旧半路失败。
    */
   resizeDataPartition(dataMB) {
     const dir = path.join(this.provisioner.paths().avdHome, `${AVD_NAME}.avd`);
-    return this.ensureDataPartition(dir, dataMB);
+    const img = path.join(dir, 'userdata-qemu.img');
+    const wantGB = Math.max(1, Math.round(Number(dataMB || 0) / 1024));
+    if (this._hasDataOverlay(img)) {
+      return {
+        ok: false,
+        needsReset: true,
+        fsGB: this.dataInfo().fsGB,
+        error: `Android is using a quick-boot differencing disk, which cannot be resized in place (target ${wantGB} GB).`
+          + 'Reset Android data to rebuild /data at the new size — installed apps and saves will be wiped, so confirm first.',
+      };
+    }
+    const r = this.ensureDataPartition(dir, dataMB);
+    // ensureDataPartition 在 resize2fs 失败时会返回 ok:false; 再核一次文件系统LargeSmall，
+    // 防止「文件撑开了, 文件系统没长」被当成功 (用户看到的就是装游戏说空间不足)。
+    let fsAfter = 0;
+    try { fsAfter = userdata.fsBytes(img); } catch (_) { /* ignore */ }
+    const wantBytes = Math.max(1024, Math.round(Number(dataMB || 0))) * 1048576;
+    if (r && r.ok && fsAfter < wantBytes * 0.95) {
+      return {
+        ok: false,
+        ...r,
+        fsGB: Number((fsAfter / 1073741824).toFixed(1)),
+        error: `The image was expanded to ${wantGB} GB, but the filesystem only reached ${(fsAfter / 1073741824).toFixed(1)} GB (resize2fs failed).`
+          + 'Click Expand now again, or free up disk space and retry.',
+      };
+    }
+    return r;
   }
 
   /**
@@ -1078,13 +1230,45 @@ class EmulatorEngine {
     const emuVersion = verInfo.version || '';
     this._emuVersion = emuVersion;
 
+    // 驱动 (兼容补丁): 先看清这台机器是什么样，再看有没有人给它写过补丁。
+    // 这一步只读 JSON，run no code at all; 匹配不上就是空效果，行为和以前完全一致。
+    let drv = { applied: [], skipped: [], errors: [], effect: null };
+    try {
+      drv = this._resolveDrivers({ accel: accelInfo, emulatorVersion: emuVersion });
+    } catch (e) {
+      this.log(`Driver failed to load: ${e.message}`);
+      onLog(`Driver failed to load (ignored, starting with defaults): ${e.message}`);
+    }
+    if (drv.applied.length) {
+      onLog(`Applied drivers: ${drv.applied.map((d) => `${d.name} v${d.version}`).join(', ')}`);
+      for (const n of (this._driverEffect.notes || []).slice(0, 4)) onLog(`· ${n}`);
+    } else {
+      onLog('No driver matched; starting with default arguments');
+    }
+    if (drv.errors && drv.errors.length) {
+      onLog(`${drv.errors.length} driver file${drv.errors.length === 1 ? '' : 's'} failed to load (see Settings → Drivers for the reason)`);
+    }
+
     // 与Settings页 / 诊断报告共用同一个入口，保证「显示的」就是「实跑的」
     const profile = doctor.autoProfile({
       settings: s, accel: accelInfo, emulatorVersion: emuVersion, diskMB,
       port: startPort, adbPort,
     });
     this.profile = profile;
-    const variants = doctor.planVariants(profile).slice(0, maxAttempts);
+    let variants = doctor.planVariants(profile).slice(0, maxAttempts);
+    // 驱动指定了渲染后端 / 要求Software emulation时，每一轮都按它来: 
+    // 用户装驱动的目的就是「这台机器只能用这一档」，Continue先试崩过的后端只会白等。
+    if (drv.applied.length && this._driverEffect) {
+      const gpuFixed = drivers.gpuModeToArg(this._driverEffect.gpuMode);
+      if (gpuFixed) {
+        variants = variants.map((v) => ({ ...v, gpu: gpuFixed }));
+        onLog(`A driver pinned the render backend to ${gpuFixed}`);
+      }
+      if (this._driverEffect.forceTcg) {
+        variants = variants.map((v) => ({ ...v, accel: 'off', label: `${v.gpu} / a driver requires software emulation` }));
+        onLog('A driver requires hardware acceleration off (software emulation)');
+      }
+    }
 
     // 记住「上次拉起就崩」的 GPU 后端，下次把它排到最后。
     // 实测: AMD Radeon 780M 上 `-gpu host` 能通过 emulator 自己的硬件检查，
@@ -1104,6 +1288,7 @@ class EmulatorEngine {
     const logFile = path.join(store.DATA_DIR, 'logs', 'emulator.log');
     fs.mkdirSync(path.dirname(logFile), { recursive: true });
     this._logWrite(logFile, `\n\n=== ${new Date().toISOString()} START ${doctor.describeProfile(profile)} ===\n`);
+    this._logWrite(logFile, `drivers: ${drv.applied.length ? drv.applied.map((d) => `${d.id}@${d.version}`).join(', ') : '(none)'}\n`);
 
     // 屏幕规格在整个启动过程中保持一致，否则每次重试都换分辨率会狂清快照。
     // 分辨率来自 doctor 的 profile (Settings里可改「画质」)，auto 时按加速状态choose。
@@ -1242,7 +1427,7 @@ class EmulatorEngine {
         let network = null;
         try {
           network = await this.checkNetwork('', { waitMs: 12000, interval: 3000 });
-        } catch (_) { /* 体检失败不算Launch failed */ }
+        } catch (_) { /* Checkup failed不算Launch failed */ }
         if (network && !network.ok) {
           onLog('⚠ The Android VM has no network yet (Wi-Fi not associated or no address).'
             + 'Apps that need network may stay black after opening: reopen the app in a moment;'
@@ -1260,7 +1445,9 @@ class EmulatorEngine {
       this.lastDiagnosis = d;
       lastError = fatal ? `${d.title}: ${d.hint}` : 'boot timed out (first boot may be slow, or hardware acceleration is not active)';
       onLog(`${lastError}, retrying with another parameter set…`);
-      this._noteGpuFailure(plan);
+      // 授权对话框卡住不是渲染后端的问题，别把当前 GPU 记进「启动即崩」黑名单，
+      // 否则下次启动会无缘无故跳过用户机器本来能用的后端。
+      if (d.code !== 'ADB_UNAUTHORIZED') this._noteGpuFailure(plan);
       // eslint-disable-next-line no-await-in-loop
       await this.killAttempt();
     }
@@ -1347,11 +1534,18 @@ class EmulatorEngine {
     }
     this.cancelSnapshotSave();
     const serial = this.serial;
-    if (adbPath && this.snapshotWorthSaving !== false) {
-      // 关机前补存一次: 空闲路径没来得及存 (比如用户装完App马上Quit)时，
-      // 下一次开机仍然能走快照恢复，而不是重新cold boot。
+    // 关机前先判断 guest 是否健康，只在这一次判断里问一遍 adb: 
+    //  - 健康 → 补存一次快照 (空闲路径没来得及存时，下次仍能秒进); 
+    //  - 不健康 (adb 卡在 unauthorized / 没开机Finish)→ 不存，并且**在Quit后作废快照**: 
+    //    `adb emu kill` 会让 emulator 自己按 quickboot 存一份内存状态，那份同样会
+    //    冻结未授权状态。不在这里清掉，下次恢复又是一份「开机必超时」的毒快照。
+    const healthy = adbPath ? await this._adbGuestHealthy(adbPath) : false;
+    if (adbPath && this.snapshotWorthSaving !== false && healthy) {
       // 3GB 内存写盘要几秒到二十几秒，超时给足，别让快照写一半就被 kill 掉。
       await this._saveViaAdb(adbPath, { timeout: 60000 });
+    }
+    if (!healthy && this.snapshotWorthSaving !== false) {
+      this.log('Guest not authorized/ready at shutdown: snapshot will be discarded and debug authorization re-injected on the next cold boot');
     }
     if (adbPath) {
       await new Promise((resolve) => {
@@ -1372,6 +1566,11 @@ class EmulatorEngine {
     // 关干净了就把启动器句柄丢掉。留着它会让 running() 永远返回 true, 
     // start() 以为还能复用 (见 start() 里的注释)。
     this.proc = null;
+    // 进程已Quit，这时再作废它可能在Quit时Automatic存的毒快照。顺序很重要: 必须放在
+    // emu kill + 端口Close之后，否则它会把刚删的快照又写回来。
+    if (!healthy && this.snapshotWorthSaving !== false) {
+      try { this.invalidateSnapshot(); } catch (_) { /* ignore */ }
+    }
     return true;
   }
 
@@ -1404,8 +1603,35 @@ class EmulatorEngine {
     });
   }
 
-  /** 用 adb 触发一次快照保存 (失败返回 false，调用方决定要不要再试) */
-  _saveViaAdb(adbPath, { timeout = 45000 } = {}) {
+  /**
+   * guest 是否处于「可以安全存快照」的健康状态: adb authorized + boot Finish。
+   * cold boot时若「允许 USB 调试吗？」对话框还挂着，state 是 unauthorized —— 这时存下
+   * 内存 + 磁盘，guest 里就没有 host 的 adbkey.pub，下次恢复还是 unauthorized，
+   * 每轮Probe的 shell 都抛异常，干等 240s 还被误诊成显卡/虚拟化问题。
+   */
+  async _adbGuestHealthy(adbPath) {
+    if (!adbPath) return false;
+    try {
+      const { AdbClient } = require('./adb');
+      const probe = new AdbClient({ adbPath, serial: this.serial });
+      const state = await probe.deviceState();
+      const out = await probe.shell('getprop sys.boot_completed', { timeout: 6000 }).catch(() => '');
+      return state === 'device' && String(out).trim() === '1';
+    } catch (_) {
+      return false; // 读不到就按不健康处理
+    }
+  }
+
+  /**
+   * 用 adb 触发一次快照保存 (失败返回 false，调用方决定要不要再试)。
+   * 只有 guest 健康时才存，宁可下次cold boot 20 多秒，也不能存一份「开机必失败」的毒快照。
+   */
+  async _saveViaAdb(adbPath, { timeout = 45000 } = {}) {
+    if (!adbPath) return false;
+    if (!(await this._adbGuestHealthy(adbPath))) {
+      this.log('Skipping snapshot save: guest not authorized or not fully booted (avoids saving a poisoned, unauthorized snapshot)');
+      return false;
+    }
     return new Promise((resolve) => {
       execFile(adbPath, ['-s', this.serial, 'emu', 'avd', 'snapshot', 'save', SNAPSHOT_NAME],
         { timeout, windowsHide: true }, (err) => resolve(!err));

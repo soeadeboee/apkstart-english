@@ -1,6 +1,6 @@
 # ApkStart English (Bahasa Indonesia)
 
-**UI bahasa Inggris tidak resmi untuk [ApkStart](https://github.com/RoutineMiku/apkstart) v0.5.3** — peluncur aplikasi Android untuk Windows: pasang APK, buat shortcut desktop, dan setiap aplikasi berjalan di jendelanya sendiri.
+**UI bahasa Inggris tidak resmi untuk [ApkStart](https://github.com/RoutineMiku/apkstart) v0.5.8** — peluncur aplikasi Android untuk Windows: pasang APK, buat shortcut desktop, dan setiap aplikasi berjalan di jendelanya sendiri.
 
 ApkStart bagus, tapi seluruh label, dialog, notifikasi, dan pesan log-nya ditulis langsung dalam bahasa Mandarin. Repo ini menerjemahkan semuanya ke bahasa Inggris dengan cara yang bisa dipasang ulang setiap kali aplikasi diperbarui.
 
@@ -14,10 +14,10 @@ ApkStart bagus, tapi seluruh label, dialog, notifikasi, dan pesan log-nya dituli
 
 | | |
 |---|---|
-| String diterjemahkan | **1.273** (UI, tray, notifikasi, dialog, installer, diagnostik, log) |
-| Penggantian | **6.242** di **46 file** |
+| String diterjemahkan | **1.507** (UI, tray, notifikasi, dialog, installer, diagnostik, log) |
+| Penggantian | **6.780** di **52 file** |
 | Sisa bahasa Mandarin di luar komentar kode | **0** |
-| Versi | hanya v0.5.3 |
+| Versi | hanya v0.5.8 |
 | Gambar Android / QEMU / komponen Google yang dibundel | tidak ada |
 
 Dua cara pakai:
@@ -27,13 +27,13 @@ Dua cara pakai:
 
 ## Cara 1 — build portable English (paling mudah)
 
-1. Unduh `ApkStart-v0.5.3-win64-portable-en.zip` dari [Releases](../../releases).
+1. Unduh `ApkStart-v0.5.8-win64-portable-en.zip` dari [Releases](../../releases).
 2. Ekstrak di mana saja (misal `D:\ApkStart`).
 3. Jalankan `ApkStart.exe`.
 
 Saat aplikasi pertama dijalankan, runtime Android tetap diunduh seperti build asli. Tidak ada yang dibundel tambahan.
 
-## Cara 2 — patch ApkStart v0.5.3 yang sudah terpasang
+## Cara 2 — patch ApkStart v0.5.8 yang sudah terpasang
 
 1. Tutup ApkStart (ikon tray → klik kanan → **Quit**).
 2. Unduh repo ini (**Code** → **Download ZIP**) lalu ekstrak.
@@ -51,8 +51,8 @@ powershell -ExecutionPolicy Bypass -File .\install-en.ps1 -AppDir "C:\Users\me\A
 
 Sebelum menulis apa pun, skrip:
 
-- memastikan `package.json` berisi `0.5.3`;
-- membandingkan SHA-256 setiap file dengan file asli v0.5.3;
+- memastikan `package.json` berisi `0.5.8`;
+- membandingkan SHA-256 setiap file dengan file asli v0.5.8;
 - mencadangkan semuanya ke `%LOCALAPPDATA%\apkstart-english\backup\...`.
 
 Kalau ada file yang sudah dimodifikasi, skrip berhenti dan menampilkan daftarnya (`-Force` untuk memaksa).
@@ -70,11 +70,14 @@ Cadangan terbaru untuk instalasi itu dipulihkan dan diverifikasi hash-nya.
 ## Yang diterjemahkan
 
 - Jendela utama: sidebar, kartu aplikasi, area drop, status, tooltip
-- Pengaturan: semua grup (Runtime & lingkungan, Otomatis, Jendela aplikasi, Tombol mouse, Pemetaan tombol, Performa & sumber daya, Sumber unduhan & update, Runtime, Pengaturan sistem Android, Desktop & aplikasi, Berbagi file, Integrasi sistem, Update, Tentang)
+- Pengaturan: semua grup (Runtime & lingkungan, Otomatis, Jendela aplikasi, Tombol mouse, Pemetaan tombol, Performa & sumber daya, Sumber unduhan & update, Pemeriksaan PC ini, Driver, Runtime, Pengaturan sistem Android, Desktop & aplikasi, Berbagi file, Integrasi sistem, Update, Tentang)
 - Menu tray, toast, dialog konfirmasi, notifikasi Windows
 - Alur pasang / buka / hapus aplikasi, pemetaan error dan saran perbaikan
 - Diagnostik: pemeriksaan lingkungan, alasan gagal, petunjuk, teks laporan diagnostik
-- Backend runtime: QEMU/Android-x86 bawaan, MuMu, FydeOS, dan mode menyambung ke runtime yang sudah ada
+- Backend runtime: QEMU/Android-x86 bawaan dan mode menyambung ke runtime yang sudah ada
+- Pemeriksaan PC ini / konfigurasi otomatis: item laporan, rekomendasi, perbaikan sekali klik, dan driver yang dihasilkan
+- Driver (patch kompatibilitas): daftar, impor, ekspor template, dan semua pesan validasi
+- Alokasi sumber daya: batas memori, core, dan partisi data; perluasan serta petunjuk rebuild
 - Modul inti: deployment runtime, start/stop emulator, perbaikan jaringan, pembersihan, updater, berbagi file, shortcut, splash, dan panduan setup pertama
 - Detail locale: `<html lang="en">`, `toLocaleDateString('en-US')`, pengurutan nama dengan locale `en`, halaman unduh VC++ versi Inggris
 
@@ -101,7 +104,7 @@ node scripts\verify-patch.js --src "C:\path\ke\resources\app-asli"
 
 ## Lisensi dan kredit
 
-- **ApkStart** © ApkStart contributors, MIT — <https://github.com/RoutineMiku/apkstart>. Repo ini memuat salinan modifikasi file UI dari tag `v0.5.3`.
+- **ApkStart** © ApkStart contributors, MIT — <https://github.com/RoutineMiku/apkstart>. Repo ini memuat salinan modifikasi file UI dari tag `v0.5.8`.
 - Terjemahan Inggris dirilis dengan lisensi MIT yang sama (lihat [LICENSE](LICENSE)).
 - ApkStart mengunduh image Android, binary emulator, dan komponen Google dari vendornya masing-masing. **Tidak ada yang didistribusikan di sini**; zip rilis hanya berisi program ApkStart asli plus file teks terjemahan.
 

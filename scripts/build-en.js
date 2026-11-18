@@ -240,7 +240,7 @@ function main() {
     const rel = path.relative(SRC, file);
     const dest = path.join(OUT, rel);
     fs.mkdirSync(path.dirname(dest), { recursive: true });
-    const isCode = /\.(js|html)$/i.test(file);
+    const isCode = /\.(js|html)$/i.test(file) || rel.startsWith(`src${path.sep}drivers${path.sep}`) && /\.json$/i.test(file);
     if (!isCode || rel.startsWith('..')) { fs.copyFileSync(file, dest); continue; }
 
     const isJs = /\.js$/i.test(file);

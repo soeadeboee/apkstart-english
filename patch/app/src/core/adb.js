@@ -24,13 +24,16 @@ function tabletDensity() {
   }
 }
 
+/**
+ * 系统里可能存在的 adb 位置。**故意只列 Android SDK 与常见手动安装目录**: 
+ * 第三方模拟器自带的 adb (MuMu / 雷电 / 蓝叠)不在这里 —— 用它们的 adb 会连带
+ * 继承别人的 server 状态 (端口, 授权, offline 抖动)，与「独立运行」冲突。
+ * 自己那份 adb 在Runtime目录里，优先级永远最高 (见 engine.adbPath)。
+ */
 const COMMON_ADB_PATHS = [
   path.join(process.env.LOCALAPPDATA || '', 'Android', 'Sdk', 'platform-tools', 'adb.exe'),
-  'C:\\Android\\platform-tools\\adb.exe',
-  'C:\\adb\\adb.exe',
-  'C:\\LDPlayer\\LDPlayer9\\adb.exe',
-  'C:\\Program Files\\Netease\\MuMuPlayer-12.0\\shell\\adb.exe',
-  'C:\\Program Files\\BlueStacks_nxt\\HD-Adb.exe',
+  'C:/Android/platform-tools/adb.exe',
+  'C:/adb/adb.exe',
 ];
 
 /**
@@ -93,6 +96,36 @@ function friendlyLaunchError(raw, pkg) {
 }
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+/**
+ * 解析 `adb devices` 里某个 serial 的 state 列。
+ * 关键: unauthorized 的设备在 `get-state` 里也会回报 'device'，只有 devices 列表的
+ * state 列能区分 authorized / unauthorized / offline —— 开机Probe据此快速自愈。
+ */
+function parseDeviceState(text, serial) {
+  const lines = String(text || '').split(/\r?\n/).slice(1);
+  for (const line of lines) {
+    const m = /^(\S+)\s+(unauthorized|offline|recovery|sideload|no\s+permissions|device)\b/i.exec(line.trim());
+    if (!m) continue;
+    if (serial && m[1] !== serial) continue;
+    const st = m[2].toLowerCase().replace(/\s+/g, '');
+    if (st === 'device') return 'device';
+    if (st === 'unauthorized' || st === 'nopermissions') return 'unauthorized';
+    return st; // offline / recovery / sideload
+  }
+  return 'no-device';
+}
+
+/** 从「允许 USB 调试」对话框未OK导致的 shell 报错里识别出 unauthorized */
+function isUnauthorizedError(raw) {
+  return /\bunauthorized\b|no permissions|confirm.*(allow|debug)/i.test(String(raw || ''));
+}
+
+/** 从 `pm path <pkg>` 的输出里取出每个 APK 的真实路径 */
+function parsePmPaths(text) {
+  return String(text || '').split(/\r?\n/).map((l) => l.trim())
+    .filter((l) => /^package:/.test(l)).map((l) => l.slice(8).trim()).filter(Boolean);
+}
 
 /** 已解析过的启动入口 (adbPath|pkg → activity)，10 分钟有效 */
 const LAUNCHER_CACHE = new Map();
@@ -208,7 +241,18 @@ class AdbClient {
   }
 
   _adbEnv() {
-    return { ...process.env, ANDROID_ADB_SERVER_PORT: process.env.ANDROID_ADB_SERVER_PORT || '5044' };
+    const env = { ...process.env, ANDROID_ADB_SERVER_PORT: process.env.ANDROID_ADB_SERVER_PORT || '5044' };
+    // Play 商店镜像会强制 ADB 授权: host 的 adb server 与 guest 的 adbd 必须用同一把
+    // adbkey。官方做法是 adb/emulator 共用 %USERPROFILE%\.android\adbkey{,.pub}，
+    // emulator 启动时把 adbkey.pub 烤进 guest 的 /data/misc/adb/adb_keys。
+    // 显式告诉 adb server 去哪里找公钥: 某些环境 ANDROID_SDK_HOME / 绿色版Runtime
+    // 会让 adb 在别处找 key，于是每次cold boot都弹「允许 USB 调试」→ device unauthorized。
+    if (!env.ADB_VENDOR_KEYS) {
+      const home = process.env.USERPROFILE || process.env.HOME || '';
+      const keyDir = path.join(home, '.android');
+      try { if (home && fs.existsSync(keyDir)) env.ADB_VENDOR_KEYS = keyDir; } catch (_) { /* ignore */ }
+    }
+    return env;
   }
 
   exec(args, { timeout = 30000, withSerial = true, binary = false } = {}) {
@@ -363,6 +407,20 @@ class AdbClient {
     }
   }
 
+  /**
+   * 读取本 serial 在 `adb devices` 里的真实状态: device / unauthorized / offline / no-device。
+   * isOnline() 用的 get-state 无法区分 authorized 与 unauthorized (两者都是 'device')，
+   * 开机Probe靠这个方法来识别「授权对话框卡住」并快速自愈。
+   */
+  async deviceState() {
+    try {
+      const { stdout } = await this.exec(['devices'], { withSerial: false, timeout: 8000 });
+      return parseDeviceState(stdout, this.serial);
+    } catch (_) {
+      return 'no-device';
+    }
+  }
+
   async devices() {
     const { stdout } = await this.exec(['devices', '-l'], { withSerial: false });
     return stdout.split('\n').slice(1)
@@ -483,9 +541,24 @@ class AdbClient {
     }
   }
 
+  /**
+   * 是否真的装好了 —— 不轻信 PackageManager 的一句话。
+   *
+   * 快照与数据分区不一致时，`pm path` 会因 packages.xml 里还留着记录而返回
+   * `package:/data/app/.../base.apk` (installed=true)，但那个 APK 文件其实已经被
+   * 回滚掉了。Continue `am start` 只会失败。所以用 `test -f/-s` 逐个核对 pm 报出来的
+   * 路径，文件不在 (或空文件)就判定为「未真正安装」，交给上层Automatic重装。
+   *
+   * @returns {Promise<boolean>}
+   */
   async isInstalled(pkg) {
     const out = await this.shell(`pm path ${pkg}`);
-    return /package:/.test(out);
+    const paths = parsePmPaths(out);
+    if (!paths.length) return false;
+    // 分片 APK 全部要在; 任一片丢了都启动不了。合并成一条 shell，省一次 adb 往返。
+    const checks = paths.map((p) => `[ -s "${p}" ]`).join(' && ');
+    const probe = await this.shell(`${checks} && echo __APKSTART_PRESENT__`, { timeout: 10000 }).catch(() => '');
+    return /__APKSTART_PRESENT__/.test(String(probe));
   }
 
   async listPackages() {
@@ -812,8 +885,8 @@ class AdbClient {
       'settings put global captive_portal_https_url https://connect.rom.miui.com/generate_204',
       'settings put global captive_portal_mode 0',
       // 注意: 这里不要再写 wm user-rotation / accelerometer_rotation。
-      // 方向由 setOrientation / resetDisplayOverrides 按当前横竖屏状态统一定，
-      // 在这里写死 lock 0 会把横屏方向覆盖回竖屏 (画面躺倒)。
+      // 方向由 setOrientation / resetDisplayOverrides 按当前横Portrait状态统一定，
+      // 在这里写死 lock 0 会把Landscape方向覆盖回Portrait (画面躺倒)。
     ];
     await this.shell(cmds.join(' ; '), { timeout: 15000 }).catch(() => {});
     return true;
@@ -852,13 +925,13 @@ class AdbClient {
       await this.shell('settings put system accelerometer_rotation 0; wm size reset', { timeout: 15000 });
       // 方向锁 **0** (不是 1)。物理面板的方向已经由 hw.lcd.width/height 决定
       //  (见 doctor.lcdFor)，这里再锁 1 等于把横面板又转成竖逻辑空间，
-      // 结果就是画面躺倒 90° —— 这正是「横屏没弄好」的直接原因。
+      // 结果就是画面躺倒 90° —— 这正是「Landscape没弄好」的直接原因。
       await this.shell('wm user-rotation lock 0', { timeout: 15000 });
       // 关键一步: 红果这类App自己声明了 portrait，系统会照办，于是
       // init=1280x720 的横面板被转成 cur=720x1280 的竖逻辑空间，画面又躺下。
       // Open「忽略App的Screen orientation请求」，系统才会按面板方向排版。
-      // 竖屏模式下必须显式关掉，否则上一次横屏留下的 true 会让Portrait panel里
-      // 显示横屏排版。API < 31 没有这个命令，失败忽略即可。
+      // Portrait模式下必须显式关掉，否则上一次Landscape留下的 true 会让Portrait panel里
+      // 显示Landscape排版。API < 31 没有这个命令，失败忽略即可。
       await this.shell(`wm set-ignore-orientation-request ${landscape ? 'true' : 'false'}`, { timeout: 15000 });
       // Open freeform / 忽略方向请求后，安卓会弹一次「See and do more」的引导框
       //  ("Double-tap outside an app to reposition it…")。它盖在App上面，
@@ -968,7 +1041,7 @@ class AdbClient {
     return true;
   }
 
-  /** 当前逻辑分辨率 (横屏切换后窗口要按它算宽高比) */
+  /** 当前逻辑分辨率 (Landscape切换后窗口要按它算宽高比) */
   async displaySize() {
     try {
       const out = await this.shell('wm size', { timeout: 8000 });
@@ -993,7 +1066,7 @@ class AdbClient {
 
   /**
    * 显示适配: 全屏时把 Android 分辨率改成显示器尺寸 (内容Automatic铺满)，
-   * 窗口模式时恢复竖屏预设。wm 命令是Runtime生效的，不需要重启 Android。
+   * 窗口模式时恢复Portrait预设。wm 命令是Runtime生效的，不需要重启 Android。
    */
   async setDisplaySize(width, height, density) {
     const w = Math.max(320, Math.round(Number(width) || 0));
@@ -1011,5 +1084,5 @@ class AdbClient {
 
 module.exports = {
   AdbClient, AdbError, parseStatList, friendlyInstallError, friendlyLaunchError,
-  componentArg, parseResolvedActivity,
+  componentArg, parseResolvedActivity, parseDeviceState, isUnauthorizedError, parsePmPaths,
 };

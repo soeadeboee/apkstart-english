@@ -166,6 +166,32 @@ class Installer {
       meta: { label: meta.label, package: meta.package, versionName: meta.versionName },
     });
 
+    // 50GB 级游戏: 先核对模拟器数据盘剩余空间，而不是装到一半才报
+    // INSTALL_INSUFFICIENT_STORAGE (用户看到的是「装了很久然后失败」)。
+    try {
+      const backend = this.runtime && this.runtime.backend;
+      if (backend && typeof backend.checkDiskFor === 'function') {
+        let bytes = 0;
+        if (bundle && bundle.files) {
+          for (const f of bundle.files) {
+            try { bytes += fs.statSync(f).size; } catch (_) { /* 忽略临时文件 */ }
+          }
+        } else {
+          try { bytes = fs.statSync(filePath).size; } catch (_) { /* 用 0 兜底 */ }
+        }
+        const verdict = backend.checkDiskFor(bytes);
+        if (!verdict.ok) {
+          onProgress({ stage: 'error', message: verdict.message });
+          const err = new Error(verdict.message);
+          err.needsSetup = 'disk';
+          throw err;
+        }
+      }
+    } catch (e) {
+      if (e && e.needsSetup === 'disk') throw e;
+      // 容量Probe失败不能挡住安装
+    }
+
     try {
       // 零配置: 仅含 ARM 库的AppAutomatic补齐带 ARM 翻译层的镜像，用户不用开任何开关
       if (isArmOnly(meta) && !this.runtime.provisioner.playImageInfo().ok) {
@@ -271,7 +297,7 @@ class Installer {
       lastLaunchAt: existing ? existing.lastLaunchAt || 0 : 0,
       shortcutPath: existing ? existing.shortcutPath || null : null,
       bounds: existing ? existing.bounds || null : null,
-      // App天然的横竖屏 (离线从 APK 清单算出来): 
+      // App天然的横Portrait (离线从 APK 清单算出来): 
       // 决定模拟器物理面板用哪个方向，方向一致画面才能铺满窗口不留黑边。
       // 用户手动设过 orientationOverride 时以用户的为准，这里只是「默认值」。
       orientation: meta.orientation || (existing ? existing.orientation || null : null),
@@ -418,7 +444,7 @@ class Installer {
     // 用 let: beforeStart 可能因为「面板方向和App方向不一致」而重启Runtime并
     // 返回一个新的 rt (旧 client 已随 stop 失效)。以前这里是 const，一旦真的
     // 走了重启分支就抛 "Assignment to constant variable."，把整个启动打断 ——
-    // 表现为「切横屏/竖屏后点App直接失败」。
+    // 表现为「切Landscape/Portrait后点App直接失败」。
     let rt = await this.runtime.ensure({ onLog });
     onMark('ensure done');
     if (!rt.ok) {
@@ -489,10 +515,16 @@ class Installer {
     // App可能还没装进当前Runtime (镜像重建 / 清过数据 / 首次)，直接拉起会报
     // "Invalid packageName"。先在本地缓存里把它装上再启动，这样「点开App」永远能进，
     // 不用先手动装一遍——这正是「点击已安装App直接进入系统」想要的体验。
+    // 关键: use isInstalled() (pm path + 逐个核对 APK 文件真实存在)而不是
+    // `pm list packages`。快照与数据分区不一致时 PackageManager 仍报 installed=true，
+    // 但 /data/app 下文件已被回滚掉 —— 这时 am start 必然失败。文件校验不通过就重装。
     if (app && app.apkPath && fs.existsSync(app.apkPath)) {
-      const pkgs = await rt.client.shell(`pm list packages ${pkg}`, { timeout: 8000 }).catch(() => '');
-      if (!new RegExp(`package:${pkg.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`).test(pkgs)) {
-        onLog('the app is not installed yet, installing automatically…');
+      let installed = false;
+      try { installed = await rt.client.isInstalled(pkg); } catch (_) { /* 当作not installed，走重装 */ }
+      if (!installed) {
+        onLog('App files are missing (snapshot and data disagree); reinstalling automatically from the local backup…');
+        // 重装前作废快照: 否则旧快照的 packages.xml 仍说「已装」，下次又不对
+        try { this.runtime.emulator?.invalidateSnapshot(); } catch (_) { /* ignore */ }
         await rt.client.install(app.apkPath).catch((e) => onLog(`automatic installation failed: ${e.message}`));
       }
     }
